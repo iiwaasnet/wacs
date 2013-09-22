@@ -28,7 +28,7 @@ namespace wacs.Election
 
 			votes.Add(elector.Id);
 
-			Console.WriteLine("Leader {0} Votes {1}", this.suggestedLeader.Id, votes.Count);
+			Console.WriteLine("[{2}] Leader {0} Votes {1}", this.suggestedLeader.Id, votes.Count, DateTime.Now);
 
 			if (votes.Count == majority)
 			{

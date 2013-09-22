@@ -36,13 +36,14 @@ namespace wacs.Election
 
 			electionStarted.Set();
 
+			Console.WriteLine("[{0}] Vore for self {1}", DateTime.Now, self.Id);
 			currentLeader.Vote(self, self);
 
 			ProposeCandidate(self, electors);
 
 			if (currentLeader.ConsensusReached.Wait(timeout))
 			{
-				Console.WriteLine("Node {0} reached consesus for Leader {1}", self.Id, currentLeader.SuggestedLeader.Id);
+				Console.WriteLine("[{2}] Node {0} reached consesus for Leader {1}", self.Id, currentLeader.SuggestedLeader.Id, DateTime.Now);
 
 				return new ElectionResult
 					       {
@@ -87,16 +88,18 @@ namespace wacs.Election
 				if (!candidate.Equals(currentLeader.SuggestedLeader)
 				    && currentLeader.SuggestedLeader.Equals(self))
 				{
+					Console.WriteLine("[{1}] GetOlder {0}", self.Id, DateTime.Now);
 					GetOlder(self);
 					ProposeCandidate(self, electors);
 				}
 			}
 			if (candidate.WorseThan(currentLeader.SuggestedLeader))
 			{
+				Console.WriteLine("[{0}] Suggesting better Candidate {1}", DateTime.Now, currentLeader.SuggestedLeader.Id);
 				ProposeCandidate(currentLeader.SuggestedLeader, electors);
 			}
 
-			Console.WriteLine("Propose {0}", candidate.Id);
+			Console.WriteLine("[{1}] Propose {0}", candidate.Id, DateTime.Now);
 		}
 
 		public void Accepted(Candidate candidate, Candidate elector)
@@ -107,8 +110,14 @@ namespace wacs.Election
 			    || candidate.Equals(currentLeader.SuggestedLeader))
 			{
 				currentLeader.Vote(candidate, elector);
+				currentLeader.Vote(candidate, self);
 
-				Console.WriteLine("Accepted {0}", candidate.Id);
+				Console.WriteLine("[{1}] Accepted {0}", candidate.Id, DateTime.Now);
+			}
+			if (candidate.WorseThan(currentLeader.SuggestedLeader))
+			{
+				Console.WriteLine("[{0}] Suggesting better Candidate {1}", DateTime.Now, currentLeader.SuggestedLeader.Id);
+				ProposeCandidate(currentLeader.SuggestedLeader, electors);
 			}
 		}
 
