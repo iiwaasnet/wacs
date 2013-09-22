@@ -18,7 +18,7 @@ namespace wacs.Election
 			votes = new HashSet<string>();
 		}
 
-		internal void Vote(Candidate suggestedLeader, Candidate elector)
+		internal int Vote(Candidate suggestedLeader, Candidate elector)
 		{
 			if (!suggestedLeader.Equals(this.suggestedLeader))
 			{
@@ -28,12 +28,14 @@ namespace wacs.Election
 
 			votes.Add(elector.Id);
 
-			Console.WriteLine("[{2}] Leader {0} Votes {1}", this.suggestedLeader.Id, votes.Count, DateTime.Now);
+			//Console.WriteLine("[{2}] Leader {0} Votes {1}", this.suggestedLeader.Id, votes.Count, DateTime.Now);
 
 			if (votes.Count == majority)
 			{
 				gateway.Set();
 			}
+
+			return votes.Count;
 		}
 
 		internal Candidate SuggestedLeader

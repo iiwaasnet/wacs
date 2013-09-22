@@ -32,18 +32,19 @@ namespace wacs.Election
 
 		private ElectionResult StartElectionProcess(TimeSpan timeout)
 		{
+			Console.WriteLine("[{0}] Node {1} started election", DateTime.Now, self.Id);
 			currentLeader = new BestCandidate(CalcMajority());
 
 			electionStarted.Set();
 
-			Console.WriteLine("[{0}] Vore for self {1}", DateTime.Now, self.Id);
 			currentLeader.Vote(self, self);
 
-			ProposeCandidate(self, electors);
+			Task.Factory.StartNew(() => ProposeCandidate(self, electors));
 
+			Console.WriteLine("[{0}] Node {1} waiting for consensus to be reached...", DateTime.Now, self.Id);
 			if (currentLeader.ConsensusReached.Wait(timeout))
 			{
-				Console.WriteLine("[{2}] Node {0} reached consesus for Leader {1}", self.Id, currentLeader.SuggestedLeader.Id, DateTime.Now);
+				Console.WriteLine("[{2}] Node {0} reached consensus for Leader {1}", self.Id, currentLeader.SuggestedLeader.Id, DateTime.Now);
 
 				return new ElectionResult
 					       {
@@ -88,18 +89,24 @@ namespace wacs.Election
 				if (!candidate.Equals(currentLeader.SuggestedLeader)
 				    && currentLeader.SuggestedLeader.Equals(self))
 				{
-					Console.WriteLine("[{1}] GetOlder {0}", self.Id, DateTime.Now);
-					GetOlder(self);
-					ProposeCandidate(self, electors);
+					Task.Factory.StartNew(() =>
+						                      {
+							                      Console.WriteLine("[{1}] GetOlder {0}", self.Id, DateTime.Now);
+							                      GetOlder(self);
+							                      ProposeCandidate(self, electors);
+						                      });
 				}
 			}
 			if (candidate.WorseThan(currentLeader.SuggestedLeader))
 			{
-				Console.WriteLine("[{0}] Suggesting better Candidate {1}", DateTime.Now, currentLeader.SuggestedLeader.Id);
-				ProposeCandidate(currentLeader.SuggestedLeader, electors);
+				Task.Factory.StartNew(() =>
+					                      {
+						                      Console.WriteLine("[{0}] Suggesting better Candidate {1}", DateTime.Now, currentLeader.SuggestedLeader.Id);
+						                      ProposeCandidate(currentLeader.SuggestedLeader, electors);
+					                      });
 			}
 
-			Console.WriteLine("[{1}] Propose {0}", candidate.Id, DateTime.Now);
+			Console.WriteLine("[{0}] Node {1} received propose for {2}", DateTime.Now, self.Id, candidate.Id);
 		}
 
 		public void Accepted(Candidate candidate, Candidate elector)
@@ -109,16 +116,19 @@ namespace wacs.Election
 			if (candidate.BetterThan(currentLeader.SuggestedLeader)
 			    || candidate.Equals(currentLeader.SuggestedLeader))
 			{
-				currentLeader.Vote(candidate, elector);
-				currentLeader.Vote(candidate, self);
+				var voices = currentLeader.Vote(candidate, elector);
+				//currentLeader.Vote(candidate, self);
 
-				Console.WriteLine("[{1}] Accepted {0}", candidate.Id, DateTime.Now);
+				Console.WriteLine("[{0}] Node {1} Accepted {2} Voices {3}", DateTime.Now, self.Id, candidate.Id, voices);
 			}
-			if (candidate.WorseThan(currentLeader.SuggestedLeader))
-			{
-				Console.WriteLine("[{0}] Suggesting better Candidate {1}", DateTime.Now, currentLeader.SuggestedLeader.Id);
-				ProposeCandidate(currentLeader.SuggestedLeader, electors);
-			}
+			//if (candidate.WorseThan(currentLeader.SuggestedLeader))
+			//{
+			//	Task.Factory.StartNew(() =>
+			//							  {
+			//								  Console.WriteLine("[{0}] Suggesting better Candidate {1}", DateTime.Now, currentLeader.SuggestedLeader.Id);
+			//								  ProposeCandidate(currentLeader.SuggestedLeader, electors);
+			//							  });
+			//}
 		}
 
 		private int CalcMajority()
