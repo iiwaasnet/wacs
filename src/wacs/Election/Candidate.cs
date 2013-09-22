@@ -35,7 +35,7 @@
 				long hashCode = Age.GetHashCode();
 				hashCode = (hashCode * 397) ^ LastAppliedLogEntry;
 				hashCode = (hashCode * 397) ^ (Id != null ? Id.GetHashCode() : 0);
-				return (int)hashCode & 0x0000ffff;
+				return (int) hashCode & 0x0000ffff;
 			}
 		}
 
@@ -44,6 +44,13 @@
 			return (other == null)
 			       || LastAppliedLogEntry > other.LastAppliedLogEntry
 			       || Age > other.Age;
+		}
+
+		public bool WorseThan(Candidate other)
+		{
+			return other != null
+			       && (other.LastAppliedLogEntry > LastAppliedLogEntry
+			           || (other.LastAppliedLogEntry == LastAppliedLogEntry && other.Age > Age));
 		}
 
 		public bool SameGood(Candidate other)

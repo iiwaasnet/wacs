@@ -53,7 +53,6 @@
     <Compile Include="Election\BestCandidate.cs" />
     <Compile Include="Election\Candidate.cs" />
     <Compile Include="Election\Election.cs" />
-    <Compile Include="Election\ElectionEventArgs.cs" />
     <Compile Include="Election\ElectionResult.cs" />
     <Compile Include="Election\IElector.cs" />
     <Compile Include="Election\IElection.cs" />

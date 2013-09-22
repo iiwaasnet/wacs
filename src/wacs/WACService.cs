@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using wacs.Election;
 
@@ -12,7 +13,7 @@ namespace wacs
 
 		public WACService()
 		{
-			farm = CreateFarm(3).ToArray();
+			farm = CreateFarm(5).ToArray();
 			Join(farm);
 		}
 
@@ -28,6 +29,7 @@ namespace wacs
 		{
 			for (var i = 0; i < count; i++)
 			{
+				Thread.Sleep(TimeSpan.FromMilliseconds(100));
 				yield return new PaxosMachine(i.ToString(), GenerateLastAppliedLogEntry());
 			}
 		}
@@ -64,9 +66,13 @@ namespace wacs
 				if (result.Result.Status == CampaignStatus.Elected)
 				{
 					Console.WriteLine("Leader Id {0}, Age {1}, LastAppliedLogEntry {2}",
-						result.Result.Leader.Id,
-						result.Result.Leader.Age,
-						result.Result.Leader.LastAppliedLogEntry);
+					                  result.Result.Leader.Id,
+					                  result.Result.Leader.Age,
+					                  result.Result.Leader.LastAppliedLogEntry);
+				}
+				else
+				{
+					Console.WriteLine("Status {0}", result.Result.Status);
 				}
 			}
 		}

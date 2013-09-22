@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace wacs.Election
@@ -26,6 +27,8 @@ namespace wacs.Election
 			}
 
 			votes.Add(elector.Id);
+
+			Console.WriteLine("Leader {0} Votes {1}", this.suggestedLeader.Id, votes.Count);
 
 			if (votes.Count == majority)
 			{
