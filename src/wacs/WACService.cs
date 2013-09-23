@@ -21,7 +21,6 @@ namespace wacs
 		{
 			foreach (var paxosMachine in paxosMachines)
 			{
-				//paxosMachine.JoinGroup(paxosMachines.Where(m => m != paxosMachine).ToArray());
 				paxosMachine.JoinGroup(paxosMachines.ToArray());
 			}
 		}
