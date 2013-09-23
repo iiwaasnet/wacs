@@ -69,12 +69,18 @@ namespace wacs.Election
 
 		public void Propose(Candidate candidate)
 		{
-			proposesQueue.Add(new ProposeMessage {Candidate = candidate});
+			if (!currentLeader.ConsensusReached.IsSet)
+			{
+				proposesQueue.Add(new ProposeMessage {Candidate = candidate});
+			}
 		}
 
 		public void Accepted(Candidate candidate, Candidate elector)
 		{
-			acceptsQueue.Add(new AcceptMessage {Candidate = candidate, Elector = elector});
+			if (!currentLeader.ConsensusReached.IsSet)
+			{
+				acceptsQueue.Add(new AcceptMessage {Candidate = candidate, Elector = elector});
+			}
 		}
 
 		private void ProcessProposeMessages()
