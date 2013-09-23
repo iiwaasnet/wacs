@@ -140,8 +140,8 @@ namespace wacs.Election
 
 		private int CalcMajority()
 		{
-			return electors.Count();
-			//return (electors.Count() + 1) / 2 + 1;
+			//return electors.Count();
+			return electors.Count() / 2 + 1;
 		}
 
 		public void Stop()
