@@ -126,7 +126,7 @@ namespace wacs.Election
 			if (candidate.BetterThan(currentLeader.SuggestedLeader)
 			    || candidate.Equals(currentLeader.SuggestedLeader))
 			{
-				var voices = currentLeader.Vote(candidate, elector);
+				currentLeader.Vote(candidate, elector);
 			}
 		}
 

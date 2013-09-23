@@ -18,7 +18,7 @@ namespace wacs.Election
 			suggestedLeader = candidate;
 		}
 
-		internal int Vote(Candidate candidate, Candidate elector)
+		internal void Vote(Candidate candidate, Candidate elector)
 		{
 			if (!suggestedLeader.Equals(candidate))
 			{
@@ -32,8 +32,6 @@ namespace wacs.Election
 			{
 				gateway.Set();
 			}
-
-			return votes.Count;
 		}
 
 		internal Candidate SuggestedLeader
