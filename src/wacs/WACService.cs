@@ -13,7 +13,7 @@ namespace wacs
 
 		public WACService()
 		{
-			farm = CreateFarm(5).ToArray();
+			farm = CreateFarm(10).ToArray();
 			Join(farm);
 		}
 
@@ -21,7 +21,8 @@ namespace wacs
 		{
 			foreach (var paxosMachine in paxosMachines)
 			{
-				paxosMachine.JoinGroup(paxosMachines.Where(m => m != paxosMachine).ToArray());
+				//paxosMachine.JoinGroup(paxosMachines.Where(m => m != paxosMachine).ToArray());
+				paxosMachine.JoinGroup(paxosMachines.ToArray());
 			}
 		}
 
@@ -29,7 +30,7 @@ namespace wacs
 		{
 			for (var i = 0; i < count; i++)
 			{
-				Thread.Sleep(TimeSpan.FromMilliseconds(100));
+				//Thread.Sleep(TimeSpan.FromMilliseconds(100));
 				yield return new PaxosMachine(i.ToString(), GenerateLastAppliedLogEntry());
 			}
 		}
@@ -44,6 +45,8 @@ namespace wacs
 		public void Start()
 		{
 			Task.Factory.StartNew(ElectLeader);
+			Thread.Sleep(TimeSpan.FromSeconds(5));
+			Task.Factory.StartNew(ElectLeader);
 		}
 
 		private void ElectLeader()
@@ -53,10 +56,13 @@ namespace wacs
 			var results = new List<Task<ElectionResult>>();
 			foreach (var paxosMachine in farm)
 			{
-				results.Add(paxosMachine.ElectLeader(TimeSpan.FromSeconds(1)));
+				results.Add(paxosMachine.ElectLeader(TimeSpan.FromSeconds(2)));
 
-				Console.WriteLine("Node {0}, Age {1}, LastAppliedLogEntry {2}",
-					paxosMachine.Id, paxosMachine.Age, paxosMachine.LastAppliedLogEntry);
+				Console.WriteLine("[{0}] Node {1}, Age {2}, LastAppliedLogEntry {3}",
+				                  DateTime.Now.ToString("hh:mm:ss fff"),
+				                  paxosMachine.Id,
+				                  paxosMachine.Age,
+				                  paxosMachine.LastAppliedLogEntry);
 			}
 
 			Console.WriteLine("Election results ========================================= ");
@@ -65,7 +71,8 @@ namespace wacs
 			{
 				if (result.Result.Status == CampaignStatus.Elected)
 				{
-					Console.WriteLine("Leader Id {0}, Age {1}, LastAppliedLogEntry {2}",
+					Console.WriteLine("[{0}] Leader Id {1}, Age {2}, LastAppliedLogEntry {3}",
+									  DateTime.Now.ToString("hh:mm:ss fff"),
 					                  result.Result.Leader.Id,
 					                  result.Result.Leader.Age,
 					                  result.Result.Leader.LastAppliedLogEntry);
@@ -79,6 +86,10 @@ namespace wacs
 
 		public void Stop()
 		{
+			foreach (var paxosMachine in farm)
+			{
+				paxosMachine.Stop();
+			}
 		}
 	}
 }

@@ -8,7 +8,9 @@
 
 		protected bool Equals(Candidate other)
 		{
-			return Age == other.Age && LastAppliedLogEntry == other.LastAppliedLogEntry && string.Equals(Id, other.Id);
+			return Age == other.Age
+			       && LastAppliedLogEntry == other.LastAppliedLogEntry
+			       && Id == other.Id;
 		}
 
 		public override bool Equals(object obj)
@@ -43,7 +45,7 @@
 		{
 			return (other == null)
 			       || LastAppliedLogEntry > other.LastAppliedLogEntry
-			       || Age > other.Age;
+			       || (LastAppliedLogEntry == other.LastAppliedLogEntry && Age > other.Age);
 		}
 
 		public bool WorseThan(Candidate other)

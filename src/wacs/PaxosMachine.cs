@@ -37,10 +37,15 @@ namespace wacs
 			election.Accepted(candidate, elector);
 		}
 
-		public void JoinGroup(IEnumerable<PaxosMachine> others)
+		public void JoinGroup(IEnumerable<PaxosMachine> group)
 		{
-			farm.AddRange(others);
-			election.AddElectors(others);
+			farm.AddRange(group);
+			election.AddElectors(group);
+		}
+
+		public void Stop()
+		{
+			election.Stop();
 		}
 
 		public string Id

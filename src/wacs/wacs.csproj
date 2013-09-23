@@ -50,12 +50,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Election\AcceptMessage.cs" />
     <Compile Include="Election\BestCandidate.cs" />
     <Compile Include="Election\Candidate.cs" />
     <Compile Include="Election\Election.cs" />
     <Compile Include="Election\ElectionResult.cs" />
     <Compile Include="Election\IElector.cs" />
     <Compile Include="Election\IElection.cs" />
+    <Compile Include="Election\ProposeMessage.cs" />
     <Compile Include="IService.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="PaxosMachine.cs" />

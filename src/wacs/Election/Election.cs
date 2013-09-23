@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -11,18 +12,24 @@ namespace wacs.Election
 		private BestCandidate currentLeader;
 		private readonly Candidate self;
 		private readonly List<IElector> electors;
-		private readonly ManualResetEventSlim electionStarted;
+		private readonly BlockingCollection<ProposeMessage> proposesQueue;
+		private readonly BlockingCollection<AcceptMessage> acceptsQueue;
 
 		public Election(Candidate self)
 		{
 			this.self = self;
-			electionStarted = new ManualResetEventSlim(false);
 			electors = new List<IElector>();
+			proposesQueue = new BlockingCollection<ProposeMessage>(new ConcurrentQueue<ProposeMessage>());
+			acceptsQueue = new BlockingCollection<AcceptMessage>(new ConcurrentQueue<AcceptMessage>());
+
+			new Thread(ProcessAcceptMessages).Start();
+			new Thread(ProcessProposeMessages).Start();
 		}
 
 		public void AddElectors(IEnumerable<IElector> electors)
 		{
 			this.electors.AddRange(electors);
+			currentLeader = new BestCandidate(CalcMajority());
 		}
 
 		public Task<ElectionResult> Elect(TimeSpan timeout)
@@ -32,20 +39,10 @@ namespace wacs.Election
 
 		private ElectionResult StartElectionProcess(TimeSpan timeout)
 		{
-			Console.WriteLine("[{0}] Node {1} started election", DateTime.Now, self.Id);
-			currentLeader = new BestCandidate(CalcMajority());
+			ProposeCandidate(self, electors);
 
-			electionStarted.Set();
-
-			currentLeader.Vote(self, self);
-
-			Task.Factory.StartNew(() => ProposeCandidate(self, electors));
-
-			Console.WriteLine("[{0}] Node {1} waiting for consensus to be reached...", DateTime.Now, self.Id);
 			if (currentLeader.ConsensusReached.Wait(timeout))
 			{
-				Console.WriteLine("[{2}] Node {0} reached consensus for Leader {1}", self.Id, currentLeader.SuggestedLeader.Id, DateTime.Now);
-
 				return new ElectionResult
 					       {
 						       Leader = currentLeader.SuggestedLeader,
@@ -61,7 +58,7 @@ namespace wacs.Election
 			foreach (var competitor in competitors)
 			{
 				competitor.Propose(candidate);
-				competitor.Accepted(candidate, self);
+				//competitor.Accepted(candidate, self);
 			}
 		}
 
@@ -73,12 +70,30 @@ namespace wacs.Election
 
 		public void Propose(Candidate candidate)
 		{
-			electionStarted.Wait();
+			proposesQueue.Add(new ProposeMessage {Candidate = candidate});
+		}
+
+		public void Accepted(Candidate candidate, Candidate elector)
+		{
+			acceptsQueue.Add(new AcceptMessage {Candidate = candidate, Elector = elector});
+		}
+
+		private void ProcessProposeMessages()
+		{
+			foreach (var proposeMessage in proposesQueue.GetConsumingEnumerable())
+			{
+				ProcessPropose(proposeMessage);
+			}
+		}
+
+		private void ProcessPropose(ProposeMessage message)
+		{
+			var candidate = message.Candidate;
 
 			if (candidate.BetterThan(currentLeader.SuggestedLeader)
-				|| candidate.Equals(currentLeader.SuggestedLeader))
+			    || candidate.Equals(currentLeader.SuggestedLeader))
 			{
-				currentLeader.Vote(candidate, self);
+				//currentLeader.Vote(candidate, self);
 				foreach (var competitor in electors)
 				{
 					competitor.Accepted(candidate, self);
@@ -89,51 +104,46 @@ namespace wacs.Election
 				if (!candidate.Equals(currentLeader.SuggestedLeader)
 				    && currentLeader.SuggestedLeader.Equals(self))
 				{
-					Task.Factory.StartNew(() =>
-						                      {
-							                      Console.WriteLine("[{1}] GetOlder {0}", self.Id, DateTime.Now);
-							                      GetOlder(self);
-							                      ProposeCandidate(self, electors);
-						                      });
+					GetOlder(self);
+					ProposeCandidate(self, electors);
 				}
 			}
 			if (candidate.WorseThan(currentLeader.SuggestedLeader))
 			{
-				Task.Factory.StartNew(() =>
-					                      {
-						                      Console.WriteLine("[{0}] Suggesting better Candidate {1}", DateTime.Now, currentLeader.SuggestedLeader.Id);
-						                      ProposeCandidate(currentLeader.SuggestedLeader, electors);
-					                      });
+				ProposeCandidate(currentLeader.SuggestedLeader, electors);
 			}
-
-			Console.WriteLine("[{0}] Node {1} received propose for {2}", DateTime.Now, self.Id, candidate.Id);
 		}
 
-		public void Accepted(Candidate candidate, Candidate elector)
+		private void ProcessAccept(AcceptMessage acceptMessage)
 		{
-			electionStarted.Wait();
+			var candidate = acceptMessage.Candidate;
+			var elector = acceptMessage.Elector;
 
 			if (candidate.BetterThan(currentLeader.SuggestedLeader)
 			    || candidate.Equals(currentLeader.SuggestedLeader))
 			{
 				var voices = currentLeader.Vote(candidate, elector);
-				//currentLeader.Vote(candidate, self);
-
-				Console.WriteLine("[{0}] Node {1} Accepted {2} Voices {3}", DateTime.Now, self.Id, candidate.Id, voices);
 			}
-			//if (candidate.WorseThan(currentLeader.SuggestedLeader))
-			//{
-			//	Task.Factory.StartNew(() =>
-			//							  {
-			//								  Console.WriteLine("[{0}] Suggesting better Candidate {1}", DateTime.Now, currentLeader.SuggestedLeader.Id);
-			//								  ProposeCandidate(currentLeader.SuggestedLeader, electors);
-			//							  });
-			//}
+		}
+
+		private void ProcessAcceptMessages()
+		{
+			foreach (var acceptMessage in acceptsQueue.GetConsumingEnumerable())
+			{
+				ProcessAccept(acceptMessage);
+			}
 		}
 
 		private int CalcMajority()
 		{
-			return (electors.Count() + 1) / 2 + 1;
+			return electors.Count();
+			//return (electors.Count() + 1) / 2 + 1;
+		}
+
+		public void Stop()
+		{
+			acceptsQueue.CompleteAdding();
+			proposesQueue.CompleteAdding();
 		}
 	}
 }
