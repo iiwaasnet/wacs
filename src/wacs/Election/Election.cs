@@ -29,7 +29,7 @@ namespace wacs.Election
 		public void AddElectors(IEnumerable<IElector> electors)
 		{
 			this.electors.AddRange(electors);
-			currentLeader = new BestCandidate(CalcMajority());
+			currentLeader = new BestCandidate(self, CalcMajority());
 		}
 
 		public Task<ElectionResult> Elect(TimeSpan timeout)
@@ -58,7 +58,6 @@ namespace wacs.Election
 			foreach (var competitor in competitors)
 			{
 				competitor.Propose(candidate);
-				//competitor.Accepted(candidate, self);
 			}
 		}
 
@@ -93,7 +92,6 @@ namespace wacs.Election
 			if (candidate.BetterThan(currentLeader.SuggestedLeader)
 			    || candidate.Equals(currentLeader.SuggestedLeader))
 			{
-				//currentLeader.Vote(candidate, self);
 				foreach (var competitor in electors)
 				{
 					competitor.Accepted(candidate, self);

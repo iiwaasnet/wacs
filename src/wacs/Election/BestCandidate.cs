@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 
 namespace wacs.Election
@@ -11,24 +10,23 @@ namespace wacs.Election
 		private readonly int majority;
 		private readonly ManualResetEventSlim gateway;
 
-		public BestCandidate(int majority)
+		public BestCandidate(Candidate candidate, int majority)
 		{
 			this.majority = majority;
 			gateway = new ManualResetEventSlim(false);
 			votes = new HashSet<string>();
+			suggestedLeader = candidate;
 		}
 
-		internal int Vote(Candidate suggestedLeader, Candidate elector)
+		internal int Vote(Candidate candidate, Candidate elector)
 		{
-			if (!suggestedLeader.Equals(this.suggestedLeader))
+			if (!suggestedLeader.Equals(candidate))
 			{
-				this.suggestedLeader = suggestedLeader;
+				suggestedLeader = candidate;
 				votes.Clear();
 			}
 
 			votes.Add(elector.Id);
-
-			//Console.WriteLine("[{2}] Leader {0} Votes {1}", this.suggestedLeader.Id, votes.Count, DateTime.Now);
 
 			if (votes.Count == majority)
 			{
