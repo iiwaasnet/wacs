@@ -14,7 +14,6 @@ namespace wacs
 		public WACService()
 		{
 			farm = CreateFarm(10).ToArray();
-			Join(farm);
 		}
 
 		private void Join(IEnumerable<PaxosMachine> paxosMachines)
@@ -50,6 +49,7 @@ namespace wacs
 
 		private void ElectLeader()
 		{
+			Join(farm);
 			Console.WriteLine("Farm ========================================= ");
 
 			var results = new List<Task<ElectionResult>>();
@@ -81,6 +81,7 @@ namespace wacs
 					Console.WriteLine("Status {0}", result.Result.Status);
 				}
 			}
+			Console.WriteLine("====== Propose messages - {0}, Accept messages - {1} =======", ProposeMessage.Count, AcceptMessage.Count);
 		}
 
 		public void Stop()

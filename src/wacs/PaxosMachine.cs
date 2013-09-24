@@ -39,8 +39,9 @@ namespace wacs
 
 		public void JoinGroup(IEnumerable<PaxosMachine> group)
 		{
+			farm.Clear();
 			farm.AddRange(group);
-			election.AddElectors(group);
+			election.SetElectors(group);
 		}
 
 		public void Stop()

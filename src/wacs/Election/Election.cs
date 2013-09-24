@@ -26,8 +26,9 @@ namespace wacs.Election
 			new Thread(ProcessProposeMessages).Start();
 		}
 
-		public void AddElectors(IEnumerable<IElector> electors)
+		public void SetElectors(IEnumerable<IElector> electors)
 		{
+			this.electors.Clear();
 			this.electors.AddRange(electors);
 			currentLeader = new BestCandidate(self, CalcMajority());
 		}
