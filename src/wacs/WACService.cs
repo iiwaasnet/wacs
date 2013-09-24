@@ -52,7 +52,7 @@ namespace wacs
 			Join(farm);
 			Console.WriteLine("Farm ========================================= ");
 
-			var results = new List<Task<ElectionResult>>();
+			var results = new List<WaitHandle>();
 			foreach (var paxosMachine in farm)
 			{
 				results.Add(paxosMachine.ElectLeader(TimeSpan.FromSeconds(2)));
@@ -66,19 +66,25 @@ namespace wacs
 
 			Console.WriteLine("Election results ========================================= ");
 
-			foreach (var result in results)
+			foreach (var waitHandle in results)
 			{
-				if (result.Result.Status == CampaignStatus.Elected)
+				waitHandle.WaitOne();
+			}
+
+			foreach (var paxosMachine in farm)
+			{
+				var result = paxosMachine.GetElectionResult();
+				if (result.Status == CampaignStatus.Elected)
 				{
 					Console.WriteLine("[{0}] Leader Id {1}, Age {2}, LastAppliedLogEntry {3}",
 									  DateTime.Now.ToString("hh:mm:ss fff"),
-					                  result.Result.Leader.Id,
-					                  result.Result.Leader.Age,
-					                  result.Result.Leader.LastAppliedLogEntry);
+					                  result.Leader.Id,
+					                  result.Leader.Age,
+					                  result.Leader.LastAppliedLogEntry);
 				}
 				else
 				{
-					Console.WriteLine("Status {0}", result.Result.Status);
+					Console.WriteLine("Status {0}", result.Status);
 				}
 			}
 			Console.WriteLine("====== Propose messages - {0}, Accept messages - {1} =======", ProposeMessage.Count, AcceptMessage.Count);

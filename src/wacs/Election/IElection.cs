@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace wacs.Election
 {
 	public interface IElection
 	{
-		Task<ElectionResult> Elect(TimeSpan timeout);
+		WaitHandle Elect(TimeSpan timeout);
 	}
 }

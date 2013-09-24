@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace wacs.Election
 {
@@ -14,6 +13,11 @@ namespace wacs.Election
 		private readonly List<IElector> electors;
 		private readonly BlockingCollection<ProposeMessage> proposesQueue;
 		private readonly BlockingCollection<AcceptMessage> acceptsQueue;
+		private bool running;
+		private readonly AutoResetEvent electionTrigger;
+		private readonly AutoResetEvent resultAvailable;
+		private TimeSpan timeout;
+		private ElectionResult electionResult;
 
 		public Election(Candidate self)
 		{
@@ -22,8 +26,29 @@ namespace wacs.Election
 			proposesQueue = new BlockingCollection<ProposeMessage>(new ConcurrentQueue<ProposeMessage>());
 			acceptsQueue = new BlockingCollection<AcceptMessage>(new ConcurrentQueue<AcceptMessage>());
 
+			running = true;
+			electionTrigger = new AutoResetEvent(false);
+			resultAvailable = new AutoResetEvent(false);
 			new Thread(ProcessAcceptMessages).Start();
 			new Thread(ProcessProposeMessages).Start();
+			new Thread(ElectionEventLoop).Start();
+		}
+
+		private void ElectionEventLoop()
+		{
+			while (running)
+			{
+				try
+				{
+					electionTrigger.WaitOne();
+					electionResult = StartElectionProcess(timeout);
+					resultAvailable.Set();
+				}
+				catch (Exception err)
+				{
+					Console.WriteLine(err);
+				}
+			}
 		}
 
 		public void SetElectors(IEnumerable<IElector> electors)
@@ -33,9 +58,13 @@ namespace wacs.Election
 			currentLeader = new BestCandidate(self, CalcMajority());
 		}
 
-		public Task<ElectionResult> Elect(TimeSpan timeout)
+		public WaitHandle Elect(TimeSpan timeout)
 		{
-			return Task.Factory.StartNew(() => StartElectionProcess(timeout));
+			this.timeout = timeout;
+			electionTrigger.Set();
+			return resultAvailable;
+
+			//return Task.Factory.StartNew(() => StartElectionProcess(timeout));
 		}
 
 		private ElectionResult StartElectionProcess(TimeSpan timeout)
@@ -113,10 +142,10 @@ namespace wacs.Election
 					ProposeCandidate(self, electors);
 				}
 			}
-			if (candidate.WorseThan(currentLeader.SuggestedLeader))
-			{
-				ProposeCandidate(currentLeader.SuggestedLeader, electors);
-			}
+			//if (candidate.WorseThan(currentLeader.SuggestedLeader))
+			//{
+			//	ProposeCandidate(currentLeader.SuggestedLeader, electors);
+			//}
 		}
 
 		private void ProcessAccept(AcceptMessage acceptMessage)
@@ -141,7 +170,7 @@ namespace wacs.Election
 
 		private int CalcMajority()
 		{
-			//return electors.Count();
+			return electors.Count();
 			return electors.Count() / 2 + 1;
 		}
 
@@ -149,6 +178,13 @@ namespace wacs.Election
 		{
 			acceptsQueue.CompleteAdding();
 			proposesQueue.CompleteAdding();
+			electionTrigger.Dispose();
+			running = false;
+		}
+
+		public ElectionResult GetElectionResult()
+		{
+			return electionResult;
 		}
 	}
 }

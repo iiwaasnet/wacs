@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using wacs.Election;
 
@@ -22,7 +23,7 @@ namespace wacs
 			election = new Election.Election(new Candidate {Id = id, Age = age, LastAppliedLogEntry = lastAppliedLogEntry});
 		}
 
-		public Task<ElectionResult> ElectLeader(TimeSpan timeout)
+		public WaitHandle ElectLeader(TimeSpan timeout)
 		{
 			return election.Elect(timeout);
 		}
@@ -30,6 +31,11 @@ namespace wacs
 		public void Propose(Candidate candidate)
 		{
 			election.Propose(candidate);
+		}
+
+		public ElectionResult GetElectionResult()
+		{
+			return election.GetElectionResult();
 		}
 
 		public void Accepted(Candidate candidate, Candidate elector)
