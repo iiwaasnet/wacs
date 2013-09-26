@@ -55,7 +55,7 @@ namespace wacs.Election
 		{
 			this.electors.Clear();
 			this.electors.AddRange(electors);
-			currentLeader = new BestCandidate(self, CalcMajority());
+			currentLeader = new BestCandidate(self, GetQuorum());
 		}
 
 		public WaitHandle Elect(TimeSpan timeout)
@@ -168,9 +168,13 @@ namespace wacs.Election
 			}
 		}
 
-		private int CalcMajority()
+		private int GetQuorum()
 		{
-			return electors.Count();
+			return Math.Max(GetMajority(), electors.Count() - 1);
+		}
+
+		private int GetMajority()
+		{
 			return electors.Count() / 2 + 1;
 		}
 
