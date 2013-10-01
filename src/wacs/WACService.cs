@@ -55,7 +55,7 @@ namespace wacs
 			var results = new List<WaitHandle>();
 			foreach (var paxosMachine in farm)
 			{
-				results.Add(paxosMachine.ElectLeader(TimeSpan.FromSeconds(2)));
+				results.Add(paxosMachine.ElectLeader(TimeSpan.FromSeconds(4)));
 
 				Console.WriteLine("[{0}] Node {1}, Age {2}, LastAppliedLogEntry {3}",
 				                  DateTime.Now.ToString("hh:mm:ss fff"),

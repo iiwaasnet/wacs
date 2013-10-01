@@ -40,6 +40,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -58,8 +59,19 @@
     <Compile Include="Election\IElector.cs" />
     <Compile Include="Election\IElection.cs" />
     <Compile Include="Election\ProposeMessage.cs" />
+    <Compile Include="FLease\IBallot.cs" />
+    <Compile Include="FLease\ILease.cs" />
+    <Compile Include="FLease\ILeaseProvider.cs" />
     <Compile Include="IService.cs" />
     <Compile Include="MainModule.cs" />
+    <Compile Include="Messaging\IBody.cs" />
+    <Compile Include="Messaging\IEnvelope.cs" />
+    <Compile Include="Messaging\IListener.cs" />
+    <Compile Include="Messaging\IMessage.cs" />
+    <Compile Include="Messaging\IMessageHub.cs" />
+    <Compile Include="Messaging\IMessageSink.cs" />
+    <Compile Include="IProcess.cs" />
+    <Compile Include="Messaging\ISender.cs" />
     <Compile Include="PaxosMachine.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
