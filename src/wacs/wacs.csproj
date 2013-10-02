@@ -59,6 +59,8 @@
     <Compile Include="Election\IElector.cs" />
     <Compile Include="Election\IElection.cs" />
     <Compile Include="Election\ProposeMessage.cs" />
+    <Compile Include="FLease\Ballot.cs" />
+    <Compile Include="FLease\BallotGenerator.cs" />
     <Compile Include="FLease\IBallot.cs" />
     <Compile Include="FLease\IBallotGenerator.cs" />
     <Compile Include="FLease\IFleaseConfiguration.cs" />
@@ -67,8 +69,10 @@
     <Compile Include="FLease\ILeaseReader.cs" />
     <Compile Include="FLease\ILeaseTxResult.cs" />
     <Compile Include="FLease\ILeaseWriter.cs" />
+    <Compile Include="FLease\IRoundBasedRegister.cs" />
     <Compile Include="FLease\Lease.cs" />
     <Compile Include="FLease\LeaseProvider.cs" />
+    <Compile Include="FLease\RoundBasedRegister.cs" />
     <Compile Include="FLease\TxOutcome.cs" />
     <Compile Include="IService.cs" />
     <Compile Include="MainModule.cs" />

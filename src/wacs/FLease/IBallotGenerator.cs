@@ -2,6 +2,8 @@
 {
 	public interface IBallotGenerator
 	{
-		IBallot Create();
+		IBallot New(IProcess owner);
+
+		IBallot Null();
 	}
 }

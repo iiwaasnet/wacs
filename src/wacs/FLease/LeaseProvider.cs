@@ -8,26 +8,24 @@ namespace wacs.FLease
 	{
 		private readonly IFleaseConfiguration config;
 		private DateTime startTime;
-		private readonly ILeaseReader leaseReader;
-		private readonly ILeaseWriter leaseWriter;
+		private readonly IRoundBasedRegister register;
 		private readonly IBallotGenerator ballotGenerator;
 		private IProcess owner;
 
-		public LeaseProvider(ILeaseReader leaseReader,
-		                     ILeaseWriter leaseWriter,
+		public LeaseProvider(IRoundBasedRegister register,
 		                     IBallotGenerator ballotGenerator,
 		                     IFleaseConfiguration config)
 		{
 			this.config = config;
 			this.ballotGenerator = ballotGenerator;
-			this.leaseReader = leaseReader;
-			this.leaseWriter = leaseWriter;
+			this.register = register;
 		}
 
 		public void Start(IProcess owner)
 		{
 			startTime = DateTime.UtcNow;
 			this.owner = owner;
+			register.SetOwner(owner);
 		}
 
 		public Task<ILease> GetLease(IBallot ballot)
@@ -41,7 +39,7 @@ namespace wacs.FLease
 
 			var now = DateTime.UtcNow;
 
-			var read = leaseReader.Read(ballot);
+			var read = register.Read(ballot);
 			if (read.TxOutcome == TxOutcome.Commit)
 			{
 				var lease = read.Lease;
@@ -49,7 +47,7 @@ namespace wacs.FLease
 				{
 					Sleep(config.ClockDrift);
 
-					return AсquireLease(ballotGenerator.Create());
+					return AсquireLease(ballotGenerator.New(owner));
 				}
 
 				if (lease == null || lease.ExpiresAt < now || lease.Owner == owner)
@@ -57,7 +55,7 @@ namespace wacs.FLease
 					lease = new Lease(owner, now + config.MaxLeaseTimeSpan);
 				}
 
-				var write = leaseWriter.Write(ballot, lease);
+				var write = register.Write(ballot, lease);
 				if (write.TxOutcome == TxOutcome.Commit)
 				{
 					return lease;
