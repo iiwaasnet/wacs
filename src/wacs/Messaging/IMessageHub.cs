@@ -2,7 +2,7 @@
 {
 	public interface IMessageHub
 	{
-		IListener Subscribe(IMessageSink messageSource);
+		IListener Subscribe(IMessageSink messageSink);
 
 		void Broadcast(IMessage message);
 

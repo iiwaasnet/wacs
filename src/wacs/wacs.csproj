@@ -60,8 +60,16 @@
     <Compile Include="Election\IElection.cs" />
     <Compile Include="Election\ProposeMessage.cs" />
     <Compile Include="FLease\IBallot.cs" />
+    <Compile Include="FLease\IBallotGenerator.cs" />
+    <Compile Include="FLease\IFleaseConfiguration.cs" />
     <Compile Include="FLease\ILease.cs" />
     <Compile Include="FLease\ILeaseProvider.cs" />
+    <Compile Include="FLease\ILeaseReader.cs" />
+    <Compile Include="FLease\ILeaseTxResult.cs" />
+    <Compile Include="FLease\ILeaseWriter.cs" />
+    <Compile Include="FLease\Lease.cs" />
+    <Compile Include="FLease\LeaseProvider.cs" />
+    <Compile Include="FLease\TxOutcome.cs" />
     <Compile Include="IService.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="Messaging\IBody.cs" />

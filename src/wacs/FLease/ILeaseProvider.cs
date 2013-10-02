@@ -1,7 +1,13 @@
-﻿namespace wacs.FLease
+﻿using System.Threading.Tasks;
+
+namespace wacs.FLease
 {
 	public interface ILeaseProvider
 	{
-		ILease GetLease(IBallot ballot);
+		void Start(IProcess owner);
+
+		Task<ILease> GetLease(IBallot ballot);
+
+		void Stop();
 	}
 }
