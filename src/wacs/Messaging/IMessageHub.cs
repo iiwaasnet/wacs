@@ -2,10 +2,10 @@
 {
 	public interface IMessageHub
 	{
-		IListener Subscribe(IMessageSink messageSink);
+		IListener Subscribe(IProcess subscriber);
 
 		void Broadcast(IMessage message);
 
-		void Send(IProcess process, IMessage message);
+		void Send(IProcess recipient, IMessage message);
 	}
 }

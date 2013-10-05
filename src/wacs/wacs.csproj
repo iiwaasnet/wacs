@@ -11,6 +11,7 @@
     <AssemblyName>wacs</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <CodeContractsAssemblyMode>0</CodeContractsAssemblyMode>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -21,6 +22,40 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeContractsEnableRuntimeChecking>True</CodeContractsEnableRuntimeChecking>
+    <CodeContractsRuntimeOnlyPublicSurface>False</CodeContractsRuntimeOnlyPublicSurface>
+    <CodeContractsRuntimeThrowOnFailure>True</CodeContractsRuntimeThrowOnFailure>
+    <CodeContractsRuntimeCallSiteRequires>False</CodeContractsRuntimeCallSiteRequires>
+    <CodeContractsRuntimeSkipQuantifiers>False</CodeContractsRuntimeSkipQuantifiers>
+    <CodeContractsRunCodeAnalysis>True</CodeContractsRunCodeAnalysis>
+    <CodeContractsNonNullObligations>True</CodeContractsNonNullObligations>
+    <CodeContractsBoundsObligations>True</CodeContractsBoundsObligations>
+    <CodeContractsArithmeticObligations>False</CodeContractsArithmeticObligations>
+    <CodeContractsEnumObligations>False</CodeContractsEnumObligations>
+    <CodeContractsRedundantAssumptions>False</CodeContractsRedundantAssumptions>
+    <CodeContractsMissingPublicRequiresAsWarnings>True</CodeContractsMissingPublicRequiresAsWarnings>
+    <CodeContractsInferRequires>True</CodeContractsInferRequires>
+    <CodeContractsInferEnsures>False</CodeContractsInferEnsures>
+    <CodeContractsInferObjectInvariants>False</CodeContractsInferObjectInvariants>
+    <CodeContractsSuggestAssumptions>False</CodeContractsSuggestAssumptions>
+    <CodeContractsSuggestRequires>True</CodeContractsSuggestRequires>
+    <CodeContractsSuggestObjectInvariants>False</CodeContractsSuggestObjectInvariants>
+    <CodeContractsRunInBackground>True</CodeContractsRunInBackground>
+    <CodeContractsShowSquigglies>True</CodeContractsShowSquigglies>
+    <CodeContractsUseBaseLine>False</CodeContractsUseBaseLine>
+    <CodeContractsEmitXMLDocs>False</CodeContractsEmitXMLDocs>
+    <CodeContractsCustomRewriterAssembly />
+    <CodeContractsCustomRewriterClass />
+    <CodeContractsLibPaths />
+    <CodeContractsExtraRewriteOptions />
+    <CodeContractsExtraAnalysisOptions />
+    <CodeContractsSQLServerOption />
+    <CodeContractsBaseLineFile />
+    <CodeContractsCacheAnalysisResults>True</CodeContractsCacheAnalysisResults>
+    <CodeContractsFailBuildOnWarnings>False</CodeContractsFailBuildOnWarnings>
+    <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
+    <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
+    <CodeContractsAnalysisWarningLevel>0</CodeContractsAnalysisWarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -40,6 +75,18 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\packages\Rx-Core.2.1.30214.0\lib\Net45\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\packages\Rx-Interfaces.2.1.30214.0\lib\Net45\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\packages\Rx-Linq.2.1.30214.0\lib\Net45\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\packages\Rx-PlatformServices.2.1.30214.0\lib\Net45\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -69,21 +116,40 @@
     <Compile Include="FLease\ILeaseReader.cs" />
     <Compile Include="FLease\ILeaseTxResult.cs" />
     <Compile Include="FLease\ILeaseWriter.cs" />
+    <Compile Include="FLease\IMessageSerializer.cs" />
     <Compile Include="FLease\IRoundBasedRegister.cs" />
     <Compile Include="FLease\Lease.cs" />
     <Compile Include="FLease\LeaseProvider.cs" />
+    <Compile Include="FLease\AwaitableMessageStreamFilter.cs" />
+    <Compile Include="FLease\MessageStreamListener.cs" />
+    <Compile Include="FLease\Messages\AckReadMessage.cs" />
+    <Compile Include="FLease\Messages\AckWriteMessage.cs" />
+    <Compile Include="FLease\Messages\Ballot.cs" />
+    <Compile Include="FLease\Messages\NackWriteMessage.cs" />
+    <Compile Include="FLease\Messages\NackReadMessage.cs" />
+    <Compile Include="FLease\Messages\Lease.cs" />
+    <Compile Include="FLease\Messages\Message.cs" />
+    <Compile Include="FLease\Messages\ReadMessage.cs" />
+    <Compile Include="FLease\Messages\WriteMessage.cs" />
     <Compile Include="FLease\RoundBasedRegister.cs" />
     <Compile Include="FLease\TxOutcome.cs" />
     <Compile Include="IService.cs" />
     <Compile Include="MainModule.cs" />
+    <Compile Include="Messaging\Body.cs" />
+    <Compile Include="Messaging\BroadcastRequest.cs" />
+    <Compile Include="Messaging\Envelope.cs" />
+    <Compile Include="Messaging\FLeaseMessageType.cs" />
+    <Compile Include="Messaging\ForwardRequest.cs" />
     <Compile Include="Messaging\IBody.cs" />
     <Compile Include="Messaging\IEnvelope.cs" />
     <Compile Include="Messaging\IListener.cs" />
     <Compile Include="Messaging\IMessage.cs" />
     <Compile Include="Messaging\IMessageHub.cs" />
-    <Compile Include="Messaging\IMessageSink.cs" />
+    <Compile Include="Messaging\Listener.cs" />
+    <Compile Include="Messaging\MessageHub.cs" />
     <Compile Include="IProcess.cs" />
     <Compile Include="Messaging\ISender.cs" />
+    <Compile Include="Messaging\Sender.cs" />
     <Compile Include="PaxosMachine.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
