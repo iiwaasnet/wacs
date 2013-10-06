@@ -1,73 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using wacs.Election;
+﻿using System.Collections.Generic;
+using wacs.FLease;
 
 namespace wacs
 {
-	public class PaxosMachine : IElector
+	public class PaxosMachine : IStateMachine
 	{
-		private readonly string id;
+		private readonly int id;
 		private readonly List<PaxosMachine> farm;
-		private readonly Election.Election election;
-		private readonly long age;
-		private readonly long lastAppliedLogEntry;
+		private readonly ILeaseProvider leaseProvider;
+		private readonly IWacsConfiguration config;
 
-		public PaxosMachine(string id, long lastAppliedLogEntry)
+		public PaxosMachine(int id, ILeaseProvider leaseProvider, IWacsConfiguration config)
 		{
 			this.id = id;
-			age = DateTime.UtcNow.Ticks;
-			this.lastAppliedLogEntry = lastAppliedLogEntry;
+			this.leaseProvider = leaseProvider;
+			this.config = config;
 			farm = new List<PaxosMachine>();
-			election = new Election.Election(new Candidate {Id = id, Age = age, LastAppliedLogEntry = lastAppliedLogEntry});
-		}
-
-		public WaitHandle ElectLeader(TimeSpan timeout)
-		{
-			return election.Elect(timeout);
-		}
-
-		public void Propose(Candidate candidate)
-		{
-			election.Propose(candidate);
-		}
-
-		public ElectionResult GetElectionResult()
-		{
-			return election.GetElectionResult();
-		}
-
-		public void Accepted(Candidate candidate, Candidate elector)
-		{
-			election.Accepted(candidate, elector);
 		}
 
 		public void JoinGroup(IEnumerable<PaxosMachine> group)
 		{
 			farm.Clear();
 			farm.AddRange(group);
-			election.SetElectors(group);
+		}
+
+		public void Start()
+		{
+			leaseProvider.Start(new Process(id));
 		}
 
 		public void Stop()
 		{
-			election.Stop();
+			leaseProvider.Stop();
 		}
 
-		public string Id
+		public int Id
 		{
 			get { return id; }
-		}
-
-		public long Age
-		{
-			get { return age; }
-		}
-
-		public long LastAppliedLogEntry
-		{
-			get { return lastAppliedLogEntry; }
 		}
 	}
 }

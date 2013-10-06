@@ -12,21 +12,6 @@ namespace wacs.FLease
 			Process = process;
 		}
 
-		//public bool LessThan(IBallot ballot)
-		//{
-		//	return CompareTo(ballot) < 0;
-		//}
-
-		//public bool GreaterThan(IBallot ballot)
-		//{
-		//	return CompareTo(ballot) > 0;
-		//}
-
-		//public bool Equals(IBallot ballot)
-		//{
-		//	return CompareTo(ballot) < 0;
-		//}
-
 		public static bool operator <=(Ballot x, Ballot y)
 		{
 			var res = x.CompareTo(y);
@@ -53,8 +38,9 @@ namespace wacs.FLease
 
 		public int CompareTo(object obj)
 		{
+			Contract.Requires(obj is Ballot);
+
 			var ballot = obj as Ballot;
-			Contract.Requires(ballot != null);
 
 			var res = Timestamp.CompareTo(ballot.Timestamp);
 			if (res != 0)

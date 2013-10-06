@@ -4,14 +4,10 @@ namespace wacs.FLease
 {
 	public class BallotGenerator : IBallotGenerator
 	{
-		private readonly TimeSpan maxLeaseTimeSpan;
-		private readonly TimeSpan clockDrift;
 		private readonly BallotTimestamp lastBallotTimestamp;
 
-		public BallotGenerator(TimeSpan maxLeaseTimeSpan, TimeSpan clockDrift)
+		public BallotGenerator()
 		{
-			this.clockDrift = clockDrift;
-			this.maxLeaseTimeSpan = maxLeaseTimeSpan;
 			lastBallotTimestamp = new BallotTimestamp {MessageNumber = 0, Timestamp = DateTime.UtcNow};
 		}
 

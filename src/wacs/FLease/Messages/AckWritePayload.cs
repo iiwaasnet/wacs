@@ -1,6 +1,6 @@
 ﻿namespace wacs.FLease.Messages
 {
-	public class AckWriteMessage
+	public class AckWritePayload : IMessagePayload
 	{
 		public Ballot Ballot { get; set; }
 	}

@@ -6,11 +6,11 @@ namespace wacs.FLease
 {
 	public class LeaseProvider : ILeaseProvider
 	{
-		private readonly IFleaseConfiguration config;
 		private DateTime startTime;
 		private readonly IRoundBasedRegister register;
 		private readonly IBallotGenerator ballotGenerator;
 		private IProcess owner;
+		private readonly IFleaseConfiguration config;
 
 		public LeaseProvider(IRoundBasedRegister register,
 		                     IBallotGenerator ballotGenerator,

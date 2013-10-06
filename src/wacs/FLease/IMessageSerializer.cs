@@ -4,6 +4,6 @@
 	{
 		byte[] Serialize(object obj);
 
-		T Deserialize<T>(byte[] obj);
+		T Deserialize<T>(byte[] buffer);
 	}
 }

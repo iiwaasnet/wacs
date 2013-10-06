@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 
@@ -51,7 +49,6 @@ namespace wacs.Messaging
 				{
 					subscription.Notify(forwardRequest.Message);
 				}
-
 			}
 
 			broadcast.Dispose();
@@ -65,7 +62,6 @@ namespace wacs.Messaging
 				{
 					subscription.Notify(forwardRequest.Message);
 				}
-				
 			}
 
 			p2p.Dispose();

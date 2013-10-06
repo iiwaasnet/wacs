@@ -15,6 +15,7 @@ namespace wacs.FLease
 		private Ballot writeBallot;
 		private ILease lease;
 		private IListener listener;
+		private readonly IWacsConfiguration config;
 
 		private IObservable<IMessage> ackReadStream;
 		private IObservable<IMessage> nackReadStream;
@@ -22,8 +23,12 @@ namespace wacs.FLease
 		private IObservable<IMessage> nackWriteStream;
 		private readonly IMessageSerializer serializer;
 
-		public RoundBasedRegister(IMessageHub messageHub, IBallotGenerator ballotGenerator, IMessageSerializer serializer)
+		public RoundBasedRegister(IMessageHub messageHub,
+		                          IBallotGenerator ballotGenerator,
+		                          IMessageSerializer serializer,
+		                          IWacsConfiguration config)
 		{
+			this.config = config;
 			this.messageHub = messageHub;
 			readBallot = (Ballot) ballotGenerator.Null();
 			writeBallot = (Ballot) ballotGenerator.Null();
@@ -48,7 +53,7 @@ namespace wacs.FLease
 
 		private void OnWriteReceived(IMessage message)
 		{
-			var writeMessage = serializer.Deserialize<WriteMessage>(message.Body.Content);
+			var writeMessage = serializer.Deserialize<WritePayload>(message.Body.Content);
 			var ballot = new Ballot(writeMessage.Ballot.Timestamp, writeMessage.Ballot.MessageNumber, new Process(writeMessage.Ballot.ProcessId));
 			if (writeBallot > ballot || readBallot > ballot)
 			{
@@ -59,7 +64,7 @@ namespace wacs.FLease
 						                Body = new Body
 							                       {
 								                       MessageType = FLeaseMessageType.NackWrite.ToMessageType(),
-								                       Content = serializer.Serialize(new NackWriteMessage {Ballot = writeMessage.Ballot})
+								                       Content = serializer.Serialize(new NackWritePayload {Ballot = writeMessage.Ballot})
 							                       }
 					                });
 			}
@@ -68,7 +73,7 @@ namespace wacs.FLease
 				writeBallot = ballot;
 				lease = new Lease(new Process(writeMessage.Lease.ProcessId), writeMessage.Lease.ExpiresAt);
 
-				var msg = new AckWriteMessage {Ballot = writeMessage.Ballot};
+				var msg = new AckWritePayload {Ballot = writeMessage.Ballot};
 				messageHub.Send(message.Envelope.Sender.Process,
 				                new Message
 					                {
@@ -84,7 +89,7 @@ namespace wacs.FLease
 
 		private void OnReadReceived(IMessage message)
 		{
-			var readMessage = serializer.Deserialize<ReadMessage>(message.Body.Content);
+			var readMessage = serializer.Deserialize<ReadPayload>(message.Body.Content);
 			var ballot = new Ballot(readMessage.Ballot.Timestamp, readMessage.Ballot.MessageNumber, new Process(readMessage.Ballot.ProcessId));
 			if (writeBallot >= ballot || readBallot >= ballot)
 			{
@@ -95,14 +100,14 @@ namespace wacs.FLease
 						                Body = new Body
 							                       {
 								                       MessageType = FLeaseMessageType.NackRead.ToMessageType(),
-								                       Content = serializer.Serialize(new NackReadMessage {Ballot = readMessage.Ballot})
+								                       Content = serializer.Serialize(new NackReadPayload {Ballot = readMessage.Ballot})
 							                       }
 					                });
 			}
 			else
 			{
 				readBallot = ballot;
-				var msg = new AckReadMessage
+				var msg = new AckReadPayload
 					          {
 						          Ballot = readMessage.Ballot,
 						          KnownWriteBallot = new Messages.Ballot
@@ -132,8 +137,8 @@ namespace wacs.FLease
 
 		public ILeaseTxResult Read(IBallot ballot)
 		{
-			var ackReadFilter = new AwaitableMessageStreamFilter(m => FilterAckReadMessages(ballot, m), GetQuorum());
-			var nackReadFilter = new AwaitableMessageStreamFilter(m => FilterNackReadMessages(ballot, m), GetQuorum());
+			var ackReadFilter = new AwaitableMessageStreamFilter(m => FilterAckMessages<AckReadPayload>(ballot, m, FLeaseMessageType.AckRead), GetQuorum());
+			var nackReadFilter = new AwaitableMessageStreamFilter(m => FilterAckMessages<NackReadPayload>(ballot, m, FLeaseMessageType.NackRead), 1);
 			ackReadStream.Subscribe(ackReadFilter);
 			nackReadStream.Subscribe(nackReadFilter);
 
@@ -149,7 +154,7 @@ namespace wacs.FLease
 
 			var lease = ackReadFilter
 				.MessageStream
-				.Select(m => serializer.Deserialize<AckReadMessage>(m.Body.Content))
+				.Select(m => serializer.Deserialize<AckReadPayload>(m.Body.Content))
 				.Max(m => m).Lease;
 
 			return new LeaseTxResult
@@ -159,28 +164,42 @@ namespace wacs.FLease
 				       };
 		}
 
-		private bool ReadNotAcknowledged(int index)
+		public ILeaseTxResult Write(IBallot ballot, ILease lease)
+		{
+			var ackWriteFilter = new AwaitableMessageStreamFilter(m => FilterAckMessages<AckWritePayload>(ballot, m, FLeaseMessageType.AckWrite), GetQuorum());
+			var nackWriteFilter = new AwaitableMessageStreamFilter(m => FilterAckMessages<NackWritePayload>(ballot, m, FLeaseMessageType.NackWrite), 1);
+			ackWriteStream.Subscribe(ackWriteFilter);
+			nackWriteStream.Subscribe(nackWriteFilter);
+
+			var message = CreateWriteMessage(ballot, lease);
+			messageHub.Broadcast(message);
+
+			var index = WaitHandle.WaitAny(new[] {ackWriteFilter.Filtered, nackWriteFilter.Filtered});
+
+			if (ReadNotAcknowledged(index))
+			{
+				return new LeaseTxResult {TxOutcome = TxOutcome.Abort};
+			}
+
+			return new LeaseTxResult
+				       {
+					       TxOutcome = TxOutcome.Commit,
+					       // NOTE: needed???
+					       Lease = lease
+				       };
+		}
+
+		private static bool ReadNotAcknowledged(int index)
 		{
 			return index == 1;
 		}
 
-		private bool FilterNackReadMessages(IBallot ballot, IMessage message)
+		private bool FilterAckMessages<TPayload>(IBallot ballot, IMessage message, FLeaseMessageType msgType)
+			where TPayload : IMessagePayload
 		{
-			if (message.Body.MessageType.ToMessageType() == FLeaseMessageType.NackRead)
+			if (message.Body.MessageType.ToMessageType() == msgType)
 			{
-				var ackRead = serializer.Deserialize<NackReadMessage>(message.Body.Content);
-
-				return ackRead.Ballot.ProcessId == ballot.Process.Id && ackRead.Ballot.Timestamp == ballot.Timestamp;
-			}
-
-			return false;
-		}
-
-		private bool FilterAckReadMessages(IBallot ballot, IMessage message)
-		{
-			if (message.Body.MessageType.ToMessageType() == FLeaseMessageType.AckRead)
-			{
-				var ackRead = serializer.Deserialize<AckReadMessage>(message.Body.Content);
+				var ackRead = serializer.Deserialize<TPayload>(message.Body.Content);
 
 				return ackRead.Ballot.ProcessId == ballot.Process.Id && ackRead.Ballot.Timestamp == ballot.Timestamp;
 			}
@@ -190,12 +209,7 @@ namespace wacs.FLease
 
 		private int GetQuorum()
 		{
-			throw new NotImplementedException();
-		}
-
-		public ILeaseTxResult Write(IBallot ballot, ILease lease)
-		{
-			throw new System.NotImplementedException();
+			return (config.FarmSize + 1) / 2;
 		}
 
 		public void Start()
@@ -208,6 +222,33 @@ namespace wacs.FLease
 			listener.Stop();
 		}
 
+		private IMessage CreateWriteMessage(IBallot ballot, ILease lease)
+		{
+			var message = new Message
+				              {
+					              Envelope = new Envelope {Sender = new Sender {Process = owner}},
+					              Body = new Body
+						                     {
+							                     MessageType = FLeaseMessageType.Write.ToMessageType(),
+							                     Content = serializer.Serialize(new WritePayload
+								                                                    {
+									                                                    Ballot = new Messages.Ballot
+										                                                             {
+											                                                             ProcessId = ballot.Process.Id,
+											                                                             Timestamp = ballot.Timestamp
+										                                                             },
+									                                                    Lease = new Messages.Lease
+										                                                            {
+											                                                            ProcessId = lease.Owner.Id,
+											                                                            ExpiresAt = lease.ExpiresAt
+										                                                            }
+								                                                    })
+						                     }
+				              };
+
+			return message;
+		}
+
 		private Message CreateReadMessage(IBallot ballot)
 		{
 			var message = new Message
@@ -216,12 +257,12 @@ namespace wacs.FLease
 					              Body = new Body
 						                     {
 							                     MessageType = FLeaseMessageType.Read.ToMessageType(),
-							                     Content = serializer.Serialize(new ReadMessage
+							                     Content = serializer.Serialize(new ReadPayload
 								                                                    {
 									                                                    Ballot = new Messages.Ballot
 										                                                             {
 											                                                             ProcessId = ballot.Process.Id,
-											                                                             Timestamp = ballot.Timestamp.Ticks
+											                                                             Timestamp = ballot.Timestamp
 										                                                             }
 								                                                    })
 						                     }
