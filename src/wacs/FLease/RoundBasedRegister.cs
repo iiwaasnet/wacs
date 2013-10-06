@@ -12,7 +12,7 @@ namespace wacs.FLease
 		private IProcess owner;
 		private readonly IMessageHub messageHub;
 		private Ballot readBallot;
-		private readonly Ballot writeBallot;
+		private Ballot writeBallot;
 		private ILease lease;
 		private IListener listener;
 
@@ -48,13 +48,44 @@ namespace wacs.FLease
 
 		private void OnWriteReceived(IMessage message)
 		{
-			throw new NotImplementedException();
+			var writeMessage = serializer.Deserialize<WriteMessage>(message.Body.Content);
+			var ballot = new Ballot(writeMessage.Ballot.Timestamp, writeMessage.Ballot.MessageNumber, new Process(writeMessage.Ballot.ProcessId));
+			if (writeBallot > ballot || readBallot > ballot)
+			{
+				messageHub.Send(new Process(message.Envelope.Sender.Process.Id),
+				                new Message
+					                {
+						                Envelope = new Envelope {Sender = new Sender {Process = owner}},
+						                Body = new Body
+							                       {
+								                       MessageType = FLeaseMessageType.NackWrite.ToMessageType(),
+								                       Content = serializer.Serialize(new NackWriteMessage {Ballot = writeMessage.Ballot})
+							                       }
+					                });
+			}
+			else
+			{
+				writeBallot = ballot;
+				lease = new Lease(new Process(writeMessage.Lease.ProcessId), writeMessage.Lease.ExpiresAt);
+
+				var msg = new AckWriteMessage {Ballot = writeMessage.Ballot};
+				messageHub.Send(message.Envelope.Sender.Process,
+				                new Message
+					                {
+						                Envelope = new Envelope {Sender = new Sender {Process = owner}},
+						                Body = new Body
+							                       {
+								                       MessageType = FLeaseMessageType.AckWrite.ToMessageType(),
+								                       Content = serializer.Serialize(msg)
+							                       }
+					                });
+			}
 		}
 
 		private void OnReadReceived(IMessage message)
 		{
-			var readMsg = serializer.Deserialize<ReadMessage>(message.Body.Content);
-			var ballot = new Ballot(readMsg.Ballot.Timestamp, readMsg.Ballot.MessageNumber, new Process(readMsg.Ballot.ProcessId));
+			var readMessage = serializer.Deserialize<ReadMessage>(message.Body.Content);
+			var ballot = new Ballot(readMessage.Ballot.Timestamp, readMessage.Ballot.MessageNumber, new Process(readMessage.Ballot.ProcessId));
 			if (writeBallot >= ballot || readBallot >= ballot)
 			{
 				messageHub.Send(new Process(message.Envelope.Sender.Process.Id),
@@ -64,7 +95,7 @@ namespace wacs.FLease
 						                Body = new Body
 							                       {
 								                       MessageType = FLeaseMessageType.NackRead.ToMessageType(),
-								                       Content = serializer.Serialize(new NackReadMessage {Ballot = readMsg.Ballot})
+								                       Content = serializer.Serialize(new NackReadMessage {Ballot = readMessage.Ballot})
 							                       }
 					                });
 			}
@@ -73,7 +104,7 @@ namespace wacs.FLease
 				readBallot = ballot;
 				var msg = new AckReadMessage
 					          {
-						          Ballot = readMsg.Ballot,
+						          Ballot = readMessage.Ballot,
 						          KnownWriteBallot = new Messages.Ballot
 							                             {
 								                             ProcessId = writeBallot.Process.Id,

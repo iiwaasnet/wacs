@@ -41,6 +41,16 @@ namespace wacs.FLease
 			return res > 0 || res == 0;
 		}
 
+		public static bool operator <(Ballot x, Ballot y)
+		{
+			return x.CompareTo(y) < 0;
+		}
+
+		public static bool operator >(Ballot x, Ballot y)
+		{
+			return x.CompareTo(y) > 0;
+		}
+
 		public int CompareTo(object obj)
 		{
 			var ballot = obj as Ballot;
