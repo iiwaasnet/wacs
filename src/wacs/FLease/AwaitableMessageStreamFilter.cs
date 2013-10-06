@@ -34,7 +34,7 @@ namespace wacs.FLease
 				{
 					messages.Add(value);
 				}
-				// NOTE: decide on concurrency
+				//NOTE: decide on concurrency
 				if (++currentCount == maxCount && !waitable.IsSet)
 				{
 					waitable.Set();
