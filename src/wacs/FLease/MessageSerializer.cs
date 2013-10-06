@@ -15,7 +15,9 @@ namespace wacs.FLease
 			{
 				using (var writer = new BsonWriter(stream))
 				{
-					new JsonSerializer().Serialize(writer, obj);
+					JsonSerializer
+						.Create()
+						.Serialize(writer, obj);
 
 					writer.Flush();
 
@@ -32,7 +34,9 @@ namespace wacs.FLease
 			{
 				using (var reader = new BsonReader(stream))
 				{
-					return new JsonSerializer().Deserialize<T>(reader);
+					return JsonSerializer
+						.Create()
+						.Deserialize<T>(reader);
 				}
 			}
 		}

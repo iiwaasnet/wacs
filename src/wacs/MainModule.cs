@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Autofac;
 using wacs.FLease;
 using wacs.Messaging;
@@ -9,6 +7,8 @@ namespace wacs
 {
 	public class MainModule : Module
 	{
+		private const int FarmSize = 3;
+
 		protected override void Load(ContainerBuilder builder)
 		{
 			builder.RegisterType<WACService>().As<IService>().SingleInstance();
@@ -29,7 +29,7 @@ namespace wacs
 			       .SingleInstance();
 			builder.Register(c => new WacsConfiguration
 				                      {
-					                      FarmSize = c.Resolve<IEnumerable<IStateMachine>>().Count()
+					                      FarmSize = FarmSize
 				                      })
 			       .As<IWacsConfiguration>()
 			       .SingleInstance();
@@ -37,9 +37,9 @@ namespace wacs
 
 		private static void RegisterPaxosInstances(ContainerBuilder builder)
 		{
-			builder.Register(c => new PaxosMachine(1, c.Resolve<ILeaseProvider>(), c.Resolve<IWacsConfiguration>())).As<IStateMachine>().SingleInstance();
-			builder.Register(c => new PaxosMachine(2, c.Resolve<ILeaseProvider>(), c.Resolve<IWacsConfiguration>())).As<IStateMachine>().SingleInstance();
-			builder.Register(c => new PaxosMachine(3, c.Resolve<ILeaseProvider>(), c.Resolve<IWacsConfiguration>())).As<IStateMachine>().SingleInstance();
+			builder.Register(c => new PaxosMachine(1, c.Resolve<ILeaseProvider>())).As<IStateMachine>().SingleInstance();
+			builder.Register(c => new PaxosMachine(2, c.Resolve<ILeaseProvider>())).As<IStateMachine>().SingleInstance();
+			builder.Register(c => new PaxosMachine(3, c.Resolve<ILeaseProvider>())).As<IStateMachine>().SingleInstance();
 		}
 	}
 }

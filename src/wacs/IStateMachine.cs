@@ -5,5 +5,7 @@
 		void Start();
 
 		void Stop();
+
+		int Id { get; }
 	}
 }

@@ -24,7 +24,7 @@ namespace wacs.FLease
 
 		public IBallot Null()
 		{
-			return null;
+			return new Ballot(DateTime.MinValue, 0, new Process(0));
 		}
 	}
 

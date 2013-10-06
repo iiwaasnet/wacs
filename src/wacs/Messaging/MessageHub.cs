@@ -15,6 +15,9 @@ namespace wacs.Messaging
 			subscriptions = new ConcurrentBag<Listener>();
 			p2p = new BlockingCollection<ForwardRequest>();
 			broadcast = new BlockingCollection<BroadcastRequest>();
+
+			new Thread(ForwardMessages).Start();
+			new Thread(BroadcastMessages).Start();
 		}
 
 		public IListener Subscribe(IProcess subscriber)
@@ -33,12 +36,6 @@ namespace wacs.Messaging
 		public void Send(IProcess recipient, IMessage message)
 		{
 			p2p.Add(new ForwardRequest {Recipient = recipient, Message = message});
-		}
-
-		public void Start()
-		{
-			new Thread(ForwardMessages).Start();
-			new Thread(BroadcastMessages).Start();
 		}
 
 		private void BroadcastMessages()
@@ -67,7 +64,7 @@ namespace wacs.Messaging
 			p2p.Dispose();
 		}
 
-		public void Stop()
+		public void Dispose()
 		{
 			p2p.CompleteAdding();
 			broadcast.CompleteAdding();
