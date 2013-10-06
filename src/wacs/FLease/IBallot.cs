@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace wacs.FLease
 {
-	public interface IBallot : IComparer<IBallot>
+	public interface IBallot : IComparable
 	{
 		IProcess Process { get; }
 		DateTime Timestamp { get; }

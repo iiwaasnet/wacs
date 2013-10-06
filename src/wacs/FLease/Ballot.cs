@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 
 namespace wacs.FLease
 {
@@ -11,21 +12,53 @@ namespace wacs.FLease
 			Process = process;
 		}
 
-		public int Compare(IBallot x, IBallot y)
+		//public bool LessThan(IBallot ballot)
+		//{
+		//	return CompareTo(ballot) < 0;
+		//}
+
+		//public bool GreaterThan(IBallot ballot)
+		//{
+		//	return CompareTo(ballot) > 0;
+		//}
+
+		//public bool Equals(IBallot ballot)
+		//{
+		//	return CompareTo(ballot) < 0;
+		//}
+
+		public static bool operator <=(Ballot x, Ballot y)
 		{
-			var res = x.Timestamp.CompareTo(y.Timestamp);
+			var res = x.CompareTo(y);
+
+			return res < 0 || res == 0;
+		}
+
+		public static bool operator >=(Ballot x, Ballot y)
+		{
+			var res = x.CompareTo(y);
+
+			return res > 0 || res == 0;
+		}
+
+		public int CompareTo(object obj)
+		{
+			var ballot = obj as Ballot;
+			Contract.Requires(ballot != null);
+
+			var res = Timestamp.CompareTo(ballot.Timestamp);
 			if (res != 0)
 			{
 				return res;
 			}
 
-			res = x.MessageNumber.CompareTo(y.MessageNumber);
+			res = MessageNumber.CompareTo(ballot.MessageNumber);
 			if (res != 0)
 			{
 				return res;
 			}
 
-			return x.Process.Id.CompareTo(y.Process.Id);
+			return Process.Id.CompareTo(ballot.Process.Id);
 		}
 
 		public IProcess Process { get; private set; }

@@ -121,6 +121,7 @@
     <Compile Include="FLease\Lease.cs" />
     <Compile Include="FLease\LeaseProvider.cs" />
     <Compile Include="FLease\AwaitableMessageStreamFilter.cs" />
+    <Compile Include="FLease\LeaseTxResult.cs" />
     <Compile Include="FLease\MessageStreamListener.cs" />
     <Compile Include="FLease\Messages\AckReadMessage.cs" />
     <Compile Include="FLease\Messages\AckWriteMessage.cs" />
@@ -151,6 +152,7 @@
     <Compile Include="Messaging\ISender.cs" />
     <Compile Include="Messaging\Sender.cs" />
     <Compile Include="PaxosMachine.cs" />
+    <Compile Include="Process.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WACService.cs" />
