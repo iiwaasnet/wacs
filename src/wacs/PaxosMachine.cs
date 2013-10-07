@@ -37,8 +37,10 @@ namespace wacs
 					Console.WriteLine("Requested Ballot: Timestamp {0}, Process {1} === Received Lease: NULL", 
 						ballot.Timestamp.ToString("HH:mm:ss fff"), ballot.Process.Id);
 				}
-
-				Thread.Sleep(TimeSpan.FromMilliseconds(5000));
+				if (lease != null)
+				{
+					Thread.Sleep(TimeSpan.FromMilliseconds(5000));
+				}
 			}
 		}
 
