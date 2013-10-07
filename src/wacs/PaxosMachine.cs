@@ -28,14 +28,16 @@ namespace wacs
 
 				if (lease != null)
 				{
-					Console.WriteLine("Requested Ballot: Timestamp {0}, Process {1} === Received Lease: Leader {2} ExpiresAt {3}",
+					Console.WriteLine("[{4}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: Leader {2} ExpiresAt {3}",
 						ballot.Timestamp.ToString("HH:mm:ss fff"), ballot.Process.Id, 
-						lease.Owner.Id, lease.ExpiresAt.ToString("HH:mm:ss fff"));
+						lease.Owner.Id, lease.ExpiresAt.ToString("HH:mm:ss fff"),
+						DateTime.UtcNow.ToString("HH:mm:ss fff"));
 				}
 				else
 				{
-					Console.WriteLine("Requested Ballot: Timestamp {0}, Process {1} === Received Lease: NULL", 
-						ballot.Timestamp.ToString("HH:mm:ss fff"), ballot.Process.Id);
+					Console.WriteLine("[{2}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: NULL", 
+						ballot.Timestamp.ToString("HH:mm:ss fff"), ballot.Process.Id,
+						DateTime.UtcNow.ToString("HH:mm:ss fff"));
 				}
 				if (lease != null)
 				{
