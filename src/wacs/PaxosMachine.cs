@@ -28,11 +28,14 @@ namespace wacs
 
 				if (lease != null)
 				{
-					Console.WriteLine("Process: {0} read Lease: Leader {1} ExpiresAt {2}", id, lease.Owner.Id, lease.ExpiresAt.ToString("HH:mm:ss fff"));
+					Console.WriteLine("Requested Ballot: Timestamp {0}, Process {1} === Received Lease: Leader {2} ExpiresAt {3}",
+						ballot.Timestamp.ToString("HH:mm:ss fff"), ballot.Process.Id, 
+						lease.Owner.Id, lease.ExpiresAt.ToString("HH:mm:ss fff"));
 				}
 				else
 				{
-					Console.WriteLine("Process: {0} read NULL Lease", id);
+					Console.WriteLine("Requested Ballot: Timestamp {0}, Process {1} === Received Lease: NULL", 
+						ballot.Timestamp.ToString("HH:mm:ss fff"), ballot.Process.Id);
 				}
 
 				Thread.Sleep(TimeSpan.FromMilliseconds(5000));
