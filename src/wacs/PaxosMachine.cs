@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using wacs.FLease;
@@ -20,24 +21,30 @@ namespace wacs
 
 		private void ApplyCommands(CancellationToken token)
 		{
+			var timer = new Stopwatch();
+
 			while (!token.IsCancellationRequested)
 			{
 				var ballot = new Ballot(DateTime.UtcNow, 0, new Process(id));
 				//Console.WriteLine("Get Lease for Ballot: Timestamp {0}, Process {1}", ballot.Timestamp.ToString("mm:hh:ss fff"), ballot.Process.Id);
+				timer.Reset();
+				timer.Start();
 				var lease = leaseProvider.GetLease(ballot).Result;
-
+				timer.Stop();
 				if (lease != null)
 				{
-					Console.WriteLine("[{4}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: Leader {2} ExpiresAt {3}",
+					Console.WriteLine("[{4}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: Leader {2} ExpiresAt {3} [{5}]",
 						ballot.Timestamp.ToString("HH:mm:ss fff"), ballot.Process.Id, 
 						lease.Owner.Id, lease.ExpiresAt.ToString("HH:mm:ss fff"),
-						DateTime.UtcNow.ToString("HH:mm:ss fff"));
+						DateTime.UtcNow.ToString("HH:mm:ss fff"),
+						timer.ElapsedMilliseconds);
 				}
 				else
 				{
-					Console.WriteLine("[{2}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: NULL", 
+					Console.WriteLine("[{2}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: NULL [{3}]", 
 						ballot.Timestamp.ToString("HH:mm:ss fff"), ballot.Process.Id,
-						DateTime.UtcNow.ToString("HH:mm:ss fff"));
+						DateTime.UtcNow.ToString("HH:mm:ss fff"),
+						timer.ElapsedMilliseconds);
 				}
 				if (lease != null)
 				{

@@ -45,7 +45,9 @@ namespace wacs.FLease
 				var lease = read.Lease;
 				if (LeaseIsNotSafelyExpired(lease, now))
 				{
+					Console.WriteLine("SLEEP === Process {0} Sleep from {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
 					Sleep(config.ClockDrift);
+					Console.WriteLine("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
 
 					return AсquireLease(ballotGenerator.New(owner));
 				}
