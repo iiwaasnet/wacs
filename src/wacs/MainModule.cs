@@ -33,7 +33,7 @@ namespace wacs
 			builder.Register(c => new FleaseConfiguration
 				                      {
 					                      ClockDrift = TimeSpan.FromMilliseconds(100),
-					                      MaxLeaseTimeSpan = TimeSpan.FromSeconds(10)
+					                      MaxLeaseTimeSpan = TimeSpan.FromSeconds(5)
 				                      })
 			       .As<IFleaseConfiguration>()
 			       .SingleInstance();

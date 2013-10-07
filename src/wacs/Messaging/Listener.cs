@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace wacs.Messaging
 {
@@ -21,11 +20,16 @@ namespace wacs.Messaging
 			{
 				foreach (var observer in observers)
 				{
-					Task.Factory.StartNew(() =>
-						                      {
-												  gateway.Set();
-							                      observer.Key.OnNext(message);
-						                      });
+					new Thread(() =>
+						           {
+							           gateway.Set();
+							           observer.Key.OnNext(message);
+						           }).Start();
+					//Task.Factory.StartNew(() =>
+					//						  {
+					//							  gateway.Set();
+					//							  observer.Key.OnNext(message);
+					//						  });
 					gateway.WaitOne();
 				}
 			}
