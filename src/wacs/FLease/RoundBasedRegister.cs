@@ -96,19 +96,26 @@ namespace wacs.FLease
 			var ballot = new Ballot(new DateTime(readMessage.Ballot.Timestamp, DateTimeKind.Utc),
 			                        readMessage.Ballot.MessageNumber,
 			                        new Process(readMessage.Ballot.ProcessId));
+			if (writeBallot >= ballot)
+			{
+				Console.WriteLine("Process {4} === {0}:{1} >= {2}:{3}",
+				                  writeBallot.Timestamp.ToString("HH:mm:ss fff"),
+				                  writeBallot.Process.Id,
+				                  ballot.Timestamp.ToString("HH:mm:ss fff"),
+				                  ballot.Process.Id,
+				                  owner.Id);
+			}
+			if (readBallot >= ballot)
+			{
+				Console.WriteLine("Process {4} === {0}:{1} >= {2}:{3}",
+				                  readBallot.Timestamp.ToString("HH:mm:ss fff"),
+				                  readBallot.Process.Id,
+				                  ballot.Timestamp.ToString("HH:mm:ss fff"),
+				                  ballot.Process.Id,
+				                  owner.Id);
+			}
 			if (writeBallot >= ballot || readBallot >= ballot)
 			{
-				Console.WriteLine("{0}:{1} >= {2}:{3}",
-				                  writeBallot.Timestamp.ToString("hh:mm:ss fff"),
-				                  writeBallot.Process.Id,
-				                  ballot.Timestamp.ToString("hh:mm:ss fff"),
-				                  ballot.Process.Id);
-				Console.WriteLine("{0}:{1} >= {2}:{3}",
-				                  readBallot.Timestamp.ToString("hh:mm:ss fff"),
-				                  readBallot.Process.Id,
-				                  ballot.Timestamp.ToString("hh:mm:ss fff"),
-				                  ballot.Process.Id);
-
 				messageHub.Send(new Process(message.Envelope.Sender.Process.Id),
 				                new Message
 					                {
@@ -174,15 +181,13 @@ namespace wacs.FLease
 					var lease = ackReadFilter
 						.MessageStream
 						.Select(m => serializer.Deserialize<AckReadPayload>(m.Body.Content))
-						.Max(m => m).Lease;
+						.Max(m => new LastWriteLease(m.KnownWriteBallot, m.Lease))
+						.Lease;
 
 					return new LeaseTxResult
 						       {
 							       TxOutcome = TxOutcome.Commit,
-							       Lease = (lease != null)
-								               ? new Lease(new Process(lease.ProcessId),
-								                           new DateTime(lease.ExpiresAt, DateTimeKind.Utc))
-								               : null
+							       Lease = lease
 						       };
 				}
 			}
@@ -295,6 +300,32 @@ namespace wacs.FLease
 						                     }
 				              };
 			return message;
+		}
+	}
+
+	public class LastWriteLease : IComparable<LastWriteLease>
+	{
+		private readonly Ballot writeBallot;
+		private readonly Lease lease;
+
+		public LastWriteLease(Messages.Ballot writeBallot, Messages.Lease lease)
+		{
+			this.writeBallot = new Ballot(new DateTime(writeBallot.Timestamp, DateTimeKind.Utc),
+			                              writeBallot.MessageNumber,
+			                              new Process(writeBallot.ProcessId));
+			this.lease = (lease != null)
+				             ? new Lease(new Process(lease.ProcessId), new DateTime(lease.ExpiresAt, DateTimeKind.Utc))
+				             : null;
+		}
+
+		public int CompareTo(LastWriteLease other)
+		{
+			return writeBallot.CompareTo(other.writeBallot);
+		}
+
+		public Lease Lease
+		{
+			get { return lease; }
 		}
 	}
 }

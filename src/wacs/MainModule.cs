@@ -11,19 +11,29 @@ namespace wacs
 
 		protected override void Load(ContainerBuilder builder)
 		{
-			builder.RegisterType<WACService>().As<IService>().SingleInstance();
+			RegisterSingletons(builder);
+			RegisterPerInstance(builder);
+		}
 
+		private void RegisterPerInstance(ContainerBuilder builder)
+		{
 			RegisterPaxosInstances(builder);
 
-			builder.RegisterType<LeaseProvider>().As<ILeaseProvider>().SingleInstance();
-			builder.RegisterType<RoundBasedRegister>().As<IRoundBasedRegister>().SingleInstance();
+			builder.RegisterType<LeaseProvider>().As<ILeaseProvider>();
+			builder.RegisterType<RoundBasedRegister>().As<IRoundBasedRegister>();
+
+			builder.RegisterType<BallotGenerator>().As<IBallotGenerator>();
+		}
+
+		private void RegisterSingletons(ContainerBuilder builder)
+		{
+			builder.RegisterType<WACService>().As<IService>().SingleInstance();
 			builder.RegisterType<MessageHub>().As<IMessageHub>().SingleInstance();
-			builder.RegisterType<BallotGenerator>().As<IBallotGenerator>().SingleInstance();
 			builder.RegisterType<MessageSerializer>().As<IMessageSerializer>().SingleInstance();
 			builder.Register(c => new FleaseConfiguration
 				                      {
 					                      ClockDrift = TimeSpan.FromMilliseconds(100),
-					                      MaxLeaseTimeSpan = TimeSpan.FromSeconds(5)
+					                      MaxLeaseTimeSpan = TimeSpan.FromSeconds(10)
 				                      })
 			       .As<IFleaseConfiguration>()
 			       .SingleInstance();
@@ -37,9 +47,9 @@ namespace wacs
 
 		private static void RegisterPaxosInstances(ContainerBuilder builder)
 		{
-			builder.Register(c => new PaxosMachine(1, c.Resolve<ILeaseProvider>())).As<IStateMachine>().SingleInstance();
-			builder.Register(c => new PaxosMachine(2, c.Resolve<ILeaseProvider>())).As<IStateMachine>().SingleInstance();
-			builder.Register(c => new PaxosMachine(3, c.Resolve<ILeaseProvider>())).As<IStateMachine>().SingleInstance();
+			builder.Register(c => new PaxosMachine(1, c.Resolve<ILeaseProvider>())).As<IStateMachine>();
+			builder.Register(c => new PaxosMachine(2, c.Resolve<ILeaseProvider>())).As<IStateMachine>();
+			builder.Register(c => new PaxosMachine(3, c.Resolve<ILeaseProvider>())).As<IStateMachine>();
 		}
 	}
 }

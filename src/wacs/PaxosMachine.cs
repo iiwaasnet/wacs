@@ -23,12 +23,12 @@ namespace wacs
 			while (!token.IsCancellationRequested)
 			{
 				var ballot = new Ballot(DateTime.UtcNow, 0, new Process(id));
-				Console.WriteLine("Get Lease for Ballot: Timestamp {0}, Process {1}", ballot.Timestamp.ToString("mm:hh:ss fff"), ballot.Process.Id);
+				//Console.WriteLine("Get Lease for Ballot: Timestamp {0}, Process {1}", ballot.Timestamp.ToString("mm:hh:ss fff"), ballot.Process.Id);
 				var lease = leaseProvider.GetLease(ballot).Result;
 
 				if (lease != null)
 				{
-					Console.WriteLine("Process: {0} read Lease: Leader {1} ExpiresAt {2}", id, lease.Owner.Id, lease.ExpiresAt.ToString("mm:hh:ss fff"));
+					Console.WriteLine("Process: {0} read Lease: Leader {1} ExpiresAt {2}", id, lease.Owner.Id, lease.ExpiresAt.ToString("HH:mm:ss fff"));
 				}
 				else
 				{
