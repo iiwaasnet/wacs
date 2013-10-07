@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace wacs.Messaging
 {
@@ -17,9 +17,17 @@ namespace wacs.Messaging
 
 		public void Notify(IMessage message)
 		{
-			foreach (var observer in observers)
+			using (var gateway = new AutoResetEvent(false))
 			{
-				observer.Key.OnNext(message);
+				foreach (var observer in observers)
+				{
+					Task.Factory.StartNew(() =>
+						                      {
+												  gateway.Set();
+							                      observer.Key.OnNext(message);
+						                      });
+					gateway.WaitOne();
+				}
 			}
 		}
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace wacs.Messaging
 {
@@ -42,7 +43,7 @@ namespace wacs.Messaging
 		{
 			foreach (var forwardRequest in broadcast.GetConsumingEnumerable())
 			{
-				foreach (var subscription in subscriptions.AsParallel())
+				foreach (var subscription in subscriptions)
 				{
 					subscription.Notify(forwardRequest.Message);
 				}
@@ -55,7 +56,7 @@ namespace wacs.Messaging
 		{
 			foreach (var forwardRequest in p2p.GetConsumingEnumerable())
 			{
-				foreach (var subscription in subscriptions.AsParallel().Where(l => l.Subscriber.Id == forwardRequest.Recipient.Id))
+				foreach (var subscription in subscriptions.Where(l => l.Subscriber.Id == forwardRequest.Recipient.Id))
 				{
 					subscription.Notify(forwardRequest.Message);
 				}
