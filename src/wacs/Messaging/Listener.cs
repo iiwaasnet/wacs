@@ -21,23 +21,6 @@ namespace wacs.Messaging
 		public void Notify(IMessage message)
 		{
 			messages.Add(message);
-			//using (var gateway = new AutoResetEvent(false))
-			//{
-			//	foreach (var observer in observers)
-			//	{
-			//		new Thread(() =>
-			//					   {
-			//						   gateway.Set();
-			//						   observer.Key.OnNext(message);
-			//					   }).Start();
-			//		//Task.Factory.StartNew(() =>
-			//		//						  {
-			//		//							  gateway.Set();
-			//		//							  observer.Key.OnNext(message);
-			//		//						  });
-			//		gateway.WaitOne();
-			//	}
-			//}
 		}
 
 		private void ForwardMessages()
