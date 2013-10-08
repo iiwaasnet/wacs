@@ -16,9 +16,17 @@ namespace wacs.FLease
 		public IBallot New(IProcess owner)
 		{
 			var now = DateTime.UtcNow;
-			lastBallotTimestamp.MessageNumber = (lastBallotTimestamp.Timestamp + config.ClockDrift == now)
-				                                    ? lastBallotTimestamp.MessageNumber++
-				                                    : 0;
+
+			if (now >= lastBallotTimestamp.Timestamp
+			    || now <= lastBallotTimestamp.Timestamp + config.ClockDrift)
+			{
+				lastBallotTimestamp.MessageNumber = ++lastBallotTimestamp.MessageNumber;
+			}
+			else
+			{
+				lastBallotTimestamp.MessageNumber = 0;
+			}
+
 			lastBallotTimestamp.Timestamp = now;
 
 			return new Ballot(lastBallotTimestamp.Timestamp, lastBallotTimestamp.MessageNumber, owner);
