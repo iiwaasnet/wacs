@@ -48,7 +48,7 @@ namespace wacs
 				}
 				if (lease != null)
 				{
-					Thread.Sleep(TimeSpan.FromMilliseconds(1000));
+					Thread.Sleep(TimeSpan.FromMilliseconds(50));
 				}
 			}
 		}

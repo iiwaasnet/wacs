@@ -26,6 +26,7 @@ namespace wacs.FLease
 			startTime = DateTime.UtcNow;
 			this.owner = owner;
 			register.SetOwner(owner);
+			register.Start();
 		}
 
 		public Task<ILease> GetLease(IBallot ballot)
@@ -94,6 +95,7 @@ namespace wacs.FLease
 
 		public void Stop()
 		{
+			register.Stop();
 		}
 	}
 }

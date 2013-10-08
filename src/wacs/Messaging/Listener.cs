@@ -7,32 +7,50 @@ namespace wacs.Messaging
 	public class Listener : IListener
 	{
 		private readonly ConcurrentDictionary<IObserver<IMessage>, object> observers;
+		private readonly BlockingCollection<IMessage> messages;
+		private readonly Thread notifyThread;
 
 		public Listener(IProcess subscriber)
 		{
 			Subscriber = subscriber;
 			observers = new ConcurrentDictionary<IObserver<IMessage>, object>();
+			messages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
+			notifyThread = new Thread(ForwardMessages);
 		}
 
 		public void Notify(IMessage message)
 		{
-			using (var gateway = new AutoResetEvent(false))
+			messages.Add(message);
+			//using (var gateway = new AutoResetEvent(false))
+			//{
+			//	foreach (var observer in observers)
+			//	{
+			//		new Thread(() =>
+			//					   {
+			//						   gateway.Set();
+			//						   observer.Key.OnNext(message);
+			//					   }).Start();
+			//		//Task.Factory.StartNew(() =>
+			//		//						  {
+			//		//							  gateway.Set();
+			//		//							  observer.Key.OnNext(message);
+			//		//						  });
+			//		gateway.WaitOne();
+			//	}
+			//}
+		}
+
+		private void ForwardMessages()
+		{
+			foreach (var message in messages.GetConsumingEnumerable())
 			{
 				foreach (var observer in observers)
 				{
-					new Thread(() =>
-						           {
-							           gateway.Set();
-							           observer.Key.OnNext(message);
-						           }).Start();
-					//Task.Factory.StartNew(() =>
-					//						  {
-					//							  gateway.Set();
-					//							  observer.Key.OnNext(message);
-					//						  });
-					gateway.WaitOne();
+					observer.Key.OnNext(message);
 				}
 			}
+
+			messages.Dispose();
 		}
 
 		public IDisposable Subscribe(IObserver<IMessage> observer)
@@ -44,6 +62,7 @@ namespace wacs.Messaging
 
 		public void Start()
 		{
+			notifyThread.Start();
 		}
 
 		public void Stop()
@@ -52,6 +71,7 @@ namespace wacs.Messaging
 			{
 				observer.Key.OnCompleted();
 			}
+			messages.CompleteAdding();
 		}
 
 		public IProcess Subscriber { get; private set; }
