@@ -11,11 +11,13 @@ namespace wacs
 		private readonly int id;
 		private readonly ILeaseProvider leaseProvider;
 		private readonly CancellationTokenSource token;
+		private readonly IBallotGenerator ballotGenerator;
 
-		public PaxosMachine(int id, ILeaseProvider leaseProvider)
+		public PaxosMachine(int id, ILeaseProvider leaseProvider, IBallotGenerator ballotGenerator)
 		{
 			this.id = id;
 			this.leaseProvider = leaseProvider;
+			this.ballotGenerator = ballotGenerator;
 			token = new CancellationTokenSource();
 		}
 
@@ -25,7 +27,7 @@ namespace wacs
 
 			while (!token.IsCancellationRequested)
 			{
-				var ballot = new Ballot(DateTime.UtcNow, 0, new Process(id));
+				var ballot = ballotGenerator.New(new Process(id));
 				//Console.WriteLine("Get Lease for Ballot: Timestamp {0}, Process {1}", ballot.Timestamp.ToString("mm:hh:ss fff"), ballot.Process.Id);
 				timer.Reset();
 				timer.Start();
@@ -48,7 +50,7 @@ namespace wacs
 				}
 				if (lease != null)
 				{
-					Thread.Sleep(TimeSpan.FromMilliseconds(50));
+					Thread.Sleep(TimeSpan.FromMilliseconds(10));
 				}
 			}
 		}

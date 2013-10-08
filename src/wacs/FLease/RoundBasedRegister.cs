@@ -267,7 +267,8 @@ namespace wacs.FLease
 									                                                    Ballot = new Messages.Ballot
 										                                                             {
 											                                                             ProcessId = ballot.Process.Id,
-											                                                             Timestamp = ballot.Timestamp.Ticks
+											                                                             Timestamp = ballot.Timestamp.Ticks,
+																										 MessageNumber = ballot.MessageNumber
 										                                                             },
 									                                                    Lease = new Messages.Lease
 										                                                            {
@@ -294,7 +295,8 @@ namespace wacs.FLease
 									                                                    Ballot = new Messages.Ballot
 										                                                             {
 											                                                             ProcessId = ballot.Process.Id,
-											                                                             Timestamp = ballot.Timestamp.Ticks
+											                                                             Timestamp = ballot.Timestamp.Ticks,
+																										 MessageNumber = ballot.MessageNumber
 										                                                             }
 								                                                    })
 						                     }

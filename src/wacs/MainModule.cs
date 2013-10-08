@@ -47,9 +47,9 @@ namespace wacs
 
 		private static void RegisterPaxosInstances(ContainerBuilder builder)
 		{
-			builder.Register(c => new PaxosMachine(1, c.Resolve<ILeaseProvider>())).As<IStateMachine>();
-			builder.Register(c => new PaxosMachine(2, c.Resolve<ILeaseProvider>())).As<IStateMachine>();
-			builder.Register(c => new PaxosMachine(3, c.Resolve<ILeaseProvider>())).As<IStateMachine>();
+			builder.Register(c => new PaxosMachine(1, c.Resolve<ILeaseProvider>(), c.Resolve<IBallotGenerator>())).As<IStateMachine>();
+			builder.Register(c => new PaxosMachine(2, c.Resolve<ILeaseProvider>(), c.Resolve<IBallotGenerator>())).As<IStateMachine>();
+			builder.Register(c => new PaxosMachine(3, c.Resolve<ILeaseProvider>(), c.Resolve<IBallotGenerator>())).As<IStateMachine>();
 		}
 	}
 }

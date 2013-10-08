@@ -5,16 +5,18 @@ namespace wacs.FLease
 	public class BallotGenerator : IBallotGenerator
 	{
 		private readonly BallotTimestamp lastBallotTimestamp;
+		private readonly IFleaseConfiguration config;
 
-		public BallotGenerator()
+		public BallotGenerator(IFleaseConfiguration config)
 		{
+			this.config = config;
 			lastBallotTimestamp = new BallotTimestamp {MessageNumber = 0, Timestamp = DateTime.UtcNow};
 		}
 
 		public IBallot New(IProcess owner)
 		{
 			var now = DateTime.UtcNow;
-			lastBallotTimestamp.MessageNumber = (lastBallotTimestamp.Timestamp == now)
+			lastBallotTimestamp.MessageNumber = (lastBallotTimestamp.Timestamp + config.ClockDrift == now)
 				                                    ? lastBallotTimestamp.MessageNumber++
 				                                    : 0;
 			lastBallotTimestamp.Timestamp = now;
