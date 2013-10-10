@@ -11,7 +11,8 @@ namespace wacs.FLease
 		private readonly IBallotGenerator ballotGenerator;
 		private IProcess owner;
 		private readonly IFleaseConfiguration config;
-		private ILease latestLease;
+		private volatile ILease latestLease;
+		private readonly AutoResetEvent renewalGateway;
 
 		public LeaseProvider(IRoundBasedRegister register,
 		                     IBallotGenerator ballotGenerator,
@@ -20,6 +21,8 @@ namespace wacs.FLease
 			this.config = config;
 			this.ballotGenerator = ballotGenerator;
 			this.register = register;
+			renewalGateway = new AutoResetEvent(false);
+			new Thread(ScheduleLeaseRenewal).Start();
 		}
 
 		public void Start(IProcess owner)
@@ -40,13 +43,40 @@ namespace wacs.FLease
 			WaitBeforeNextLeaseIssued();
 
 			var now = DateTime.UtcNow;
-
 			if (LeaseNullOrExpired(latestLease, now))
 			{
 				latestLease = AсquireLease(ballot, now);
+
+				if (IsLeaseOwner(latestLease))
+				{
+					renewalGateway.Set();
+				}
 			}
 
 			return latestLease;
+		}
+
+		private void ScheduleLeaseRenewal()
+		{
+			renewalGateway.WaitOne();
+
+			var lease = latestLease;
+			var awaitable = new ManualResetEventSlim(false);
+
+			if (lease != null)
+			{
+				awaitable.Wait(lease.ExpiresAt - DateTime.UtcNow - TimeSpan.FromSeconds(1));
+
+				var renewedLease = AсquireLease(ballotGenerator.New(owner), DateTime.UtcNow);
+				if (renewedLease != null)
+				{
+					latestLease = lease;
+
+					Console.WriteLine("[{3}] Process {0} === RENEWED LEASE: Leader {1} ExpiresAt {2}",
+						owner.Id, lease.Owner.Id, lease.ExpiresAt.ToString("HH:mm:ss fff"),
+						DateTime.UtcNow.ToString("HH:mm:ss fff"));
+				}
+			}
 		}
 
 		private ILease AсquireLease(IBallot ballot, DateTime now)
@@ -64,7 +94,7 @@ namespace wacs.FLease
 					return AсquireLease(ballotGenerator.New(owner), now);
 				}
 
-				if (LeaseNullOrExpired(lease, now) || lease.Owner == owner)
+				if (LeaseNullOrExpired(lease, now) || IsLeaseOwner(lease))
 				{
 					lease = new Lease(owner, now + config.MaxLeaseTimeSpan);
 				}
@@ -77,6 +107,11 @@ namespace wacs.FLease
 			}
 
 			return null;
+		}
+
+		private bool IsLeaseOwner(ILease lease)
+		{
+			return lease != null && lease.Owner == owner;
 		}
 
 		private static bool LeaseNullOrExpired(ILease lease, DateTime now)
