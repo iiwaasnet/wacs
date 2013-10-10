@@ -11,6 +11,7 @@ namespace wacs.FLease
 		private readonly IBallotGenerator ballotGenerator;
 		private IProcess owner;
 		private readonly IFleaseConfiguration config;
+		private ILease latestLease;
 
 		public LeaseProvider(IRoundBasedRegister register,
 		                     IBallotGenerator ballotGenerator,
@@ -31,15 +32,25 @@ namespace wacs.FLease
 
 		public Task<ILease> GetLease(IBallot ballot)
 		{
-			return Task.Factory.StartNew(() => AсquireLease(ballot));
+			return Task.Factory.StartNew(() => ReadLease(ballot));
 		}
 
-		private ILease AсquireLease(IBallot ballot)
+		private ILease ReadLease(IBallot ballot)
 		{
 			WaitBeforeNextLeaseIssued();
 
 			var now = DateTime.UtcNow;
 
+			if (LeaseNullOrExpired(latestLease, now))
+			{
+				latestLease = AсquireLease(ballot, now);
+			}
+
+			return latestLease;
+		}
+
+		private ILease AсquireLease(IBallot ballot, DateTime now)
+		{
 			var read = register.Read(ballot);
 			if (read.TxOutcome == TxOutcome.Commit)
 			{
@@ -50,10 +61,10 @@ namespace wacs.FLease
 					Sleep(config.ClockDrift);
 					Console.WriteLine("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
 
-					return AсquireLease(ballotGenerator.New(owner));
+					return AсquireLease(ballotGenerator.New(owner), now);
 				}
 
-				if (lease == null || lease.ExpiresAt < now || lease.Owner == owner)
+				if (LeaseNullOrExpired(lease, now) || lease.Owner == owner)
 				{
 					lease = new Lease(owner, now + config.MaxLeaseTimeSpan);
 				}
@@ -68,6 +79,11 @@ namespace wacs.FLease
 			return null;
 		}
 
+		private static bool LeaseNullOrExpired(ILease lease, DateTime now)
+		{
+			return lease == null || lease.ExpiresAt < now;
+		}
+
 		private bool LeaseIsNotSafelyExpired(ILease lease, DateTime now)
 		{
 			return lease != null
@@ -75,6 +91,7 @@ namespace wacs.FLease
 			       && lease.ExpiresAt + config.ClockDrift > now;
 		}
 
+		// TODO: Move to another place, i.e. start of listeners...
 		private void WaitBeforeNextLeaseIssued()
 		{
 			var diff = DateTime.UtcNow - startTime;

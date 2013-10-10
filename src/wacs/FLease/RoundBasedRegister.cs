@@ -96,28 +96,28 @@ namespace wacs.FLease
 			var ballot = new Ballot(new DateTime(readMessage.Ballot.Timestamp, DateTimeKind.Utc),
 			                        readMessage.Ballot.MessageNumber,
 			                        new Process(readMessage.Ballot.ProcessId));
-			//if (writeBallot >= ballot)
-			//{
-			//	Console.WriteLine("Process {6} ==WB== {0}-{1}-{2} >= {3}-{4}-{5}",
-			//					  writeBallot.Timestamp.ToString("HH:mm:ss fff"),
-			//					  writeBallot.MessageNumber,
-			//					  writeBallot.Process.Id,
-			//					  ballot.Timestamp.ToString("HH:mm:ss fff"),
-			//					  ballot.MessageNumber,
-			//					  ballot.Process.Id,
-			//					  owner.Id);
-			//}
-			//if (readBallot >= ballot)
-			//{
-			//	Console.WriteLine("Process {6} ==RB== {0}-{1}-{2} >= {3}-{4}-{5}",
-			//					  readBallot.Timestamp.ToString("HH:mm:ss fff"),
-			//					  readBallot.MessageNumber,
-			//					  readBallot.Process.Id,
-			//					  ballot.Timestamp.ToString("HH:mm:ss fff"),
-			//					  ballot.MessageNumber,
-			//					  ballot.Process.Id,
-			//					  owner.Id);
-			//}
+			if (writeBallot >= ballot)
+			{
+				Console.WriteLine("Process {6} ==WB== {0}-{1}-{2} >= {3}-{4}-{5}",
+								  writeBallot.Timestamp.ToString("HH:mm:ss fff"),
+								  writeBallot.MessageNumber,
+								  writeBallot.Process.Id,
+								  ballot.Timestamp.ToString("HH:mm:ss fff"),
+								  ballot.MessageNumber,
+								  ballot.Process.Id,
+								  owner.Id);
+			}
+			if (readBallot >= ballot)
+			{
+				Console.WriteLine("Process {6} ==RB== {0}-{1}-{2} >= {3}-{4}-{5}",
+								  readBallot.Timestamp.ToString("HH:mm:ss fff"),
+								  readBallot.MessageNumber,
+								  readBallot.Process.Id,
+								  ballot.Timestamp.ToString("HH:mm:ss fff"),
+								  ballot.MessageNumber,
+								  ballot.Process.Id,
+								  owner.Id);
+			}
 			if (writeBallot >= ballot || readBallot >= ballot)
 			{
 				messageHub.Send(new Process(message.Envelope.Sender.Process.Id),

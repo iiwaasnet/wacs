@@ -41,13 +41,13 @@ namespace wacs
 						DateTime.UtcNow.ToString("HH:mm:ss fff"),
 						timer.ElapsedMilliseconds);
 				}
-				//else
-				//{
-				//	Console.WriteLine("[{2}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: NULL [{3}]", 
-				//		ballot.Timestamp.ToString("HH:mm:ss fff"), ballot.Process.Id,
-				//		DateTime.UtcNow.ToString("HH:mm:ss fff"),
-				//		timer.ElapsedMilliseconds);
-				//}
+				else
+				{
+					Console.WriteLine("[{2}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: NULL [{3}]",
+						ballot.Timestamp.ToString("HH:mm:ss fff"), ballot.Process.Id,
+						DateTime.UtcNow.ToString("HH:mm:ss fff"),
+						timer.ElapsedMilliseconds);
+				}
 				//if (lease != null)
 				//{
 				//	Thread.Sleep(TimeSpan.FromMilliseconds(10));
