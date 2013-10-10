@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -65,16 +66,33 @@ namespace wacs.FLease
 
 			if (lease != null)
 			{
-				awaitable.Wait(lease.ExpiresAt - DateTime.UtcNow - TimeSpan.FromSeconds(1));
+				awaitable.Wait(lease.ExpiresAt - DateTime.UtcNow - TimeSpan.FromSeconds(2));
+
+				var timer = new Stopwatch();
+				timer.Start();
+				Console.WriteLine("[{0}] Process {1} === RENEW STARTED", DateTime.UtcNow.ToString("HH:mm:ss fff"), owner.Id);
 
 				var renewedLease = AсquireLease(ballotGenerator.New(owner), DateTime.UtcNow);
+
+				timer.Stop();
 				if (renewedLease != null)
 				{
 					latestLease = lease;
 
-					Console.WriteLine("[{3}] Process {0} === RENEWED LEASE: Leader {1} ExpiresAt {2}",
-						owner.Id, lease.Owner.Id, lease.ExpiresAt.ToString("HH:mm:ss fff"),
-						DateTime.UtcNow.ToString("HH:mm:ss fff"));
+					
+					Console.WriteLine("[{4}] Process {0} === RENEWED LEASE: Leader {1} ExpiresAt {2} [{3}]",
+					                  owner.Id,
+					                  lease.Owner.Id,
+					                  lease.ExpiresAt.ToString("HH:mm:ss fff"),
+					                  timer.ElapsedMilliseconds,
+					                  DateTime.UtcNow.ToString("HH:mm:ss fff"));
+				}
+				else
+				{
+					Console.WriteLine("[{2}] Process {0} === RENEWED LEASE: NULL [{1}]",
+									  owner.Id,
+									  timer.ElapsedMilliseconds,
+									  DateTime.UtcNow.ToString("HH:mm:ss fff"));
 				}
 			}
 		}

@@ -7,7 +7,7 @@ namespace wacs
 {
 	public class MainModule : Module
 	{
-		private const int FarmSize = 3;
+		private const int FarmSize = 1;
 
 		protected override void Load(ContainerBuilder builder)
 		{
@@ -48,8 +48,8 @@ namespace wacs
 		private static void RegisterPaxosInstances(ContainerBuilder builder)
 		{
 			builder.Register(c => new PaxosMachine(1, c.Resolve<ILeaseProvider>(), c.Resolve<IBallotGenerator>())).As<IStateMachine>();
-			builder.Register(c => new PaxosMachine(2, c.Resolve<ILeaseProvider>(), c.Resolve<IBallotGenerator>())).As<IStateMachine>();
-			builder.Register(c => new PaxosMachine(3, c.Resolve<ILeaseProvider>(), c.Resolve<IBallotGenerator>())).As<IStateMachine>();
+			//builder.Register(c => new PaxosMachine(2, c.Resolve<ILeaseProvider>(), c.Resolve<IBallotGenerator>())).As<IStateMachine>();
+			//builder.Register(c => new PaxosMachine(3, c.Resolve<ILeaseProvider>(), c.Resolve<IBallotGenerator>())).As<IStateMachine>();
 		}
 	}
 }
