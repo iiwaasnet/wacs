@@ -31,7 +31,7 @@ namespace wacs
 				//Console.WriteLine("Get Lease for Ballot: Timestamp {0}, Process {1}", ballot.Timestamp.ToString("mm:hh:ss fff"), ballot.Process.Id);
 				timer.Reset();
 				timer.Start();
-				var lease = leaseProvider.GetLease(ballot).Result;
+				var lease = leaseProvider.GetLease().Result;
 				timer.Stop();
 				if (lease != null)
 				{
@@ -48,10 +48,10 @@ namespace wacs
 						DateTime.UtcNow.ToString("HH:mm:ss fff"),
 						timer.ElapsedMilliseconds);
 				}
-				if (lease != null)
-				{
-					Thread.Sleep(TimeSpan.FromMilliseconds(10));
-				}
+				//if (lease != null)
+				//{
+				//	Thread.Sleep(TimeSpan.FromMilliseconds(10));
+				//}
 			}
 		}
 

@@ -6,7 +6,7 @@ namespace wacs.FLease
 	{
 		void Start(IProcess owner);
 
-		Task<ILease> GetLease(IBallot ballot);
+		Task<ILease> GetLease();
 
 		void Stop();
 	}

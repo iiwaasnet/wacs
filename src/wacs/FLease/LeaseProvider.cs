@@ -23,7 +23,7 @@ namespace wacs.FLease
 			this.ballotGenerator = ballotGenerator;
 			this.register = register;
 			renewalGateway = new AutoResetEvent(false);
-			new Thread(ScheduleLeaseRenewal).Start();
+			//new Thread(ScheduleLeaseRenewal).Start();
 		}
 
 		public void Start(IProcess owner)
@@ -34,24 +34,34 @@ namespace wacs.FLease
 			register.Start();
 		}
 
-		public Task<ILease> GetLease(IBallot ballot)
+		public Task<ILease> GetLease()
 		{
-			return Task.Factory.StartNew(() => ReadLease(ballot));
+			return Task.Factory.StartNew(() => ReadLease());
 		}
 
-		private ILease ReadLease(IBallot ballot)
+		private ILease ReadLease()
 		{
 			WaitBeforeNextLeaseIssued();
-
+			
 			var now = DateTime.UtcNow;
+
 			if (LeaseNullOrExpired(latestLease, now))
 			{
-				latestLease = AсquireLease(ballot, now);
+				latestLease = AсquireLease(ballotGenerator.New(owner), now);
 
-				if (IsLeaseOwner(latestLease))
-				{
-					renewalGateway.Set();
-				}
+				//if (IsLeaseOwner(latestLease))
+				//{
+				//	renewalGateway.Set();
+				//}
+			}
+
+			if (LeaseIsNotSafelyExpired(latestLease, now))
+			{
+				Console.WriteLine("SLEEP === Process {0} Sleep from {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+				Sleep(config.ClockDrift);
+				Console.WriteLine("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+
+				latestLease = AсquireLease(ballotGenerator.New(owner), now);
 			}
 
 			return latestLease;
@@ -103,14 +113,14 @@ namespace wacs.FLease
 			if (read.TxOutcome == TxOutcome.Commit)
 			{
 				var lease = read.Lease;
-				if (LeaseIsNotSafelyExpired(lease, now))
-				{
-					Console.WriteLine("SLEEP === Process {0} Sleep from {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
-					Sleep(config.ClockDrift);
-					Console.WriteLine("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+				//if (LeaseIsNotSafelyExpired(lease, now))
+				//{
+				//	Console.WriteLine("SLEEP === Process {0} Sleep from {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+				//	Sleep(config.ClockDrift);
+				//	Console.WriteLine("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
 
-					return AсquireLease(ballotGenerator.New(owner), now);
-				}
+				//	return AсquireLease(ballotGenerator.New(owner), now);
+				//}
 
 				if (LeaseNullOrExpired(lease, now) || IsLeaseOwner(lease))
 				{
