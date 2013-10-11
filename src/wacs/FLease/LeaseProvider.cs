@@ -55,14 +55,14 @@ namespace wacs.FLease
 				//}
 			}
 
-			if (LeaseIsNotSafelyExpired(latestLease, now))
-			{
-				Console.WriteLine("SLEEP === Process {0} Sleep from {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
-				Sleep(config.ClockDrift);
-				Console.WriteLine("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+			//if (LeaseIsNotSafelyExpired(latestLease, now))
+			//{
+			//	Console.WriteLine("SLEEP === Process {0} Sleep from {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+			//	Sleep(config.ClockDrift);
+			//	Console.WriteLine("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
 
-				latestLease = AсquireLease(ballotGenerator.New(owner), now);
-			}
+			//	latestLease = AсquireLease(ballotGenerator.New(owner), now);
+			//}
 
 			return latestLease;
 		}
@@ -113,14 +113,15 @@ namespace wacs.FLease
 			if (read.TxOutcome == TxOutcome.Commit)
 			{
 				var lease = read.Lease;
-				//if (LeaseIsNotSafelyExpired(lease, now))
-				//{
-				//	Console.WriteLine("SLEEP === Process {0} Sleep from {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
-				//	Sleep(config.ClockDrift);
-				//	Console.WriteLine("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+				if (LeaseIsNotSafelyExpired(lease, now))
+				{
+					Console.WriteLine("SLEEP === Process {0} Sleep from {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+					Sleep(config.ClockDrift);
+					Console.WriteLine("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
 
-				//	return AсquireLease(ballotGenerator.New(owner), now);
-				//}
+					// TOOD: Add recursion exit condition
+					return AсquireLease(ballotGenerator.New(owner), DateTime.UtcNow);
+				}
 
 				if (LeaseNullOrExpired(lease, now) || IsLeaseOwner(lease))
 				{
