@@ -13,7 +13,6 @@ namespace wacs.FLease
 		private IProcess owner;
 		private readonly IFleaseConfiguration config;
 		private volatile ILease latestLease;
-		private readonly AutoResetEvent renewalGateway;
 
 		public LeaseProvider(IRoundBasedRegister register,
 		                     IBallotGenerator ballotGenerator,
@@ -22,8 +21,6 @@ namespace wacs.FLease
 			this.config = config;
 			this.ballotGenerator = ballotGenerator;
 			this.register = register;
-			renewalGateway = new AutoResetEvent(false);
-			//new Thread(ScheduleLeaseRenewal).Start();
 		}
 
 		public void Start(IProcess owner)
@@ -48,63 +45,9 @@ namespace wacs.FLease
 			if (LeaseNullOrExpired(latestLease, now))
 			{
 				latestLease = AсquireLease(ballotGenerator.New(owner), now);
-
-				//if (IsLeaseOwner(latestLease))
-				//{
-				//	renewalGateway.Set();
-				//}
 			}
-
-			//if (LeaseIsNotSafelyExpired(latestLease, now))
-			//{
-			//	Console.WriteLine("SLEEP === Process {0} Sleep from {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
-			//	Sleep(config.ClockDrift);
-			//	Console.WriteLine("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
-
-			//	latestLease = AсquireLease(ballotGenerator.New(owner), now);
-			//}
 
 			return latestLease;
-		}
-
-		private void ScheduleLeaseRenewal()
-		{
-			renewalGateway.WaitOne();
-
-			var lease = latestLease;
-			var awaitable = new ManualResetEventSlim(false);
-
-			if (lease != null)
-			{
-				awaitable.Wait(lease.ExpiresAt - DateTime.UtcNow - TimeSpan.FromSeconds(2));
-
-				var timer = new Stopwatch();
-				timer.Start();
-				Console.WriteLine("[{0}] Process {1} === RENEW STARTED", DateTime.UtcNow.ToString("HH:mm:ss fff"), owner.Id);
-
-				var renewedLease = AсquireLease(ballotGenerator.New(owner), DateTime.UtcNow);
-
-				timer.Stop();
-				if (renewedLease != null)
-				{
-					latestLease = lease;
-
-					
-					Console.WriteLine("[{4}] Process {0} === RENEWED LEASE: Leader {1} ExpiresAt {2} [{3}]",
-					                  owner.Id,
-					                  lease.Owner.Id,
-					                  lease.ExpiresAt.ToString("HH:mm:ss fff"),
-					                  timer.ElapsedMilliseconds,
-					                  DateTime.UtcNow.ToString("HH:mm:ss fff"));
-				}
-				else
-				{
-					Console.WriteLine("[{2}] Process {0} === RENEWED LEASE: NULL [{1}]",
-									  owner.Id,
-									  timer.ElapsedMilliseconds,
-									  DateTime.UtcNow.ToString("HH:mm:ss fff"));
-				}
-			}
 		}
 
 		private ILease AсquireLease(IBallot ballot, DateTime now)
