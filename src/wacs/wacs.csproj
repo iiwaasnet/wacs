@@ -79,8 +79,14 @@
     <Reference Include="clrzmq-ext">
       <HintPath>..\packages\clrzmq-x64.2.2.5\lib\clrzmq-ext.dll</HintPath>
     </Reference>
+    <Reference Include="Moq">
+      <HintPath>..\packages\Moq.4.1.1309.1617\lib\net40\Moq.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework">
+      <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -107,14 +113,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Election\AcceptMessage.cs" />
-    <Compile Include="Election\BestCandidate.cs" />
-    <Compile Include="Election\Candidate.cs" />
-    <Compile Include="Election\Election.cs" />
-    <Compile Include="Election\ElectionResult.cs" />
-    <Compile Include="Election\IElector.cs" />
-    <Compile Include="Election\IElection.cs" />
-    <Compile Include="Election\ProposeMessage.cs" />
     <Compile Include="FLease\Ballot.cs" />
     <Compile Include="FLease\BallotGenerator.cs" />
     <Compile Include="FLease\FleaseConfiguration.cs" />
@@ -169,6 +167,7 @@
     <Compile Include="Process.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tests\FLease\LeaseProviderTests.cs" />
     <Compile Include="WacsConfiguration.cs" />
     <Compile Include="WACService.cs" />
   </ItemGroup>
