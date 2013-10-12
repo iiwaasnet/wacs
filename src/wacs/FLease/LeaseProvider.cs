@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,24 +9,24 @@ namespace wacs.FLease
 		private DateTime startTime;
 		private readonly IRoundBasedRegister register;
 		private readonly IBallotGenerator ballotGenerator;
-		private IProcess owner;
+		private readonly IProcess owner;
 		private readonly IFleaseConfiguration config;
 		private volatile ILease latestLease;
 
-		public LeaseProvider(IRoundBasedRegister register,
+		public LeaseProvider(IProcess owner,
+		                     IRoundBasedRegisterFactory registerFactory,
 		                     IBallotGenerator ballotGenerator,
 		                     IFleaseConfiguration config)
 		{
+			this.owner = owner;
 			this.config = config;
 			this.ballotGenerator = ballotGenerator;
-			this.register = register;
+			register = registerFactory.Build(owner);
 		}
 
-		public void Start(IProcess owner)
+		public void Start()
 		{
 			startTime = DateTime.UtcNow;
-			this.owner = owner;
-			register.SetOwner(owner);
 			register.Start();
 		}
 
@@ -39,7 +38,7 @@ namespace wacs.FLease
 		private ILease ReadLease()
 		{
 			WaitBeforeNextLeaseIssued();
-			
+
 			var now = DateTime.UtcNow;
 
 			if (LeaseNullOrExpired(latestLease, now))

@@ -4,7 +4,7 @@ namespace wacs.FLease
 {
 	public interface ILeaseProvider
 	{
-		void Start(IProcess owner);
+		void Start();
 
 		Task<ILease> GetLease();
 

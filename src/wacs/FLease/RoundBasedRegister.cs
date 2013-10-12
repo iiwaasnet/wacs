@@ -9,21 +9,22 @@ namespace wacs.FLease
 {
 	public class RoundBasedRegister : IRoundBasedRegister
 	{
-		private IProcess owner;
+		private readonly IProcess owner;
 		private readonly IMessageHub messageHub;
 		private Ballot readBallot;
 		private Ballot writeBallot;
 		private ILease lease;
-		private IListener listener;
+		private readonly IListener listener;
 		private readonly IWacsConfiguration config;
 
-		private IObservable<IMessage> ackReadStream;
-		private IObservable<IMessage> nackReadStream;
-		private IObservable<IMessage> ackWriteStream;
-		private IObservable<IMessage> nackWriteStream;
+		private readonly IObservable<IMessage> ackReadStream;
+		private readonly IObservable<IMessage> nackReadStream;
+		private readonly IObservable<IMessage> ackWriteStream;
+		private readonly IObservable<IMessage> nackWriteStream;
 		private readonly IMessageSerializer serializer;
 
-		public RoundBasedRegister(IMessageHub messageHub,
+		public RoundBasedRegister(IProcess owner,
+		                          IMessageHub messageHub,
 		                          IBallotGenerator ballotGenerator,
 		                          IMessageSerializer serializer,
 		                          IWacsConfiguration config)
@@ -33,11 +34,8 @@ namespace wacs.FLease
 			readBallot = (Ballot) ballotGenerator.Null();
 			writeBallot = (Ballot) ballotGenerator.Null();
 			this.serializer = serializer;
-		}
+			this.owner = owner;
 
-		public void SetOwner(IProcess process)
-		{
-			owner = process;
 			listener = messageHub.Subscribe(owner);
 
 			listener.Where(m => m.Body.MessageType.ToMessageType() == FLeaseMessageType.Read)
@@ -99,24 +97,24 @@ namespace wacs.FLease
 			if (writeBallot >= ballot)
 			{
 				Console.WriteLine("Process {6} ==WB== {0}-{1}-{2} >= {3}-{4}-{5}",
-								  writeBallot.Timestamp.ToString("HH:mm:ss fff"),
-								  writeBallot.MessageNumber,
-								  writeBallot.Process.Id,
-								  ballot.Timestamp.ToString("HH:mm:ss fff"),
-								  ballot.MessageNumber,
-								  ballot.Process.Id,
-								  owner.Id);
+				                  writeBallot.Timestamp.ToString("HH:mm:ss fff"),
+				                  writeBallot.MessageNumber,
+				                  writeBallot.Process.Id,
+				                  ballot.Timestamp.ToString("HH:mm:ss fff"),
+				                  ballot.MessageNumber,
+				                  ballot.Process.Id,
+				                  owner.Id);
 			}
 			if (readBallot >= ballot)
 			{
 				Console.WriteLine("Process {6} ==RB== {0}-{1}-{2} >= {3}-{4}-{5}",
-								  readBallot.Timestamp.ToString("HH:mm:ss fff"),
-								  readBallot.MessageNumber,
-								  readBallot.Process.Id,
-								  ballot.Timestamp.ToString("HH:mm:ss fff"),
-								  ballot.MessageNumber,
-								  ballot.Process.Id,
-								  owner.Id);
+				                  readBallot.Timestamp.ToString("HH:mm:ss fff"),
+				                  readBallot.MessageNumber,
+				                  readBallot.Process.Id,
+				                  ballot.Timestamp.ToString("HH:mm:ss fff"),
+				                  ballot.MessageNumber,
+				                  ballot.Process.Id,
+				                  owner.Id);
 			}
 			if (writeBallot >= ballot || readBallot >= ballot)
 			{
@@ -272,7 +270,7 @@ namespace wacs.FLease
 										                                                             {
 											                                                             ProcessId = ballot.Process.Id,
 											                                                             Timestamp = ballot.Timestamp.Ticks,
-																										 MessageNumber = ballot.MessageNumber
+											                                                             MessageNumber = ballot.MessageNumber
 										                                                             },
 									                                                    Lease = new Messages.Lease
 										                                                            {
@@ -300,7 +298,7 @@ namespace wacs.FLease
 										                                                             {
 											                                                             ProcessId = ballot.Process.Id,
 											                                                             Timestamp = ballot.Timestamp.Ticks,
-																										 MessageNumber = ballot.MessageNumber
+											                                                             MessageNumber = ballot.MessageNumber
 										                                                             }
 								                                                    })
 						                     }

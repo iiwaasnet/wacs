@@ -121,14 +121,17 @@
     <Compile Include="FLease\IFleaseConfiguration.cs" />
     <Compile Include="FLease\ILease.cs" />
     <Compile Include="FLease\ILeaseProvider.cs" />
+    <Compile Include="FLease\ILeaseProviderFactory.cs" />
     <Compile Include="FLease\ILeaseReader.cs" />
     <Compile Include="FLease\ILeaseTxResult.cs" />
     <Compile Include="FLease\ILeaseWriter.cs" />
     <Compile Include="FLease\IMessageSerializer.cs" />
     <Compile Include="FLease\IRoundBasedRegister.cs" />
+    <Compile Include="FLease\IRoundBasedRegisterFactory.cs" />
     <Compile Include="FLease\Lease.cs" />
     <Compile Include="FLease\LeaseProvider.cs" />
     <Compile Include="FLease\AwaitableMessageStreamFilter.cs" />
+    <Compile Include="FLease\LeaseProviderFactory.cs" />
     <Compile Include="FLease\LeaseTxResult.cs" />
     <Compile Include="FLease\MessageSerializer.cs" />
     <Compile Include="FLease\MessageStreamListener.cs" />
@@ -143,6 +146,7 @@
     <Compile Include="FLease\Messages\ReadPayload.cs" />
     <Compile Include="FLease\Messages\WritePayload.cs" />
     <Compile Include="FLease\RoundBasedRegister.cs" />
+    <Compile Include="FLease\RoundBasedRegisterFactory.cs" />
     <Compile Include="FLease\TxOutcome.cs" />
     <Compile Include="IService.cs" />
     <Compile Include="IStateMachine.cs" />

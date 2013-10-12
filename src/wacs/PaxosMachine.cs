@@ -13,10 +13,10 @@ namespace wacs
 		private readonly CancellationTokenSource token;
 		private readonly IBallotGenerator ballotGenerator;
 
-		public PaxosMachine(int id, ILeaseProvider leaseProvider, IBallotGenerator ballotGenerator)
+		public PaxosMachine(int id, ILeaseProviderFactory leaseProviderFactory, IBallotGenerator ballotGenerator)
 		{
 			this.id = id;
-			this.leaseProvider = leaseProvider;
+			leaseProvider = leaseProviderFactory.Build(new Process(id));
 			this.ballotGenerator = ballotGenerator;
 			token = new CancellationTokenSource();
 		}
@@ -57,7 +57,7 @@ namespace wacs
 
 		public void Start()
 		{
-			leaseProvider.Start(new Process(id));
+			leaseProvider.Start();
 			Task.Factory.StartNew(() => ApplyCommands(token.Token), token.Token);
 		}
 
