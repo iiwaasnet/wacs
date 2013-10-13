@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,6 +19,11 @@ namespace wacs.FLease
 		                     IBallotGenerator ballotGenerator,
 		                     IFleaseConfiguration config)
 		{
+			Contract.Requires(owner != null);
+			Contract.Requires(registerFactory != null);
+			Contract.Requires(config != null);
+			Contract.Requires(ballotGenerator != null);
+
 			this.owner = owner;
 			this.config = config;
 			this.ballotGenerator = ballotGenerator;

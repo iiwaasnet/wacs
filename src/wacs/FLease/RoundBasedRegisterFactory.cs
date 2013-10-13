@@ -2,7 +2,7 @@
 
 namespace wacs.FLease
 {
-	internal class RoundBasedRegisterFactory : IRoundBasedRegisterFactory
+	public class RoundBasedRegisterFactory : IRoundBasedRegisterFactory
 	{
 		private readonly IMessageHub messageHub;
 		private readonly IBallotGenerator ballotGenerator;
