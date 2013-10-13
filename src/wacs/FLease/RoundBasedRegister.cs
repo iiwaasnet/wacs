@@ -183,7 +183,7 @@ namespace wacs.FLease
 					var lease = ackReadFilter
 						.MessageStream
 						.Select(m => serializer.Deserialize<AckReadPayload>(m.Body.Content))
-						.Max(m => new LastWriteLease(m.KnownWriteBallot, m.Lease))
+						.Max(m => new LastWrittenLease(m.KnownWriteBallot, m.Lease))
 						.Lease;
 
 					return new LeaseTxResult
@@ -243,7 +243,7 @@ namespace wacs.FLease
 
 		private int GetQuorum()
 		{
-			return (config.FarmSize + 1) / 2;
+			return config.FarmSize / 2 + 1;
 		}
 
 		public void Start()
@@ -304,32 +304,6 @@ namespace wacs.FLease
 						                     }
 				              };
 			return message;
-		}
-	}
-
-	public class LastWriteLease : IComparable<LastWriteLease>
-	{
-		private readonly Ballot writeBallot;
-		private readonly Lease lease;
-
-		public LastWriteLease(Messages.Ballot writeBallot, Messages.Lease lease)
-		{
-			this.writeBallot = new Ballot(new DateTime(writeBallot.Timestamp, DateTimeKind.Utc),
-			                              writeBallot.MessageNumber,
-			                              new Process(writeBallot.ProcessId));
-			this.lease = (lease != null)
-				             ? new Lease(new Process(lease.ProcessId), new DateTime(lease.ExpiresAt, DateTimeKind.Utc))
-				             : null;
-		}
-
-		public int CompareTo(LastWriteLease other)
-		{
-			return writeBallot.CompareTo(other.writeBallot);
-		}
-
-		public Lease Lease
-		{
-			get { return lease; }
 		}
 	}
 }
