@@ -2,28 +2,33 @@
 using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
+using wacs.Diagnostics;
 
 namespace wacs.FLease
 {
-	public class LeaseProvider : ILeaseProvider
+	public partial class LeaseProvider : ILeaseProvider
 	{
 		private DateTime startTime;
 		private readonly IRoundBasedRegister register;
 		private readonly IBallotGenerator ballotGenerator;
 		private readonly IProcess owner;
 		private readonly IFleaseConfiguration config;
-		private volatile ILease latestLease;
+		private ILease latestLease;
+		private readonly ILogger logger;
 
 		public LeaseProvider(IProcess owner,
 		                     IRoundBasedRegisterFactory registerFactory,
 		                     IBallotGenerator ballotGenerator,
-		                     IFleaseConfiguration config)
+		                     IFleaseConfiguration config,
+		                     ILogger logger)
 		{
 			Contract.Requires(owner != null);
 			Contract.Requires(registerFactory != null);
 			Contract.Requires(config != null);
 			Contract.Requires(ballotGenerator != null);
+			Contract.Requires(logger != null);
 
+			this.logger = logger;
 			this.owner = owner;
 			this.config = config;
 			this.ballotGenerator = ballotGenerator;
@@ -63,9 +68,9 @@ namespace wacs.FLease
 				var lease = read.Lease;
 				if (LeaseIsNotSafelyExpired(lease, now))
 				{
-					Console.WriteLine("SLEEP === Process {0} Sleep from {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+					LogStartSleep();
 					Sleep(config.ClockDrift);
-					Console.WriteLine("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+					LogAwake();
 
 					// TOOD: Add recursion exit condition
 					return AсquireLease(ballotGenerator.New(owner), DateTime.UtcNow);
@@ -85,6 +90,8 @@ namespace wacs.FLease
 
 			return null;
 		}
+
+		
 
 		private bool IsLeaseOwner(ILease lease)
 		{

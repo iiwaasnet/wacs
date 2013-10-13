@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
+using wacs.Diagnostics;
 using wacs.FLease.Messages;
 using wacs.Messaging;
 
 namespace wacs.FLease
 {
-	public class RoundBasedRegister : IRoundBasedRegister
+	public partial class RoundBasedRegister : IRoundBasedRegister
 	{
 		private readonly IProcess owner;
 		private readonly IMessageHub messageHub;
@@ -16,6 +18,7 @@ namespace wacs.FLease
 		private ILease lease;
 		private readonly IListener listener;
 		private readonly IWacsConfiguration config;
+		private readonly ILogger logger;
 
 		private readonly IObservable<IMessage> ackReadStream;
 		private readonly IObservable<IMessage> nackReadStream;
@@ -27,8 +30,17 @@ namespace wacs.FLease
 		                          IMessageHub messageHub,
 		                          IBallotGenerator ballotGenerator,
 		                          IMessageSerializer serializer,
-		                          IWacsConfiguration config)
+		                          IWacsConfiguration config,
+		                          ILogger logger)
 		{
+			Contract.Requires(owner != null);
+			Contract.Requires(messageHub != null);
+			Contract.Requires(ballotGenerator != null);
+			Contract.Requires(serializer != null);
+			Contract.Requires(config != null);
+			Contract.Requires(logger != null);
+
+			this.logger = logger;
 			this.config = config;
 			this.messageHub = messageHub;
 			readBallot = (Ballot) ballotGenerator.Null();
@@ -94,30 +106,11 @@ namespace wacs.FLease
 			var ballot = new Ballot(new DateTime(readMessage.Ballot.Timestamp, DateTimeKind.Utc),
 			                        readMessage.Ballot.MessageNumber,
 			                        new Process(readMessage.Ballot.ProcessId));
-			if (writeBallot >= ballot)
-			{
-				Console.WriteLine("Process {6} ==WB== {0}-{1}-{2} >= {3}-{4}-{5}",
-				                  writeBallot.Timestamp.ToString("HH:mm:ss fff"),
-				                  writeBallot.MessageNumber,
-				                  writeBallot.Process.Id,
-				                  ballot.Timestamp.ToString("HH:mm:ss fff"),
-				                  ballot.MessageNumber,
-				                  ballot.Process.Id,
-				                  owner.Id);
-			}
-			if (readBallot >= ballot)
-			{
-				Console.WriteLine("Process {6} ==RB== {0}-{1}-{2} >= {3}-{4}-{5}",
-				                  readBallot.Timestamp.ToString("HH:mm:ss fff"),
-				                  readBallot.MessageNumber,
-				                  readBallot.Process.Id,
-				                  ballot.Timestamp.ToString("HH:mm:ss fff"),
-				                  ballot.MessageNumber,
-				                  ballot.Process.Id,
-				                  owner.Id);
-			}
+			
 			if (writeBallot >= ballot || readBallot >= ballot)
 			{
+				LogNackRead(ballot);
+
 				messageHub.Send(new Process(message.Envelope.Sender.Process.Id),
 				                new Message
 					                {
@@ -161,6 +154,8 @@ namespace wacs.FLease
 					                });
 			}
 		}
+
+		
 
 		public ILeaseTxResult Read(IBallot ballot)
 		{

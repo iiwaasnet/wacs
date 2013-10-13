@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging;
 
@@ -27,6 +28,7 @@ namespace wacs
 
 		private void RegisterSingletons(ContainerBuilder builder)
 		{
+			builder.Register(c => new Logger()).As<ILogger>().SingleInstance();
 			builder.RegisterType<WACService>().As<IService>().SingleInstance();
 			builder.RegisterType<MessageHub>().As<IMessageHub>().SingleInstance();
 			builder.RegisterType<MessageSerializer>().As<IMessageSerializer>().SingleInstance();
