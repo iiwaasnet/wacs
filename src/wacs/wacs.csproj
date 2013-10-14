@@ -156,7 +156,6 @@
     <Compile Include="FLease\RoundBasedRegisterFactory.cs" />
     <Compile Include="FLease\RoundBasedRegisterLogging.cs" />
     <Compile Include="FLease\TxOutcome.cs" />
-    <Compile Include="IService.cs" />
     <Compile Include="IStateMachine.cs" />
     <Compile Include="IWacsConfiguration.cs" />
     <Compile Include="MainModule.cs" />

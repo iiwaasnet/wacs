@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using Topshelf;
 using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging;
@@ -29,7 +30,7 @@ namespace wacs
 		private void RegisterSingletons(ContainerBuilder builder)
 		{
 			builder.Register(c => new Logger("fileLogger")).As<ILogger>().SingleInstance();
-			builder.RegisterType<WACService>().As<IService>().SingleInstance();
+			builder.RegisterType<WACService>().As<ServiceControl>().SingleInstance();
 			builder.RegisterType<MessageHub>().As<IMessageHub>().SingleInstance();
 			builder.RegisterType<MessageSerializer>().As<IMessageSerializer>().SingleInstance();
 			builder.Register(c => new FleaseConfiguration

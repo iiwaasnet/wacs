@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using wacs.FLease;
+using Topshelf;
 
 namespace wacs
 {
-	public class Test
-	{
-		public DateTime Timestamp { get; set; }
-	}
-
-	public class WACService : IService
+	public class WACService : ServiceControl
 	{
 		private readonly IEnumerable<IStateMachine> farm;
 
@@ -18,7 +13,7 @@ namespace wacs
 			farm = members;
 		}
 
-		public void Start()
+		public bool Start(HostControl hostControl)
 		{
 			Console.WriteLine("=== Farm started ======================");
 			foreach (var stateMachine in farm)
@@ -27,14 +22,18 @@ namespace wacs
 
 				Console.WriteLine("PAXOS Id: {0}", stateMachine.Id);
 			}
+
+			return true;
 		}
 
-		public void Stop()
+		public bool Stop(HostControl hostControl)
 		{
 			foreach (var stateMachine in farm)
 			{
 				stateMachine.Stop();
 			}
+
+			return true;
 		}
 	}
 }

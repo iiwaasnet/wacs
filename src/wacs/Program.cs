@@ -19,12 +19,12 @@ namespace wacs
 
 		private static void ConfigureService(HostConfigurator x, IContainer container)
 		{
-			x.Service<IService>(s =>
-				                    {
-					                    s.ConstructUsing(name => container.Resolve<IService>());
-					                    s.WhenStarted(tc => tc.Start());
-					                    s.WhenStopped(tc => tc.Stop());
-				                    });
+			x.Service<ServiceControl>(s =>
+				                          {
+					                          s.ConstructUsing(name => container.Resolve<ServiceControl>());
+					                          s.WhenStarted((sc, hc) => sc.Start(hc));
+					                          s.WhenStopped((sc, hc) => sc.Stop(hc));
+				                          });
 			x.RunAsLocalSystem();
 
 			x.SetDescription("Wait-free Coordination Service");
