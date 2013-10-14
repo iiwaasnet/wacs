@@ -91,8 +91,6 @@ namespace wacs.FLease
 			return null;
 		}
 
-		
-
 		private bool IsLeaseOwner(ILease lease)
 		{
 			return lease != null && lease.Owner == owner;

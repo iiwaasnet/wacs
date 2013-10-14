@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Moq;
@@ -60,6 +62,33 @@ namespace wacs.Tests.FLease
 
 			Assert.AreEqual(lease.Owner.Id, acquiredLease.Owner.Id);
 			Assert.AreEqual(lease.ExpiresAt, acquiredLease.ExpiresAt);
+		}
+
+		[Test]
+		[TestCase(3)]
+		[TestCase(4)]
+		public void LeaseIsIssuedByQuorum(int numberOfNodes)
+		{
+			var container = DIHelper.CreateContainer();
+
+			var leaseProviderFactory = container.Resolve<ILeaseProviderFactory>();
+
+			var leaseProviders = new List<ILeaseProvider>();
+			for (var i = 0; i < numberOfNodes; i++)
+			{
+				leaseProviders.Add(leaseProviderFactory.Build(new Process(i)));
+			}
+
+			var majority = numberOfNodes / 2 + 1;
+
+			leaseProviders.ForEach(p => p.Start());
+
+			var leases = leaseProviders.Select(p => p.GetLease().Result).ToArray();
+
+			Assert.IsTrue(leases.GroupBy(l => l.ExpiresAt).Any(g => g.Count() >= majority));
+			Assert.IsTrue(leases.GroupBy(l => l.Owner.Id).Any(g => g.Count() >= majority));
+
+			leaseProviders.ToList().ForEach(p => p.Stop());
 		}
 	}
 }
