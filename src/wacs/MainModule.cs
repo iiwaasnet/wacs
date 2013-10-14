@@ -28,7 +28,7 @@ namespace wacs
 
 		private void RegisterSingletons(ContainerBuilder builder)
 		{
-			builder.Register(c => new Logger()).As<ILogger>().SingleInstance();
+			builder.Register(c => new Logger("fileLogger")).As<ILogger>().SingleInstance();
 			builder.RegisterType<WACService>().As<IService>().SingleInstance();
 			builder.RegisterType<MessageHub>().As<IMessageHub>().SingleInstance();
 			builder.RegisterType<MessageSerializer>().As<IMessageSerializer>().SingleInstance();
