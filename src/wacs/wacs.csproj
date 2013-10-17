@@ -92,6 +92,7 @@
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
     <Reference Include="System.Reactive.Core">
       <HintPath>..\packages\Rx-Core.2.1.30214.0\lib\Net45\System.Reactive.Core.dll</HintPath>
@@ -117,7 +118,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Diagnostics\ILogger.cs" />
+    <Compile Include="Diagnostics\IPerformanceCounter.cs" />
+    <Compile Include="Diagnostics\IPerformanceCountersCategory.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
+    <Compile Include="Diagnostics\PerformanceCounterCategoryAttribute.cs" />
+    <Compile Include="Diagnostics\PerformanceCounterDefinitionAttribute.cs" />
+    <Compile Include="Diagnostics\PerformanceCountersCategory.cs" />
+    <Compile Include="Diagnostics\PerformanceCountersInstaller.cs" />
+    <Compile Include="Diagnostics\SafePerformanceCounter.cs" />
+    <Compile Include="Diagnostics\WacsPerformanceCounters.cs" />
     <Compile Include="FLease\Ballot.cs" />
     <Compile Include="FLease\BallotGenerator.cs" />
     <Compile Include="FLease\FleaseConfiguration.cs" />

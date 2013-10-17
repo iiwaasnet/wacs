@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
@@ -33,13 +32,6 @@ namespace wacs.FLease
 		                          IWacsConfiguration config,
 		                          ILogger logger)
 		{
-			Contract.Requires(owner != null);
-			Contract.Requires(messageHub != null);
-			Contract.Requires(ballotGenerator != null);
-			Contract.Requires(serializer != null);
-			Contract.Requires(config != null);
-			Contract.Requires(logger != null);
-
 			this.logger = logger;
 			this.config = config;
 			this.messageHub = messageHub;
@@ -106,7 +98,7 @@ namespace wacs.FLease
 			var ballot = new Ballot(new DateTime(readMessage.Ballot.Timestamp, DateTimeKind.Utc),
 			                        readMessage.Ballot.MessageNumber,
 			                        new Process(readMessage.Ballot.ProcessId));
-			
+
 			if (writeBallot >= ballot || readBallot >= ballot)
 			{
 				LogNackRead(ballot);
@@ -154,8 +146,6 @@ namespace wacs.FLease
 					                });
 			}
 		}
-
-		
 
 		public ILeaseTxResult Read(IBallot ballot)
 		{

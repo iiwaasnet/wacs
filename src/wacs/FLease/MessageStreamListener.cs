@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 using wacs.Messaging;
 
 namespace wacs.FLease
@@ -10,8 +9,6 @@ namespace wacs.FLease
 
 		public MessageStreamListener(Action<IMessage> callback)
 		{
-			Contract.Requires(callback != null);
-
 			this.callback = callback;
 		}
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
 using wacs.Diagnostics;
@@ -22,12 +21,6 @@ namespace wacs.FLease
 		                     IFleaseConfiguration config,
 		                     ILogger logger)
 		{
-			Contract.Requires(owner != null);
-			Contract.Requires(registerFactory != null);
-			Contract.Requires(config != null);
-			Contract.Requires(ballotGenerator != null);
-			Contract.Requires(logger != null);
-
 			this.logger = logger;
 			this.owner = owner;
 			this.config = config;

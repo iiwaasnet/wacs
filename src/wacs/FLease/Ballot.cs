@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 
 namespace wacs.FLease
 {
@@ -38,8 +37,6 @@ namespace wacs.FLease
 
 		public int CompareTo(object obj)
 		{
-			Contract.Requires(obj is Ballot);
-
 			var ballot = obj as Ballot;
 
 			var res = Timestamp.CompareTo(ballot.Timestamp);

@@ -1,7 +1,10 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
 using Autofac.Configuration;
 using Topshelf;
 using Topshelf.HostConfigurators;
+using Topshelf.Runtime;
+using wacs.Diagnostics;
 
 namespace wacs
 {
@@ -14,7 +17,7 @@ namespace wacs
 
 			var container = builder.Build();
 
-			HostFactory.Run(x => ConfigureService(x, container));
+			HostFactory.New(x => ConfigureService(x, container)).Run();
 		}
 
 		private static void ConfigureService(HostConfigurator x, IContainer container)
@@ -30,6 +33,33 @@ namespace wacs
 			x.SetDescription("Wait-free Coordination Service");
 			x.SetDisplayName("WACS");
 			x.SetServiceName("WACS");
+
+			x.AfterInstall(InstallPerfCounters);
+			x.BeforeUninstall(UninstallPerfCounters);
+		}
+
+		private static void UninstallPerfCounters()
+		{
+			try
+			{
+				new PerformanceCountersInstaller<WacsPerformanceCounters>().Uninstall();
+			}
+			catch (Exception err)
+			{
+				Console.WriteLine(err);
+			}
+		}
+
+		private static void InstallPerfCounters(InstallHostSettings settings)
+		{
+			try
+			{
+				new PerformanceCountersInstaller<WacsPerformanceCounters>().Install();
+			}
+			catch (Exception err)
+			{
+				Console.WriteLine(err);
+			}
 		}
 	}
 }

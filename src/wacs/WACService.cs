@@ -1,26 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using Topshelf;
+using wacs.Diagnostics;
 
 namespace wacs
 {
 	public class WACService : ServiceControl
 	{
 		private readonly IEnumerable<IStateMachine> farm;
+		private readonly ILogger logger;
 
-		public WACService(IEnumerable<IStateMachine> members)
+		public WACService(IEnumerable<IStateMachine> members, ILogger logger)
 		{
 			farm = members;
+			this.logger = logger;
 		}
 
 		public bool Start(HostControl hostControl)
 		{
-			Console.WriteLine("=== Farm started ======================");
 			foreach (var stateMachine in farm)
 			{
 				stateMachine.Start();
 
-				Console.WriteLine("PAXOS Id: {0}", stateMachine.Id);
+				logger.InfoFormat("WACS Id:[{0}] started", stateMachine.Id);
 			}
 
 			return true;
@@ -31,6 +33,8 @@ namespace wacs
 			foreach (var stateMachine in farm)
 			{
 				stateMachine.Stop();
+
+				logger.InfoFormat("WACS Id:[{0}] stopped", stateMachine.Id);
 			}
 
 			return true;

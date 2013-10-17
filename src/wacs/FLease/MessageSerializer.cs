@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.Contracts;
-using System.IO;
+﻿using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 
@@ -9,8 +8,6 @@ namespace wacs.FLease
 	{
 		public byte[] Serialize(object obj)
 		{
-			Contract.Requires(obj != null);
-
 			using (var stream = new MemoryStream())
 			{
 				using (var writer = new BsonWriter(stream))
@@ -28,8 +25,6 @@ namespace wacs.FLease
 
 		public T Deserialize<T>(byte[] buffer)
 		{
-			Contract.Requires(buffer != null);
-
 			using (var stream = new MemoryStream(buffer))
 			{
 				using (var reader = new BsonReader(stream))

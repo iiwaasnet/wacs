@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Threading;
 using wacs.Messaging;
 
@@ -16,9 +15,6 @@ namespace wacs.FLease
 
 		public AwaitableMessageStreamFilter(Func<IMessage, bool> predicate, int maxCount)
 		{
-			Contract.Requires(predicate != null);
-			Contract.Requires(maxCount > 0);
-
 			this.predicate = predicate;
 			this.maxCount = maxCount;
 			currentCount = 0;
