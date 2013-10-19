@@ -179,10 +179,11 @@
     <Compile Include="Messaging\IMessage.cs" />
     <Compile Include="Messaging\IMessageHub.cs" />
     <Compile Include="Messaging\Listener.cs" />
-    <Compile Include="Messaging\MessageHub.cs" />
+    <Compile Include="Messaging\Inproc\InprocMessageHub.cs" />
     <Compile Include="IProcess.cs" />
     <Compile Include="Messaging\ISender.cs" />
     <Compile Include="Messaging\Sender.cs" />
+    <Compile Include="Messaging\zmq\MessageHub.cs" />
     <Compile Include="PaxosMachine.cs" />
     <Compile Include="Process.cs" />
     <Compile Include="Program.cs" />

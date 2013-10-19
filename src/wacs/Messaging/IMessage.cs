@@ -1,9 +1,9 @@
 ﻿namespace wacs.Messaging
 {
-	public interface IMessage
-	{
-		IEnvelope Envelope { get; }
+    public interface IMessage
+    {
+        IEnvelope Envelope { get; }
 
-		IBody Body { get; }
-	}
+        IBody Body { get; }
+    }
 }
