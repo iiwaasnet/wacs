@@ -5,124 +5,199 @@ using wacs.Diagnostics;
 
 namespace wacs.FLease
 {
-	public partial class LeaseProvider : ILeaseProvider
-	{
-		private DateTime startTime;
-		private readonly IRoundBasedRegister register;
-		private readonly IBallotGenerator ballotGenerator;
-		private readonly IProcess owner;
-		private readonly IFleaseConfiguration config;
-		private ILease latestLease;
-		private readonly ILogger logger;
+    public partial class LeaseProvider : ILeaseProvider
+    {
+        private DateTime startTime;
+        private readonly IRoundBasedRegister register;
+        private readonly IBallotGenerator ballotGenerator;
+        private readonly IProcess owner;
+        private readonly IFleaseConfiguration config;
+        private volatile ILease lastKnownLease;
+        private readonly ILogger logger;
+        private readonly Timer leaseTimer;
+        private readonly SemaphoreSlim renewGateway;
 
-		public LeaseProvider(IProcess owner,
-		                     IRoundBasedRegisterFactory registerFactory,
-		                     IBallotGenerator ballotGenerator,
-		                     IFleaseConfiguration config,
-		                     ILogger logger)
-		{
-			this.logger = logger;
-			this.owner = owner;
-			this.config = config;
-			this.ballotGenerator = ballotGenerator;
-			register = registerFactory.Build(owner);
-		}
+        public LeaseProvider(IProcess owner,
+                             IRoundBasedRegisterFactory registerFactory,
+                             IBallotGenerator ballotGenerator,
+                             IFleaseConfiguration config,
+                             ILogger logger)
+        {
+            this.logger = logger;
+            this.owner = owner;
+            this.config = config;
+            this.ballotGenerator = ballotGenerator;
+            register = registerFactory.Build(owner);
 
-		public void Start()
-		{
-			startTime = DateTime.UtcNow;
-			register.Start();
-		}
+            renewGateway = new SemaphoreSlim(1);
+            leaseTimer = new Timer(state => ScheduledReadOrRenewLease(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
+        }
 
-		public Task<ILease> GetLease()
-		{
-			return Task.Factory.StartNew(() => ReadLease());
-		}
+        private void ScheduledReadOrRenewLease()
+        {
+            if (renewGateway.Wait(TimeSpan.FromMilliseconds(10)))
+            {
+                try
+                {
+                    ReadOrRenewLease();
+                }
+                catch (Exception err)
+                {
+                    logger.Error(err);
+                }
+                finally
+                {
+                    renewGateway.Release();
+                }
+            }
+        }
 
-		private ILease ReadLease()
-		{
-			WaitBeforeNextLeaseIssued();
+        private void ReadOrRenewLease()
+        {
+            WaitBeforeNextLeaseIssued();
 
-			var now = DateTime.UtcNow;
+            var now = DateTime.UtcNow;
+            var lease = AсquireOrLearnLease(ballotGenerator.New(owner), now);
 
-			if (LeaseNullOrExpired(latestLease, now))
-			{
-				latestLease = AсquireLease(ballotGenerator.New(owner), now);
-			}
+            if (ProcessBecameLeader(lease, lastKnownLease) || ProcessLostLeadership(lease, lastKnownLease))
+            {
+                var renewPeriod = CalcLeaseRenewPeriod(ProcessBecameLeader(lease, lastKnownLease));
+                leaseTimer.Change(renewPeriod, renewPeriod);
+            }
 
-			return latestLease;
-		}
+            lastKnownLease = lease;
+        }
 
-		private ILease AсquireLease(IBallot ballot, DateTime now)
-		{
-			var read = register.Read(ballot);
-			if (read.TxOutcome == TxOutcome.Commit)
-			{
-				var lease = read.Lease;
-				if (LeaseIsNotSafelyExpired(lease, now))
-				{
-					LogStartSleep();
-					Sleep(config.ClockDrift);
-					LogAwake();
+        private bool ProcessLostLeadership(ILease nextLease, ILease previousLease)
+        {
+            return (previousLease != null && previousLease.Owner.Equals(owner)
+                    && nextLease != null && !nextLease.Owner.Equals(owner));
+        }
 
-					// TOOD: Add recursion exit condition
-					return AсquireLease(ballotGenerator.New(owner), DateTime.UtcNow);
-				}
+        private bool ProcessBecameLeader(ILease nextLease, ILease previousLease)
+        {
+            return ((previousLease == null || !previousLease.Owner.Equals(owner))
+                    && nextLease != null && nextLease.Owner.Equals(owner));
+        }
 
-				if (LeaseNullOrExpired(lease, now) || IsLeaseOwner(lease))
-				{
-					lease = new Lease(owner, now + config.MaxLeaseTimeSpan);
-				}
+        private TimeSpan CalcLeaseRenewPeriod(bool leader)
+        {
+            return (leader)
+                       ? TimeSpan.FromTicks(config.MaxLeaseTimeSpan.Ticks / 2 - config.ClockDrift.Ticks)
+                       : TimeSpan.FromTicks(config.MaxLeaseTimeSpan.Ticks);
+        }
 
-				var write = register.Write(ballot, lease);
-				if (write.TxOutcome == TxOutcome.Commit)
-				{
-					return lease;
-				}
-			}
+        public void Start()
+        {
+            startTime = DateTime.UtcNow;
+            register.Start();
+            leaseTimer.Change(TimeSpan.FromMilliseconds(0), config.MaxLeaseTimeSpan);
+        }
 
-			return null;
-		}
+        public Task<ILease> GetLease()
+        {
+            return Task.Factory.StartNew(() => GetLastKnownLease());
+        }
 
-		private bool IsLeaseOwner(ILease lease)
-		{
-			return lease != null && lease.Owner == owner;
-		}
+        private ILease GetLastKnownLease()
+        {
+            var now = DateTime.UtcNow;
 
-		private static bool LeaseNullOrExpired(ILease lease, DateTime now)
-		{
-			return lease == null || lease.ExpiresAt < now;
-		}
+            renewGateway.Wait();
+            try
+            {
+                if (LeaseNullOrExpired(lastKnownLease, now))
+                {
+                    ReadOrRenewLease();
+                }
 
-		private bool LeaseIsNotSafelyExpired(ILease lease, DateTime now)
-		{
-			return lease != null
-			       && lease.ExpiresAt < now
-			       && lease.ExpiresAt + config.ClockDrift > now;
-		}
+                return lastKnownLease;
+            }
+            finally
+            {
+                renewGateway.Release();
+            }
+        }
 
-		// TODO: Move to another place, i.e. start of listeners...
-		private void WaitBeforeNextLeaseIssued()
-		{
-			var diff = DateTime.UtcNow - startTime;
+        private ILease AсquireOrLearnLease(IBallot ballot, DateTime now)
+        {
+            var read = register.Read(ballot);
+            if (read.TxOutcome == TxOutcome.Commit)
+            {
+                var lease = read.Lease;
+                if (LeaseIsNotSafelyExpired(lease, now))
+                {
+                    LogStartSleep();
+                    Sleep(config.ClockDrift);
+                    LogAwake();
 
-			if (diff < config.MaxLeaseTimeSpan)
-			{
-				Sleep(config.MaxLeaseTimeSpan - diff);
-			}
-		}
+                    // TOOD: Add recursion exit condition
+                    return AсquireOrLearnLease(ballotGenerator.New(owner), DateTime.UtcNow);
+                }
 
-		private void Sleep(TimeSpan delay)
-		{
-			using (var @lock = new ManualResetEvent(false))
-			{
-				@lock.WaitOne(delay);
-			}
-		}
+                if (LeaseNullOrExpired(lease, now) || IsLeaseOwner(lease))
+                {
+                    LogLeaseProlonged(lease);
+                    lease = new Lease(owner, now + config.MaxLeaseTimeSpan);
+                }
 
-		public void Stop()
-		{
-			register.Stop();
-		}
-	}
+                var write = register.Write(ballot, lease);
+                if (write.TxOutcome == TxOutcome.Commit)
+                {
+                    return lease;
+                }
+            }
+
+            return null;
+        }
+
+        private bool IsLeaseOwner(ILease lease)
+        {
+            return lease != null && lease.Owner.Equals(owner);
+        }
+
+        private static bool LeaseNullOrExpired(ILease lease, DateTime now)
+        {
+            return lease == null || lease.ExpiresAt < now;
+        }
+
+        private bool LeaseIsNotSafelyExpired(ILease lease, DateTime now)
+        {
+            return lease != null
+                   && lease.ExpiresAt < now
+                   && lease.ExpiresAt + config.ClockDrift > now;
+        }
+
+        // TODO: Move to another place, i.e. start of listeners...
+        private void WaitBeforeNextLeaseIssued()
+        {
+            var diff = DateTime.UtcNow - startTime;
+
+            if (diff < config.MaxLeaseTimeSpan)
+            {
+                Sleep(config.MaxLeaseTimeSpan - diff);
+            }
+        }
+
+        private void Sleep(TimeSpan delay)
+        {
+            using (var @lock = new ManualResetEvent(false))
+            {
+                @lock.WaitOne(delay);
+            }
+        }
+
+        //TODO: add Dispose() method???
+        public void Stop()
+        {
+            register.Stop();
+            leaseTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
+        }
+
+        public void Dispose()
+        {
+            leaseTimer.Dispose();
+            renewGateway.Dispose();
+        }
+    }
 }

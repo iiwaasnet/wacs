@@ -1,8 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace wacs.FLease
 {
-	public interface ILeaseProvider
+	public interface ILeaseProvider : IDisposable
 	{
 		void Start();
 
