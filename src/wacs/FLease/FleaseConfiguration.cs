@@ -6,5 +6,6 @@ namespace wacs.FLease
 	{
 		public TimeSpan MaxLeaseTimeSpan { get; set; }
 		public TimeSpan ClockDrift { get; set; }
+	    public TimeSpan MessageRoundtrip { get; set; }
 	}
 }

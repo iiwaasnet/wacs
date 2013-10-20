@@ -18,7 +18,7 @@ namespace wacs.Tests.FLease
 		{
 			var builder = DIHelper.CreateBuilder();
 
-			var owner = new Process(12);
+			var owner = new Process(Guid.NewGuid().ToString());
 			var register = new Mock<IRoundBasedRegister>();
 			var registerFactory = new Mock<IRoundBasedRegisterFactory>();
 			registerFactory.Setup(m => m.Build(It.Is<IProcess>(v => v.Id == owner.Id))).Returns(register.Object);
@@ -37,7 +37,7 @@ namespace wacs.Tests.FLease
 		{
 			var builder = DIHelper.CreateBuilder();
 
-			var owner = new Process(12);
+            var owner = new Process(Guid.NewGuid().ToString());
 			var register = new Mock<IRoundBasedRegister>();
 			var registerFactory = new Mock<IRoundBasedRegisterFactory>();
 			registerFactory.Setup(m => m.Build(It.Is<IProcess>(v => v.Id == owner.Id))).Returns(register.Object);
@@ -54,7 +54,7 @@ namespace wacs.Tests.FLease
 		[Test]
 		public void TestGetLease_ReturnsTask()
 		{
-			var lease = new Lease(new Process(12), DateTime.UtcNow + TimeSpan.FromSeconds(3));
+            var lease = new Lease(new Process(Guid.NewGuid().ToString()), DateTime.UtcNow + TimeSpan.FromSeconds(3));
 			var leaseProvider = new Mock<ILeaseProvider>();
 			leaseProvider.Setup(m => m.GetLease()).Returns(Task.FromResult<ILease>(lease));
 
@@ -76,7 +76,7 @@ namespace wacs.Tests.FLease
 			var leaseProviders = new List<ILeaseProvider>();
 			for (var i = 0; i < numberOfNodes; i++)
 			{
-				leaseProviders.Add(leaseProviderFactory.Build(new Process(i)));
+				leaseProviders.Add(leaseProviderFactory.Build(new Process(i.ToString())));
 			}
 
 			var majority = numberOfNodes / 2 + 1;

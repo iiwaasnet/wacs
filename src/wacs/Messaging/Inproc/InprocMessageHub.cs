@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading;
 
-namespace wacs.Messaging
+namespace wacs.Messaging.Inproc
 {
     public class InprocMessageHub : IMessageHub
     {

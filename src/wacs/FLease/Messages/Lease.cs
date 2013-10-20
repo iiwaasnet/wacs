@@ -2,7 +2,7 @@
 {
 	public class Lease
 	{
-		public int ProcessId { get; set; }
+		public string ProcessId { get; set; }
 		public long ExpiresAt { get; set; }
 	}
 }

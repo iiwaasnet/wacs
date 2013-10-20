@@ -9,13 +9,13 @@ namespace wacs
 {
     public class PaxosMachine : IStateMachine
     {
-        private readonly int id;
+        private readonly string id;
         private readonly ILeaseProvider leaseProvider;
         private readonly CancellationTokenSource token;
         private readonly IBallotGenerator ballotGenerator;
-        private ILogger logger;
+        private readonly ILogger logger;
 
-        public PaxosMachine(int id,
+        public PaxosMachine(string id,
                             ILeaseProviderFactory leaseProviderFactory,
                             IBallotGenerator ballotGenerator,
                             ILogger logger)
@@ -57,10 +57,10 @@ namespace wacs
                                       DateTime.UtcNow.ToString("HH:mm:ss fff"),
                                       timer.ElapsedMilliseconds);
                 }
-                //if (lease != null)
-                //{
-                //    Thread.Sleep(TimeSpan.FromMilliseconds(10));
-                //}
+                if (lease != null)
+                {
+                    Thread.Sleep(TimeSpan.FromMilliseconds(50));
+                }
             }
         }
 
@@ -77,7 +77,7 @@ namespace wacs
             token.Dispose();
         }
 
-        public int Id
+        public string Id
         {
             get { return id; }
         }

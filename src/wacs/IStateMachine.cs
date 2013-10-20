@@ -6,6 +6,6 @@
 
 		void Stop();
 
-		int Id { get; }
+		string Id { get; }
 	}
 }

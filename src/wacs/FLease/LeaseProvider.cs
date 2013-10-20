@@ -83,7 +83,9 @@ namespace wacs.FLease
         private TimeSpan CalcLeaseRenewPeriod(bool leader)
         {
             return (leader)
-                       ? TimeSpan.FromTicks(config.MaxLeaseTimeSpan.Ticks / 2 - config.ClockDrift.Ticks)
+                       ? config.MaxLeaseTimeSpan
+                         - TimeSpan.FromTicks(config.MessageRoundtrip.Ticks * 2)
+                         - config.ClockDrift
                        : TimeSpan.FromTicks(config.MaxLeaseTimeSpan.Ticks);
         }
 

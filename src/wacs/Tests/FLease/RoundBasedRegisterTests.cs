@@ -19,7 +19,7 @@ namespace wacs.Tests.FLease
 			config.Setup(m => m.FarmSize).Returns(1);
 			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
 
-			var owner = new Process(12);
+            var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 			
@@ -43,7 +43,7 @@ namespace wacs.Tests.FLease
 			config.Setup(m => m.FarmSize).Returns(1);
 			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
 
-			var owner = new Process(12);
+            var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 			
@@ -67,7 +67,7 @@ namespace wacs.Tests.FLease
 			config.Setup(m => m.FarmSize).Returns(1);
 			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
 
-			var owner = new Process(12);
+            var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -91,7 +91,7 @@ namespace wacs.Tests.FLease
 			config.Setup(m => m.FarmSize).Returns(1);
 			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
 
-			var owner = new Process(12);
+            var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -115,7 +115,7 @@ namespace wacs.Tests.FLease
 			config.Setup(m => m.FarmSize).Returns(1);
 			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
 
-			var owner = new Process(12);
+            var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -140,7 +140,7 @@ namespace wacs.Tests.FLease
 			config.Setup(m => m.FarmSize).Returns(1);
 			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
 
-			var owner = new Process(12);
+            var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -164,7 +164,7 @@ namespace wacs.Tests.FLease
 			config.Setup(m => m.FarmSize).Returns(1);
 			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
 
-			var owner = new Process(12);
+            var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -192,7 +192,7 @@ namespace wacs.Tests.FLease
 			config.Setup(m => m.FarmSize).Returns(1);
 			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
 
-			var owner = new Process(12);
+            var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
