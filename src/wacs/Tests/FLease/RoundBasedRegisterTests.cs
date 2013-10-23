@@ -2,6 +2,7 @@
 using Autofac;
 using Moq;
 using NUnit.Framework;
+using wacs.Configuration;
 using wacs.FLease;
 using wacs.Tests.Helpers;
 

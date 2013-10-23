@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
+using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.FLease.Messages;
 using wacs.Messaging;
@@ -16,7 +17,7 @@ namespace wacs.FLease
 		private Ballot writeBallot;
 		private ILease lease;
 		private readonly IListener listener;
-		private readonly IWacsConfiguration config;
+		private readonly ISynodConfiguration config;
 		private readonly ILogger logger;
 
 		private readonly IObservable<IMessage> ackReadStream;
@@ -29,7 +30,7 @@ namespace wacs.FLease
 		                          IMessageHub messageHub,
 		                          IBallotGenerator ballotGenerator,
 		                          IMessageSerializer serializer,
-		                          IWacsConfiguration config,
+		                          ISynodConfiguration config,
 		                          ILogger logger)
 		{
 			this.logger = logger;
@@ -228,7 +229,7 @@ namespace wacs.FLease
 
 		private int GetQuorum()
 		{
-			return config.FarmSize / 2 + 1;
+			return config.Nodes.Count() / 2 + 1;
 		}
 
 		public void Start()

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
+using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.FLease.Messages;
 using ZMQ;
@@ -15,13 +15,13 @@ namespace wacs.Messaging.zmq
         private readonly Socket multicastListener;
         private readonly Socket unicastListener;
         private readonly Socket sender;
-        private readonly IMessageHubConfiguration config;
+        private readonly ISynodConfiguration config;
         private readonly ILogger logger;
         private IProcess subscriber;
         private readonly ConcurrentBag<Listener> subscriptions;
         private readonly BlockingCollection<MultipartMessage> messageQueue;
 
-        public MessageHub(IMessageHubConfiguration config, ILogger logger)
+        public MessageHub(ISynodConfiguration config, ILogger logger)
         {
             this.config = config;
             this.logger = logger;
@@ -71,7 +71,8 @@ namespace wacs.Messaging.zmq
             BindSenderToSocket(subscriber);
 
             SubscribeListeningSockets(subscriber);
-            ConnectToListeners(new[] {multicastListener, unicastListener}, config.Listeners);
+            ConnectToListeners(unicastListener , config.Nodes, subscriber.Id.GetBytes());
+            ConnectToListeners(multicastListener, config.Nodes, MultipartMessage.MulticastId);
 
             var listener = new Listener(subscriber);
             subscriptions.Add(listener);
@@ -82,7 +83,7 @@ namespace wacs.Messaging.zmq
         private void BindSenderToSocket(IProcess subscriber)
         {
             sender.Identity = subscriber.Id.GetBytes();
-            sender.Bind(config.Sender.ToString());
+            sender.Bind(config.This.Address);
         }
 
         private void SubscribeListeningSockets(IProcess subscriber)
@@ -95,7 +96,12 @@ namespace wacs.Messaging.zmq
             var multicastPoller = multicastListener.CreatePollItem(IOMultiPlex.POLLIN);
             multicastPoller.PollInHandler += PollInMessageHandler;
 
-            new Thread(() => PollReceivers(new []{unicastPoller, multicastPoller})).Start();
+            new Thread(() => PollReceivers(new[] {unicastPoller, multicastPoller})).Start();
+        }
+
+        private void PollMultiInMessageHandler(Socket socket, IOMultiPlex revents)
+        {
+            PollInMessageHandler(socket, revents);
         }
 
         private void PollReceivers(PollItem[] pollItems)
@@ -112,19 +118,18 @@ namespace wacs.Messaging.zmq
 
             if (queue.Any())
             {
-                messageQueue.Add(new MultipartMessage(queue));
+                var multipartMessage = new MultipartMessage(queue);
+                logger.InfoFormat("MSG RECEIVED: {0} {1}", multipartMessage.GetMessageType(), multipartMessage.GetMessage().GetString());
+                messageQueue.Add(multipartMessage);
             }
         }
 
-        private void ConnectToListeners(IEnumerable<Socket> sockets, IEnumerable<IPEndPoint> listeners)
+        private void ConnectToListeners(Socket socket, IEnumerable<INode> listeners, byte[] identity)
         {
             foreach (var ipEndPoint in listeners)
             {
-                foreach (var socket in sockets)
-                {
-                    socket.Identity = subscriber.Id.GetBytes();
-                    socket.Connect(ipEndPoint.ToString());
-                }
+                socket.Identity = identity;
+                socket.Connect(ipEndPoint.Address);
             }
         }
 
@@ -144,6 +149,7 @@ namespace wacs.Messaging.zmq
 
         private void SendMessage(MultipartMessage multipartMessage)
         {
+            logger.InfoFormat("MSG SENT: {0} {1}", multipartMessage.GetMessageType(), multipartMessage.GetMessage().GetString());
             sender.Send(multipartMessage.GetFilterBytes(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
             sender.Send(multipartMessage.GetSenderIdBytes(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
             sender.Send(multipartMessage.GetMessageTypeBytes(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);

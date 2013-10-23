@@ -1,13 +1,14 @@
 ﻿using System;
+using wacs.Configuration;
 
 namespace wacs.FLease
 {
 	public class BallotGenerator : IBallotGenerator
 	{
 		private readonly BallotTimestamp lastBallotTimestamp;
-		private readonly IFleaseConfiguration config;
+		private readonly ILeaseConfiguration config;
 
-		public BallotGenerator(IFleaseConfiguration config)
+		public BallotGenerator(ILeaseConfiguration config)
 		{
 			this.config = config;
 			lastBallotTimestamp = new BallotTimestamp {MessageNumber = 0, Timestamp = DateTime.UtcNow};

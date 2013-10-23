@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using wacs.Configuration;
 using wacs.Diagnostics;
 
 namespace wacs.FLease
@@ -11,7 +12,7 @@ namespace wacs.FLease
         private readonly IRoundBasedRegister register;
         private readonly IBallotGenerator ballotGenerator;
         private readonly IProcess owner;
-        private readonly IFleaseConfiguration config;
+        private readonly ILeaseConfiguration config;
         private volatile ILease lastKnownLease;
         private readonly ILogger logger;
         private readonly Timer leaseTimer;
@@ -20,7 +21,7 @@ namespace wacs.FLease
         public LeaseProvider(IProcess owner,
                              IRoundBasedRegisterFactory registerFactory,
                              IBallotGenerator ballotGenerator,
-                             IFleaseConfiguration config,
+                             ILeaseConfiguration config,
                              ILogger logger)
         {
             this.logger = logger;
@@ -93,7 +94,7 @@ namespace wacs.FLease
         {
             startTime = DateTime.UtcNow;
             register.Start();
-            leaseTimer.Change(TimeSpan.FromMilliseconds(0), config.MaxLeaseTimeSpan);
+            //leaseTimer.Change(TimeSpan.FromMilliseconds(0), config.MaxLeaseTimeSpan);
         }
 
         public Task<ILease> GetLease()

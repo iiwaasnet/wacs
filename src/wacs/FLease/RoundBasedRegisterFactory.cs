@@ -1,4 +1,5 @@
-﻿using wacs.Diagnostics;
+﻿using wacs.Configuration;
+using wacs.Diagnostics;
 using wacs.Messaging;
 
 namespace wacs.FLease
@@ -8,13 +9,13 @@ namespace wacs.FLease
 		private readonly IMessageHub messageHub;
 		private readonly IBallotGenerator ballotGenerator;
 		private readonly IMessageSerializer serializer;
-		private readonly IWacsConfiguration config;
+        private readonly ISynodConfiguration config;
 		private readonly ILogger logger;
 
 		public RoundBasedRegisterFactory(IMessageHub messageHub,
 		                                 IBallotGenerator ballotGenerator,
 		                                 IMessageSerializer serializer,
-		                                 IWacsConfiguration config,
+                                         ISynodConfiguration config,
 		                                 ILogger logger)
 		{
 			this.messageHub = messageHub;

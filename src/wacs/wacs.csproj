@@ -56,6 +56,7 @@
     <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
     <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
     <CodeContractsAnalysisWarningLevel>0</CodeContractsAnalysisWarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -72,6 +73,9 @@
     </Reference>
     <Reference Include="Autofac.Configuration">
       <HintPath>..\packages\Autofac.Configuration.3.1.0\lib\net40\Autofac.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="Castle.Core">
+      <HintPath>..\packages\Castle.Core.3.0.0.4001\lib\net40-client\Castle.Core.dll</HintPath>
     </Reference>
     <Reference Include="clrzmq">
       <HintPath>..\packages\clrzmq-x64.2.2.5\lib\clrzmq.dll</HintPath>
@@ -91,7 +95,11 @@
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="SimpleConfigSections">
+      <HintPath>..\packages\SimpleConfigSections.1.0.0.7\lib\net35\SimpleConfigSections.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
     <Reference Include="System.Reactive.Core">
@@ -119,6 +127,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\INode.cs" />
+    <Compile Include="Configuration\ISynodConfiguration.cs" />
+    <Compile Include="Configuration\IWacsConfiguration.cs" />
+    <Compile Include="Configuration\WacsConfiguration.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />
     <Compile Include="Diagnostics\IPerformanceCounter.cs" />
     <Compile Include="Diagnostics\IPerformanceCountersCategory.cs" />
@@ -131,10 +143,10 @@
     <Compile Include="Diagnostics\WacsPerformanceCounters.cs" />
     <Compile Include="FLease\Ballot.cs" />
     <Compile Include="FLease\BallotGenerator.cs" />
-    <Compile Include="FLease\FleaseConfiguration.cs" />
+    <Compile Include="FLease\LeaseConfiguration.cs" />
     <Compile Include="FLease\IBallot.cs" />
     <Compile Include="FLease\IBallotGenerator.cs" />
-    <Compile Include="FLease\IFleaseConfiguration.cs" />
+    <Compile Include="Configuration\ILeaseConfiguration.cs" />
     <Compile Include="FLease\ILease.cs" />
     <Compile Include="FLease\ILeaseProvider.cs" />
     <Compile Include="FLease\ILeaseProviderFactory.cs" />
@@ -168,7 +180,6 @@
     <Compile Include="FLease\RoundBasedRegisterLogging.cs" />
     <Compile Include="FLease\TxOutcome.cs" />
     <Compile Include="IStateMachine.cs" />
-    <Compile Include="IWacsConfiguration.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="Messaging\Body.cs" />
     <Compile Include="Messaging\BroadcastRequest.cs" />
@@ -184,9 +195,7 @@
     <Compile Include="Messaging\Inproc\InprocMessageHub.cs" />
     <Compile Include="IProcess.cs" />
     <Compile Include="Messaging\ISender.cs" />
-    <Compile Include="Messaging\MessageHubConfiguration.cs" />
     <Compile Include="Messaging\Sender.cs" />
-    <Compile Include="Messaging\IMessageHubConfiguration.cs" />
     <Compile Include="Messaging\zmq\MessageHub.cs" />
     <Compile Include="Messaging\zmq\MultipartMessage.cs" />
     <Compile Include="Messaging\zmq\StringEncoder.cs" />
@@ -197,7 +206,6 @@
     <Compile Include="Tests\FLease\LeaseProviderTests.cs" />
     <Compile Include="Tests\FLease\RoundBasedRegisterTests.cs" />
     <Compile Include="Tests\Helpers\DIHelper.cs" />
-    <Compile Include="WacsConfiguration.cs" />
     <Compile Include="WACService.cs" />
   </ItemGroup>
   <ItemGroup>

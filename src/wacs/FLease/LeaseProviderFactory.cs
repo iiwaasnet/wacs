@@ -1,4 +1,5 @@
-﻿using wacs.Diagnostics;
+﻿using wacs.Configuration;
+using wacs.Diagnostics;
 
 namespace wacs.FLease
 {
@@ -6,12 +7,12 @@ namespace wacs.FLease
 	{
 		private readonly IRoundBasedRegisterFactory registerFactory;
 		private readonly IBallotGenerator ballotGenerator;
-		private readonly IFleaseConfiguration config;
+		private readonly ILeaseConfiguration config;
 		private readonly ILogger logger;
 
 		public LeaseProviderFactory(IRoundBasedRegisterFactory registerFactory,
 		                            IBallotGenerator ballotGenerator,
-		                            IFleaseConfiguration config,
+		                            ILeaseConfiguration config,
 		                            ILogger logger)
 		{
 			this.registerFactory = registerFactory;

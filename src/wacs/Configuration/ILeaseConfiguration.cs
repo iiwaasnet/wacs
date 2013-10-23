@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace wacs.FLease
+namespace wacs.Configuration
 {
-    public interface IFleaseConfiguration
+    public interface ILeaseConfiguration
     {
         TimeSpan MaxLeaseTimeSpan { get; }
         TimeSpan ClockDrift { get; }
