@@ -131,6 +131,7 @@
     <Compile Include="Configuration\ISynodConfiguration.cs" />
     <Compile Include="Configuration\IWacsConfiguration.cs" />
     <Compile Include="Configuration\WacsConfiguration.cs" />
+    <Compile Include="core\UniqueIdGenerator.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />
     <Compile Include="Diagnostics\IPerformanceCounter.cs" />
     <Compile Include="Diagnostics\IPerformanceCountersCategory.cs" />
@@ -226,9 +227,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="core\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

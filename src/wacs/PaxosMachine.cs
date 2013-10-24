@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using wacs.core;
 using wacs.Diagnostics;
 using wacs.FLease;
 
@@ -15,12 +16,11 @@ namespace wacs
         private readonly IBallotGenerator ballotGenerator;
         private readonly ILogger logger;
 
-        public PaxosMachine(string id,
-                            ILeaseProviderFactory leaseProviderFactory,
+        public PaxosMachine(ILeaseProviderFactory leaseProviderFactory,
                             IBallotGenerator ballotGenerator,
                             ILogger logger)
         {
-            this.id = id;
+            id = UniqueIdGenerator.Generate();
             this.logger = logger;
             leaseProvider = leaseProviderFactory.Build(new Process(id));
             this.ballotGenerator = ballotGenerator;

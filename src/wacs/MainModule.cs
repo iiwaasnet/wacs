@@ -2,6 +2,7 @@
 using Autofac;
 using Topshelf;
 using wacs.Configuration;
+using wacs.core;
 using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging;
@@ -53,8 +54,7 @@ namespace wacs
 
         private static void RegisterPaxosInstances(ContainerBuilder builder)
         {
-            builder.Register(c => new PaxosMachine(Guid.NewGuid().ToString(),
-                                                   c.Resolve<ILeaseProviderFactory>(),
+            builder.Register(c => new PaxosMachine(c.Resolve<ILeaseProviderFactory>(),
                                                    c.Resolve<IBallotGenerator>(),
                                                    c.Resolve<ILogger>()))
                    .As<IStateMachine>();
