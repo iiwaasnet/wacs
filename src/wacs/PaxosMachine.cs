@@ -34,7 +34,6 @@ namespace wacs
             while (!token.IsCancellationRequested)
             {
                 var ballot = ballotGenerator.New(new Process(id));
-                //Console.WriteLine("Get Lease for Ballot: Timestamp {0}, Process {1}", ballot.Timestamp.ToString("mm:hh:ss fff"), ballot.Process.Id);
                 timer.Reset();
                 timer.Start();
                 var lease = leaseProvider.GetLease().Result;

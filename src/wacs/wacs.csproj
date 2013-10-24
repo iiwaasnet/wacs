@@ -144,7 +144,6 @@
     <Compile Include="Diagnostics\WacsPerformanceCounters.cs" />
     <Compile Include="FLease\Ballot.cs" />
     <Compile Include="FLease\BallotGenerator.cs" />
-    <Compile Include="FLease\LeaseConfiguration.cs" />
     <Compile Include="FLease\IBallot.cs" />
     <Compile Include="FLease\IBallotGenerator.cs" />
     <Compile Include="Configuration\ILeaseConfiguration.cs" />

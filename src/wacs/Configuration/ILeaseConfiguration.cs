@@ -7,5 +7,6 @@ namespace wacs.Configuration
         TimeSpan MaxLeaseTimeSpan { get; }
         TimeSpan ClockDrift { get; }
         TimeSpan MessageRoundtrip { get; }
+        TimeSpan NodeResponseTimeout { get; }
     }
 }
