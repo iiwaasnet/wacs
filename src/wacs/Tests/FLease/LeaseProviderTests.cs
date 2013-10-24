@@ -6,6 +6,9 @@ using Autofac;
 using Moq;
 using NUnit.Framework;
 using wacs.FLease;
+using wacs.Messaging;
+using wacs.Messaging.Inproc;
+using wacs.Messaging.zmq;
 using wacs.Tests.Helpers;
 
 namespace wacs.Tests.FLease
@@ -18,6 +21,7 @@ namespace wacs.Tests.FLease
 		{
 			var builder = DIHelper.CreateBuilder();
 
+            builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
 			var owner = new Process(Guid.NewGuid().ToString());
 			var register = new Mock<IRoundBasedRegister>();
 			var registerFactory = new Mock<IRoundBasedRegisterFactory>();
@@ -37,6 +41,7 @@ namespace wacs.Tests.FLease
 		{
 			var builder = DIHelper.CreateBuilder();
 
+            builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
             var owner = new Process(Guid.NewGuid().ToString());
 			var register = new Mock<IRoundBasedRegister>();
 			var registerFactory = new Mock<IRoundBasedRegisterFactory>();
@@ -69,9 +74,11 @@ namespace wacs.Tests.FLease
 		[TestCase(4)]
 		public void LeaseIsIssuedByQuorum(int numberOfNodes)
 		{
-			var container = DIHelper.CreateContainer();
+			var builder = DIHelper.CreateBuilder();
 
-			var leaseProviderFactory = container.Resolve<ILeaseProviderFactory>();
+            builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
+
+			var leaseProviderFactory = builder.Build().Resolve<ILeaseProviderFactory>();
 
 			var leaseProviders = new List<ILeaseProvider>();
 			for (var i = 0; i < numberOfNodes; i++)

@@ -4,6 +4,8 @@ using Moq;
 using NUnit.Framework;
 using wacs.Configuration;
 using wacs.FLease;
+using wacs.Messaging;
+using wacs.Messaging.Inproc;
 using wacs.Tests.Helpers;
 
 namespace wacs.Tests.FLease
@@ -11,15 +13,28 @@ namespace wacs.Tests.FLease
 	[TestFixture]
 	public class RoundBasedRegisterTests
 	{
-		[Test(Description = "Lemma R1: Read-abort")]
+	    private ContainerBuilder builder;
+
+        [SetUp]
+	    public void Setup()
+	    {
+            builder = DIHelper.CreateBuilder();
+
+            builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
+            var config = new Mock<IWacsConfiguration>();
+            config.Setup(m => m.FarmSize).Returns(1);
+            var leaseConfig = new Mock<ILeaseConfiguration>();
+            var synodConfig = new Mock<ISynodConfiguration>();
+            leaseConfig.Setup(m => m.NodeResponseTimeout).Returns(TimeSpan.FromSeconds(1));
+            config.Setup(m => m.Lease).Returns(leaseConfig.Object);
+            config.Setup(m => m.Synod).Returns(synodConfig.Object);
+
+            builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
+	    }
+
+	    [Test(Description = "Lemma R1: Read-abort")]
 		public void TestReadWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
 		{
-			var builder = DIHelper.CreateBuilder();
-
-			var config = new Mock<IWacsConfiguration>();
-			config.Setup(m => m.FarmSize).Returns(1);
-			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
-
             var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
@@ -38,12 +53,6 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R1: Read-abort")]
 		public void TestReadWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
 		{
-			var builder = DIHelper.CreateBuilder();
-
-			var config = new Mock<IWacsConfiguration>();
-			config.Setup(m => m.FarmSize).Returns(1);
-			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
-
             var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
@@ -62,12 +71,6 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R2: Write-abort")]
 		public void TestWriteWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
 		{
-			var builder = DIHelper.CreateBuilder();
-
-			var config = new Mock<IWacsConfiguration>();
-			config.Setup(m => m.FarmSize).Returns(1);
-			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
-
             var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
@@ -86,12 +89,6 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R2: Write-abort")]
 		public void TestWriteWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
 		{
-			var builder = DIHelper.CreateBuilder();
-
-			var config = new Mock<IWacsConfiguration>();
-			config.Setup(m => m.FarmSize).Returns(1);
-			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
-
             var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
@@ -110,12 +107,6 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R3: Read-write-commit")]
 		public void TestIfReadWithHigherBallotCommits_ThenReadWithLowerOrEqualBallotAborts()
 		{
-			var builder = DIHelper.CreateBuilder();
-
-			var config = new Mock<IWacsConfiguration>();
-			config.Setup(m => m.FarmSize).Returns(1);
-			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
-
             var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
@@ -135,12 +126,6 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R3: Read-write-commit")]
 		public void TestIfWriteWithHigherBallotCommits_ThenWriteWithLowerBallotAborts()
 		{
-			var builder = DIHelper.CreateBuilder();
-
-			var config = new Mock<IWacsConfiguration>();
-			config.Setup(m => m.FarmSize).Returns(1);
-			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
-
             var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
@@ -159,12 +144,6 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R4: Read-commit")]
 		public void TestIfReadWithHigherBallotCommitsWithL1_ThenWriteWithLowerBallotCommitedWithL1Before()
 		{
-			var builder = DIHelper.CreateBuilder();
-
-			var config = new Mock<IWacsConfiguration>();
-			config.Setup(m => m.FarmSize).Returns(1);
-			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
-
             var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
@@ -187,12 +166,6 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R5: Write-commit")]
 		public void TestIfTwoWritesCommitWithL1AndL2_ThenReadWithHigherBallotCommitsWithL2()
 		{
-			var builder = DIHelper.CreateBuilder();
-
-			var config = new Mock<IWacsConfiguration>();
-			config.Setup(m => m.FarmSize).Returns(1);
-			builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
-
             var owner = new Process(Guid.NewGuid().ToString());
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
