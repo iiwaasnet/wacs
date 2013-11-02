@@ -1,12 +1,9 @@
-﻿using System;
-using Autofac;
+﻿using Autofac;
 using Topshelf;
 using wacs.Configuration;
-using wacs.core;
 using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging;
-using wacs.Messaging.Inproc;
 using wacs.Messaging.zmq;
 
 namespace wacs
