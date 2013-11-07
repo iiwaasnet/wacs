@@ -1,6 +1,4 @@
-﻿using wacs.Messaging;
-
-namespace wacs.FLease.Messages
+﻿namespace wacs.Messaging
 {
 	public class Message : IMessage
 	{

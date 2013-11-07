@@ -172,7 +172,7 @@
     <Compile Include="FLease\Messages\NackWritePayload.cs" />
     <Compile Include="FLease\Messages\NackReadPayload.cs" />
     <Compile Include="FLease\Messages\Lease.cs" />
-    <Compile Include="FLease\Messages\Message.cs" />
+    <Compile Include="Messaging\Message.cs" />
     <Compile Include="FLease\Messages\ReadPayload.cs" />
     <Compile Include="FLease\Messages\WritePayload.cs" />
     <Compile Include="FLease\RoundBasedRegister.cs" />
