@@ -6,8 +6,7 @@ namespace wacs.core
     {
         public static string Generate()
         {
-            var random = (int) (0x0000ffff & DateTime.UtcNow.Ticks);
-            return Base62ToString(random);
+            return Base62ToString(DateTime.UtcNow.Ticks);
         }
 
         private static string Base62ToString(long value)
