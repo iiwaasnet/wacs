@@ -35,7 +35,7 @@ namespace wacs.FLease
 
 		public IBallot Null()
 		{
-			return new Ballot(DateTime.MinValue, 0, new Process(0.ToString()));
+			return new Ballot(DateTime.MinValue, 0, new Process(0));
 		}
 	}
 

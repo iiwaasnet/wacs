@@ -2,9 +2,10 @@
 {
     public class Process : IProcess
     {
-        public Process(string id)
+        public Process(int id)
         {
             Id = id;
+            Name = id.ToString();
         }
 
         public static bool operator ==(Process x, Process y)
@@ -41,9 +42,11 @@
 
         public override int GetHashCode()
         {
-            return Id.GetHashCode();
+            return Id;
         }
 
-        public string Id { get; private set; }
+        public int Id { get; private set; }
+
+        public string Name { get; private set; }
     }
 }

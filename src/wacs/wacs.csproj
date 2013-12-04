@@ -200,9 +200,18 @@
     <Compile Include="Messaging\zmq\MultipartMessage.cs" />
     <Compile Include="Messaging\zmq\StringEncoder.cs" />
     <Compile Include="PaxosMachine.cs" />
+    <Compile Include="Paxos\Interface\ICommand.cs" />
+    <Compile Include="Paxos\Interface\ILogEntry.cs" />
+    <Compile Include="Paxos\Interface\ILogIndex.cs" />
+    <Compile Include="Paxos\Interface\IProposer.cs" />
+    <Compile Include="Paxos\Interface\IReplicatedLog.cs" />
+    <Compile Include="Paxos\Interface\IValue.cs" />
+    <Compile Include="Paxos\Interface\LogEntryState.cs" />
     <Compile Include="Process.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResolutionService\Interface\IResolutionService.cs" />
+    <Compile Include="ResolutionService\Implementation\ResolutionService.cs" />
     <Compile Include="Tests\FLease\LeaseProviderTests.cs" />
     <Compile Include="Tests\FLease\RoundBasedRegisterTests.cs" />
     <Compile Include="Tests\Helpers\DIHelper.cs" />
@@ -228,7 +237,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Paxos\Implementation\" />
-    <Folder Include="Paxos\Interface\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

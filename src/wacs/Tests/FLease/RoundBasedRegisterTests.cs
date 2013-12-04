@@ -3,6 +3,7 @@ using Autofac;
 using Moq;
 using NUnit.Framework;
 using wacs.Configuration;
+using wacs.core;
 using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.Inproc;
@@ -35,7 +36,7 @@ namespace wacs.Tests.FLease
 	    [Test(Description = "Lemma R1: Read-abort")]
 		public void TestReadWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
 		{
-            var owner = new Process(Guid.NewGuid().ToString());
+            var owner = new Process(UniqueIdGenerator.Generate(3));
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 			
@@ -53,7 +54,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R1: Read-abort")]
 		public void TestReadWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
 		{
-            var owner = new Process(Guid.NewGuid().ToString());
+            var owner = new Process(UniqueIdGenerator.Generate(3));
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 			
@@ -71,7 +72,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R2: Write-abort")]
 		public void TestWriteWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
 		{
-            var owner = new Process(Guid.NewGuid().ToString());
+            var owner = new Process(UniqueIdGenerator.Generate(3));
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -89,7 +90,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R2: Write-abort")]
 		public void TestWriteWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
 		{
-            var owner = new Process(Guid.NewGuid().ToString());
+            var owner = new Process(UniqueIdGenerator.Generate(3));
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -107,7 +108,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R3: Read-write-commit")]
 		public void TestIfReadWithHigherBallotCommits_ThenReadWithLowerOrEqualBallotAborts()
 		{
-            var owner = new Process(Guid.NewGuid().ToString());
+            var owner = new Process(UniqueIdGenerator.Generate(3));
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -126,7 +127,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R3: Read-write-commit")]
 		public void TestIfWriteWithHigherBallotCommits_ThenWriteWithLowerBallotAborts()
 		{
-            var owner = new Process(Guid.NewGuid().ToString());
+            var owner = new Process(UniqueIdGenerator.Generate(3));
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -144,7 +145,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R4: Read-commit")]
 		public void TestIfReadWithHigherBallotCommitsWithL1_ThenWriteWithLowerBallotCommitedWithL1Before()
 		{
-            var owner = new Process(Guid.NewGuid().ToString());
+            var owner = new Process(UniqueIdGenerator.Generate(3));
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -157,7 +158,7 @@ namespace wacs.Tests.FLease
 			Assert.AreEqual(TxOutcome.Commit, register.Write(ballot, lease).TxOutcome);
 			var readLease = register.Read(ballot1);
 			Assert.AreEqual(TxOutcome.Commit, readLease.TxOutcome);
-			Assert.AreEqual(lease.Owner.Id, readLease.Lease.Owner.Id);
+			Assert.AreEqual(lease.Owner.Name, readLease.Lease.Owner.Name);
 			Assert.AreEqual(lease.ExpiresAt, readLease.Lease.ExpiresAt);
 
 			register.Stop();
@@ -166,7 +167,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R5: Write-commit")]
 		public void TestIfTwoWritesCommitWithL1AndL2_ThenReadWithHigherBallotCommitsWithL2()
 		{
-            var owner = new Process(Guid.NewGuid().ToString());
+            var owner = new Process(UniqueIdGenerator.Generate(3));
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -183,7 +184,7 @@ namespace wacs.Tests.FLease
 			Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, lease2).TxOutcome);
 			var readLease = register.Read(ballot3);
 			Assert.AreEqual(TxOutcome.Commit, readLease.TxOutcome);
-			Assert.AreEqual(lease2.Owner.Id, readLease.Lease.Owner.Id);
+			Assert.AreEqual(lease2.Owner.Name, readLease.Lease.Owner.Name);
 			Assert.AreEqual(lease2.ExpiresAt, readLease.Lease.ExpiresAt);
 
 			register.Stop();

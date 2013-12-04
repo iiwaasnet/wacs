@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Moq;
 using NUnit.Framework;
+using wacs.core;
 using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.Inproc;
@@ -22,7 +23,7 @@ namespace wacs.Tests.FLease
 			var builder = DIHelper.CreateBuilder();
 
             builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
-			var owner = new Process(Guid.NewGuid().ToString());
+			var owner = new Process(UniqueIdGenerator.Generate(3));
 			var register = new Mock<IRoundBasedRegister>();
 			var registerFactory = new Mock<IRoundBasedRegisterFactory>();
 			registerFactory.Setup(m => m.Build(It.Is<IProcess>(v => v.Id == owner.Id))).Returns(register.Object);
@@ -42,7 +43,7 @@ namespace wacs.Tests.FLease
 			var builder = DIHelper.CreateBuilder();
 
             builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
-            var owner = new Process(Guid.NewGuid().ToString());
+            var owner = new Process(UniqueIdGenerator.Generate(3));
 			var register = new Mock<IRoundBasedRegister>();
 			var registerFactory = new Mock<IRoundBasedRegisterFactory>();
 			registerFactory.Setup(m => m.Build(It.Is<IProcess>(v => v.Id == owner.Id))).Returns(register.Object);
@@ -59,13 +60,13 @@ namespace wacs.Tests.FLease
 		[Test]
 		public void TestGetLease_ReturnsTask()
 		{
-            var lease = new Lease(new Process(Guid.NewGuid().ToString()), DateTime.UtcNow + TimeSpan.FromSeconds(3));
+            var lease = new Lease(new Process(UniqueIdGenerator.Generate(3)), DateTime.UtcNow + TimeSpan.FromSeconds(3));
 			var leaseProvider = new Mock<ILeaseProvider>();
 			leaseProvider.Setup(m => m.GetLease()).Returns(Task.FromResult<ILease>(lease));
 
 			var acquiredLease = leaseProvider.Object.GetLease().Result;
 
-			Assert.AreEqual(lease.Owner.Id, acquiredLease.Owner.Id);
+			Assert.AreEqual(lease.Owner.Name, acquiredLease.Owner.Name);
 			Assert.AreEqual(lease.ExpiresAt, acquiredLease.ExpiresAt);
 		}
 
@@ -83,7 +84,7 @@ namespace wacs.Tests.FLease
 			var leaseProviders = new List<ILeaseProvider>();
 			for (var i = 0; i < numberOfNodes; i++)
 			{
-				leaseProviders.Add(leaseProviderFactory.Build(new Process(i.ToString())));
+				leaseProviders.Add(leaseProviderFactory.Build(new Process(i)));
 			}
 
 			var majority = numberOfNodes / 2 + 1;
@@ -93,7 +94,7 @@ namespace wacs.Tests.FLease
 			var leases = leaseProviders.Select(p => p.GetLease().Result).ToArray();
 
 			Assert.IsTrue(leases.GroupBy(l => l.ExpiresAt).Any(g => g.Count() >= majority));
-			Assert.IsTrue(leases.GroupBy(l => l.Owner.Id).Any(g => g.Count() >= majority));
+			Assert.IsTrue(leases.GroupBy(l => l.Owner.Name).Any(g => g.Count() >= majority));
 
 			leaseProviders.ToList().ForEach(p => p.Stop());
 		}

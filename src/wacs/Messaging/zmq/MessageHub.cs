@@ -90,7 +90,7 @@ namespace wacs.Messaging.zmq
 
         private void SubscribeListeningSockets(IProcess subscriber)
         {
-            unicastListener.Subscribe(subscriber.Id.GetBytes());
+            unicastListener.Subscribe(subscriber.Name.GetBytes());
             var unicastPoller = unicastListener.CreatePollItem(IOMultiPlex.POLLIN);
             unicastPoller.PollInHandler += PollInMessageHandler;
 

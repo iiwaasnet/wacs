@@ -10,7 +10,7 @@ namespace wacs
 {
     public class PaxosMachine : IStateMachine
     {
-        private readonly string id;
+        private readonly int id;
         private readonly ILeaseProvider leaseProvider;
         private readonly CancellationTokenSource token;
         private readonly IBallotGenerator ballotGenerator;
@@ -20,7 +20,7 @@ namespace wacs
                             IBallotGenerator ballotGenerator,
                             ILogger logger)
         {
-            id = UniqueIdGenerator.Generate();
+            id = UniqueIdGenerator.Generate(3);
             this.logger = logger;
             leaseProvider = leaseProviderFactory.Build(new Process(id));
             this.ballotGenerator = ballotGenerator;
@@ -42,8 +42,8 @@ namespace wacs
                 {
                     logger.DebugFormat("[{4}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: Leader {2} ExpiresAt {3} [{5}]",
                                       ballot.Timestamp.ToString("HH:mm:ss fff"),
-                                      ballot.Process.Id,
-                                      lease.Owner.Id,
+                                      ballot.Process.Name,
+                                      lease.Owner.Name,
                                       lease.ExpiresAt.ToString("HH:mm:ss fff"),
                                       DateTime.UtcNow.ToString("HH:mm:ss fff"),
                                       timer.ElapsedMilliseconds);
@@ -52,7 +52,7 @@ namespace wacs
                 {
                     logger.DebugFormat("[{2}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: NULL [{3}]",
                                       ballot.Timestamp.ToString("HH:mm:ss fff"),
-                                      ballot.Process.Id,
+                                      ballot.Process.Name,
                                       DateTime.UtcNow.ToString("HH:mm:ss fff"),
                                       timer.ElapsedMilliseconds);
                 }
@@ -76,7 +76,7 @@ namespace wacs
             token.Dispose();
         }
 
-        public string Id
+        public int Id
         {
             get { return id; }
         }

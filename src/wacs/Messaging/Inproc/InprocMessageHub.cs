@@ -55,7 +55,7 @@ namespace wacs.Messaging.Inproc
         {
             foreach (var forwardRequest in p2p.GetConsumingEnumerable())
             {
-                foreach (var subscription in subscriptions.Where(l => l.Subscriber.Id == forwardRequest.Recipient.Id))
+                foreach (var subscription in subscriptions.Where(l => l.Subscriber.Name == forwardRequest.Recipient.Name))
                 {
                     subscription.Notify(forwardRequest.Message);
                 }

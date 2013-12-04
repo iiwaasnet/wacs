@@ -2,6 +2,7 @@
 {
 	public interface IProcess
 	{
-		string Id { get; }
+		string Name { get; }
+	    int Id { get; }
 	}
 }
