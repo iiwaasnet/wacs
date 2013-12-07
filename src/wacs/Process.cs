@@ -1,21 +1,17 @@
-﻿namespace wacs
+﻿using wacs.core;
+
+namespace wacs
 {
     public class Process : IProcess
     {
+        public Process()
+        {
+            Id = UniqueIdGenerator.Generate(3);
+        }
+
         public Process(int id)
         {
             Id = id;
-            Name = id.ToString();
-        }
-
-        public static bool operator ==(Process x, Process y)
-        {
-            return x.Equals(y);
-        }
-
-        public static bool operator !=(Process x, Process y)
-        {
-            return !(x == y);
         }
 
         protected bool Equals(Process other)
@@ -47,6 +43,14 @@
 
         public int Id { get; private set; }
 
-        public string Name { get; private set; }
+        public static bool operator ==(Process x, Process y)
+        {
+            return x.Equals(y);
+        }
+
+        public static bool operator !=(Process x, Process y)
+        {
+            return !(x == y);
+        }
     }
 }

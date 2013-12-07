@@ -42,8 +42,8 @@ namespace wacs
                 {
                     logger.DebugFormat("[{4}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: Leader {2} ExpiresAt {3} [{5}]",
                                       ballot.Timestamp.ToString("HH:mm:ss fff"),
-                                      ballot.Process.Name,
-                                      lease.Owner.Name,
+                                      ballot.Process.Id,
+                                      lease.Owner.Id,
                                       lease.ExpiresAt.ToString("HH:mm:ss fff"),
                                       DateTime.UtcNow.ToString("HH:mm:ss fff"),
                                       timer.ElapsedMilliseconds);
@@ -52,7 +52,7 @@ namespace wacs
                 {
                     logger.DebugFormat("[{2}] Requested Ballot: Timestamp {0}, Process {1} === Received Lease: NULL [{3}]",
                                       ballot.Timestamp.ToString("HH:mm:ss fff"),
-                                      ballot.Process.Name,
+                                      ballot.Process.Id,
                                       DateTime.UtcNow.ToString("HH:mm:ss fff"),
                                       timer.ElapsedMilliseconds);
                 }

@@ -9,22 +9,22 @@
 				logger.DebugFormat("Process {6} ==WB== {0}-{1}-{2} >= {3}-{4}-{5}",
 				                   writeBallot.Timestamp.ToString("HH:mm:ss fff"),
 				                   writeBallot.MessageNumber,
-				                   writeBallot.Process.Name,
+				                   writeBallot.Process.Id,
 				                   ballot.Timestamp.ToString("HH:mm:ss fff"),
 				                   ballot.MessageNumber,
-				                   ballot.Process.Name,
-				                   owner.Name);
+				                   ballot.Process.Id,
+				                   owner.Id);
 			}
 			if (readBallot >= ballot)
 			{
 				logger.DebugFormat("Process {6} ==RB== {0}-{1}-{2} >= {3}-{4}-{5}",
 				                   readBallot.Timestamp.ToString("HH:mm:ss fff"),
 				                   readBallot.MessageNumber,
-				                   readBallot.Process.Name,
+				                   readBallot.Process.Id,
 				                   ballot.Timestamp.ToString("HH:mm:ss fff"),
 				                   ballot.MessageNumber,
-				                   ballot.Process.Name,
-				                   owner.Name);
+				                   ballot.Process.Id,
+				                   owner.Id);
 			}
 		}
 	}

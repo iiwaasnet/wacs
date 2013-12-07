@@ -5,6 +5,7 @@ using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.zmq;
+using wacs.ResolutionService.Interface;
 
 namespace wacs
 {
@@ -32,6 +33,7 @@ namespace wacs
             builder.RegisterType<WACService>().As<ServiceControl>().SingleInstance();
             builder.RegisterType<MessageHub>().As<IMessageHub>().SingleInstance();
             builder.RegisterType<MessageSerializer>().As<IMessageSerializer>().SingleInstance();
+            builder.RegisterType<ResolutionService.Implementation.ResolutionService>().As<IResolutionService>().SingleInstance();
             RegisterConfigurations(builder);
         }
 

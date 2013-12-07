@@ -66,7 +66,7 @@ namespace wacs.Tests.FLease
 
 			var acquiredLease = leaseProvider.Object.GetLease().Result;
 
-			Assert.AreEqual(lease.Owner.Name, acquiredLease.Owner.Name);
+			Assert.AreEqual(lease.Owner.Id, acquiredLease.Owner.Id);
 			Assert.AreEqual(lease.ExpiresAt, acquiredLease.ExpiresAt);
 		}
 
@@ -94,7 +94,7 @@ namespace wacs.Tests.FLease
 			var leases = leaseProviders.Select(p => p.GetLease().Result).ToArray();
 
 			Assert.IsTrue(leases.GroupBy(l => l.ExpiresAt).Any(g => g.Count() >= majority));
-			Assert.IsTrue(leases.GroupBy(l => l.Owner.Name).Any(g => g.Count() >= majority));
+			Assert.IsTrue(leases.GroupBy(l => l.Owner.Id).Any(g => g.Count() >= majority));
 
 			leaseProviders.ToList().ForEach(p => p.Stop());
 		}

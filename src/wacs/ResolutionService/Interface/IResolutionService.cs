@@ -1,12 +1,13 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace wacs.ResolutionService.Interface
 {
     public interface IResolutionService
     {
-        IEnumerable<IProcess> GetWorld();
+        Task<IEnumerable<IProcess>> GetWorld();
 
-        IProcess GetLocalProcess();
+        Task<IProcess> GetLocalProcess();
     }
 }

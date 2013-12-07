@@ -158,7 +158,7 @@ namespace wacs.Tests.FLease
 			Assert.AreEqual(TxOutcome.Commit, register.Write(ballot, lease).TxOutcome);
 			var readLease = register.Read(ballot1);
 			Assert.AreEqual(TxOutcome.Commit, readLease.TxOutcome);
-			Assert.AreEqual(lease.Owner.Name, readLease.Lease.Owner.Name);
+			Assert.AreEqual(lease.Owner.Id, readLease.Lease.Owner.Id);
 			Assert.AreEqual(lease.ExpiresAt, readLease.Lease.ExpiresAt);
 
 			register.Stop();
@@ -184,7 +184,7 @@ namespace wacs.Tests.FLease
 			Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, lease2).TxOutcome);
 			var readLease = register.Read(ballot3);
 			Assert.AreEqual(TxOutcome.Commit, readLease.TxOutcome);
-			Assert.AreEqual(lease2.Owner.Name, readLease.Lease.Owner.Name);
+			Assert.AreEqual(lease2.Owner.Id, readLease.Lease.Owner.Id);
 			Assert.AreEqual(lease2.ExpiresAt, readLease.Lease.ExpiresAt);
 
 			register.Stop();

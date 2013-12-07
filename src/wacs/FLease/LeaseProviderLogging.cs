@@ -6,12 +6,12 @@ namespace wacs.FLease
     {
         private void LogAwake()
         {
-            logger.DebugFormat("SLEEP === Process {0} Waked up at {1}", owner.Name, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+            logger.DebugFormat("SLEEP === Process {0} Waked up at {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
         }
 
         private void LogStartSleep()
         {
-            logger.DebugFormat("SLEEP === Process {0} Sleep from {1}", owner.Name, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+            logger.DebugFormat("SLEEP === Process {0} Sleep from {1}", owner.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
         }
 
         private void LogLeaseProlonged(ILease lastReadLease)
@@ -22,14 +22,14 @@ namespace wacs.FLease
                 {
                     logger.DebugFormat("[{0}] PROLONG === Process {1} wants to prolong it's lease {2}",
                                        DateTime.UtcNow.ToString("HH:mm:ss fff"),
-                                       owner.Name,
+                                       owner.Id,
                                        lastReadLease.ExpiresAt.ToString("HH:mm:ss fff"));
                 }
                 else
                 {
                     logger.DebugFormat("[{0}] RENEW === Process {1} wants to renew lease {2}",
                                        DateTime.UtcNow.ToString("HH:mm:ss fff"),
-                                       owner.Name,
+                                       owner.Id,
                                        lastReadLease.ExpiresAt.ToString("HH:mm:ss fff"));
                 }
             }

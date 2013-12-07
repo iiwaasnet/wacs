@@ -1,12 +1,16 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using wacs.Configuration;
 using wacs.Diagnostics;
-using wacs.FLease.Messages;
 using ZMQ;
 using Exception = System.Exception;
+using Socket = ZMQ.Socket;
+using SocketType = ZMQ.SocketType;
 
 namespace wacs.Messaging.zmq
 {
@@ -21,11 +25,13 @@ namespace wacs.Messaging.zmq
         private readonly ConcurrentBag<Listener> subscriptions;
         private readonly BlockingCollection<MultipartMessage> messageQueue;
         private readonly CancellationTokenSource cancellationSource;
+        private readonly string localEndpoint;
 
         public MessageHub(ISynodConfiguration config, ILogger logger)
         {
             this.config = config;
             this.logger = logger;
+            localEndpoint = GetLocalEndpoint(config.Nodes);
             messageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
             cancellationSource = new CancellationTokenSource();
 
@@ -38,19 +44,63 @@ namespace wacs.Messaging.zmq
             sender = context.Socket(SocketType.PUB);
         }
 
+        private string GetLocalEndpoint(IEnumerable<INode> nodes)
+        {
+            var endpoint = GetLocalConfiguredEndpoint(nodes);
+
+            if (string.IsNullOrWhiteSpace(endpoint))
+            {
+                endpoint = GetLocalResolvedEndpoint(nodes);
+            }
+
+            return endpoint.TrimEnd('/');
+        }
+
+        private string GetLocalResolvedEndpoint(IEnumerable<INode> nodes)
+        {
+            var localIP = Dns.GetHostEntry(Dns.GetHostName())
+                             .AddressList
+                             .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork
+                                                   || ip.AddressFamily == AddressFamily.InterNetworkV6);
+
+            if (localIP == null)
+            {
+                throw new Exception("Unable to resolve host external IP address!");
+            }
+
+            var uri = nodes
+                .Select(n => new Uri(n.Address, UriKind.Absolute))
+                .FirstOrDefault(n => n.Host == localIP.ToString());
+
+            if (uri == null)
+            {
+                throw new Exception("Host is not configured to be part of the cluster!");
+            }
+
+            return uri.AbsoluteUri;
+        }
+
+        private string GetLocalConfiguredEndpoint(IEnumerable<INode> nodes)
+        {
+            var uri = nodes
+                .Where(n => n.IsLocal)
+                .Select(n => new Uri(n.Address).AbsoluteUri)
+                .FirstOrDefault();
+
+            return uri;
+        }
+
         private void ForwardMessagesToListeners(CancellationToken token)
         {
             foreach (var message in messageQueue.GetConsumingEnumerable(token))
             {
-                var msg = new Message
-                          {
-                              Envelope = new Envelope {Sender = new Sender {Process = new Process(message.GetSenderId())}},
-                              Body = new Body
-                                     {
-                                         MessageType = message.GetMessageType(),
-                                         Content = message.GetMessage()
-                                     }
-                          };
+                var msg = new Message(
+                    new Envelope {Sender = new Process(message.GetSenderId())},
+                    new Body
+                    {
+                        MessageType = message.GetMessageType(),
+                        Content = message.GetMessage()
+                    });
                 foreach (var subscription in subscriptions)
                 {
                     subscription.Notify(msg);
@@ -85,12 +135,12 @@ namespace wacs.Messaging.zmq
 
         private void BindSenderToSocket()
         {
-            sender.Bind(config.This.Address);
+            sender.Bind(localEndpoint);
         }
 
         private void SubscribeListeningSockets(IProcess subscriber)
         {
-            unicastListener.Subscribe(subscriber.Name.GetBytes());
+            unicastListener.Subscribe(subscriber.Id.GetBytes());
             var unicastPoller = unicastListener.CreatePollItem(IOMultiPlex.POLLIN);
             unicastPoller.PollInHandler += PollInMessageHandler;
 

@@ -131,6 +131,13 @@
     <Compile Include="Configuration\ISynodConfiguration.cs" />
     <Compile Include="Configuration\IWacsConfiguration.cs" />
     <Compile Include="Configuration\WacsConfiguration.cs" />
+    <Compile Include="core\State\IChangeNotifiable.cs" />
+    <Compile Include="core\State\IObservableAtomicValue.cs" />
+    <Compile Include="core\State\IObservableConcurrentDictionary.cs" />
+    <Compile Include="core\State\IObservableCondition.cs" />
+    <Compile Include="core\State\ObservableAtomicValue.cs" />
+    <Compile Include="core\State\ObservableConcurrentDictionary.cs" />
+    <Compile Include="core\State\ObservableCondition.cs" />
     <Compile Include="core\UniqueIdGenerator.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />
     <Compile Include="Diagnostics\IPerformanceCounter.cs" />
@@ -194,11 +201,9 @@
     <Compile Include="Messaging\Listener.cs" />
     <Compile Include="Messaging\Inproc\InprocMessageHub.cs" />
     <Compile Include="IProcess.cs" />
-    <Compile Include="Messaging\ISender.cs" />
-    <Compile Include="Messaging\Sender.cs" />
     <Compile Include="Messaging\zmq\MessageHub.cs" />
     <Compile Include="Messaging\zmq\MultipartMessage.cs" />
-    <Compile Include="Messaging\zmq\StringEncoder.cs" />
+    <Compile Include="Messaging\zmq\DataEncoder.cs" />
     <Compile Include="PaxosMachine.cs" />
     <Compile Include="Paxos\Interface\ICommand.cs" />
     <Compile Include="Paxos\Interface\ILogEntry.cs" />
@@ -210,6 +215,9 @@
     <Compile Include="Process.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Messaging\ITypedMessage.cs" />
+    <Compile Include="ResolutionService\Implementation\ProcessAnnouncementMessage.cs" />
+    <Compile Include="ResolutionService\Implementation\TypedMessage.cs" />
     <Compile Include="ResolutionService\Interface\IResolutionService.cs" />
     <Compile Include="ResolutionService\Implementation\ResolutionService.cs" />
     <Compile Include="Tests\FLease\LeaseProviderTests.cs" />

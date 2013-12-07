@@ -39,13 +39,13 @@ namespace wacs.Messaging.zmq
 
         private byte[] BuildSenderId(IMessage message)
         {
-            return message.Envelope.Sender.Process.Name.GetBytes();
+            return message.Envelope.Sender.Id.GetBytes();
         }
 
         private byte[] BuildMessageFilter(IProcess recipient)
         {
             return (recipient != null)
-                       ? recipient.Name.GetBytes()
+                       ? recipient.Id.GetBytes()
                        : MulticastId;
         }
 
@@ -76,7 +76,7 @@ namespace wacs.Messaging.zmq
 
         internal int GetSenderId()
         {
-            return int.Parse(parts.Skip(1).First().GetString());
+            return parts.Skip(1).First().GetInt();
         }
         internal byte[] GetSenderIdBytes()
         {

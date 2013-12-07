@@ -65,16 +65,14 @@ namespace wacs.FLease
                                     new Process(writeMessage.Ballot.ProcessId));
             if (writeBallot > ballot || readBallot > ballot)
             {
-                messageHub.Send(new Process(message.Envelope.Sender.Process.Id),
-                                new Message
-                                {
-                                    Envelope = new Envelope {Sender = new Sender {Process = owner}},
-                                    Body = new Body
-                                           {
-                                               MessageType = FLeaseMessageType.NackWrite.ToMessageType(),
-                                               Content = serializer.Serialize(new NackWritePayload {Ballot = writeMessage.Ballot})
-                                           }
-                                });
+                messageHub.Send(new Process(message.Envelope.Sender.Id),
+                                new Message(
+                                    new Envelope {Sender = owner},
+                                    new Body
+                                    {
+                                        MessageType = FLeaseMessageType.NackWrite.ToMessageType(),
+                                        Content = serializer.Serialize(new NackWritePayload {Ballot = writeMessage.Ballot})
+                                    }));
             }
             else
             {
@@ -83,16 +81,14 @@ namespace wacs.FLease
                                   new DateTime(writeMessage.Lease.ExpiresAt, DateTimeKind.Utc));
 
                 var msg = new AckWritePayload {Ballot = writeMessage.Ballot};
-                messageHub.Send(message.Envelope.Sender.Process,
-                                new Message
-                                {
-                                    Envelope = new Envelope {Sender = new Sender {Process = owner}},
-                                    Body = new Body
-                                           {
-                                               MessageType = FLeaseMessageType.AckWrite.ToMessageType(),
-                                               Content = serializer.Serialize(msg)
-                                           }
-                                });
+                messageHub.Send(message.Envelope.Sender,
+                                new Message(
+                                    new Envelope {Sender = owner},
+                                    new Body
+                                    {
+                                        MessageType = FLeaseMessageType.AckWrite.ToMessageType(),
+                                        Content = serializer.Serialize(msg)
+                                    }));
             }
         }
 
@@ -107,16 +103,14 @@ namespace wacs.FLease
             {
                 LogNackRead(ballot);
 
-                messageHub.Send(new Process(message.Envelope.Sender.Process.Id),
-                                new Message
-                                {
-                                    Envelope = new Envelope {Sender = new Sender {Process = owner}},
-                                    Body = new Body
-                                           {
-                                               MessageType = FLeaseMessageType.NackRead.ToMessageType(),
-                                               Content = serializer.Serialize(new NackReadPayload {Ballot = readMessage.Ballot})
-                                           }
-                                });
+                messageHub.Send(new Process(message.Envelope.Sender.Id),
+                                new Message(
+                                    new Envelope {Sender = owner},
+                                    new Body
+                                    {
+                                        MessageType = FLeaseMessageType.NackRead.ToMessageType(),
+                                        Content = serializer.Serialize(new NackReadPayload {Ballot = readMessage.Ballot})
+                                    }));
             }
             else
             {
@@ -138,16 +132,14 @@ namespace wacs.FLease
                                             }
                                           : null
                           };
-                messageHub.Send(message.Envelope.Sender.Process,
-                                new Message
-                                {
-                                    Envelope = new Envelope {Sender = new Sender {Process = owner}},
-                                    Body = new Body
-                                           {
-                                               MessageType = FLeaseMessageType.AckRead.ToMessageType(),
-                                               Content = serializer.Serialize(msg)
-                                           }
-                                });
+                messageHub.Send(message.Envelope.Sender,
+                                new Message(
+                                    new Envelope {Sender = owner},
+                                    new Body
+                                    {
+                                        MessageType = FLeaseMessageType.AckRead.ToMessageType(),
+                                        Content = serializer.Serialize(msg)
+                                    }));
             }
         }
 
@@ -249,51 +241,47 @@ namespace wacs.FLease
 
         private IMessage CreateWriteMessage(IBallot ballot, ILease lease)
         {
-            var message = new Message
-                          {
-                              Envelope = new Envelope {Sender = new Sender {Process = owner}},
-                              Body = new Body
-                                     {
-                                         MessageType = FLeaseMessageType.Write.ToMessageType(),
-                                         Content = serializer.Serialize(new WritePayload
-                                                                        {
-                                                                            Ballot = new Messages.Ballot
-                                                                                     {
-                                                                                         ProcessId = ballot.Process.Id,
-                                                                                         Timestamp = ballot.Timestamp.Ticks,
-                                                                                         MessageNumber = ballot.MessageNumber
-                                                                                     },
-                                                                            Lease = new Messages.Lease
-                                                                                    {
-                                                                                        ProcessId = lease.Owner.Id,
-                                                                                        ExpiresAt = lease.ExpiresAt.Ticks
-                                                                                    }
-                                                                        })
-                                     }
-                          };
+            var message = new Message(
+                new Envelope {Sender = owner},
+                new Body
+                {
+                    MessageType = FLeaseMessageType.Write.ToMessageType(),
+                    Content = serializer.Serialize(new WritePayload
+                                                   {
+                                                       Ballot = new Messages.Ballot
+                                                                {
+                                                                    ProcessId = ballot.Process.Id,
+                                                                    Timestamp = ballot.Timestamp.Ticks,
+                                                                    MessageNumber = ballot.MessageNumber
+                                                                },
+                                                       Lease = new Messages.Lease
+                                                               {
+                                                                   ProcessId = lease.Owner.Id,
+                                                                   ExpiresAt = lease.ExpiresAt.Ticks
+                                                               }
+                                                   })
+                });
 
             return message;
         }
 
         private Message CreateReadMessage(IBallot ballot)
         {
-            var message = new Message
-                          {
-                              Envelope = new Envelope {Sender = new Sender {Process = owner}},
-                              Body = new Body
-                                     {
-                                         MessageType = FLeaseMessageType.Read.ToMessageType(),
-                                         Content = serializer.Serialize(new ReadPayload
-                                                                        {
-                                                                            Ballot = new Messages.Ballot
-                                                                                     {
-                                                                                         ProcessId = ballot.Process.Id,
-                                                                                         Timestamp = ballot.Timestamp.Ticks,
-                                                                                         MessageNumber = ballot.MessageNumber
-                                                                                     }
-                                                                        })
-                                     }
-                          };
+            var message = new Message(
+                new Envelope {Sender = owner},
+                new Body
+                {
+                    MessageType = FLeaseMessageType.Read.ToMessageType(),
+                    Content = serializer.Serialize(new ReadPayload
+                                                   {
+                                                       Ballot = new Messages.Ballot
+                                                                {
+                                                                    ProcessId = ballot.Process.Id,
+                                                                    Timestamp = ballot.Timestamp.Ticks,
+                                                                    MessageNumber = ballot.MessageNumber
+                                                                }
+                                                   })
+                });
             return message;
         }
     }

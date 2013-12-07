@@ -51,7 +51,7 @@ namespace wacs.FLease
 				return res;
 			}
 
-			return Process.Name.CompareTo(ballot.Process.Name);
+			return Process.Id.CompareTo(ballot.Process.Id);
 		}
 
 		public IProcess Process { get; private set; }
