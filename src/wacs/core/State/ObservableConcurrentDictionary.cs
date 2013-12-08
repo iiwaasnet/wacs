@@ -34,6 +34,23 @@ namespace wacs.core.State
             OnChanged();
         }
 
+        public bool TryGetValue(K key, out V val)
+        {
+            return storage.TryGetValue(key, out val);
+        }
+
+        public bool TryRemoveKey(K key)
+        {
+            V val;
+            var res = storage.TryRemove(key, out val);
+            if (res)
+            {
+                OnChanged();
+            }
+
+            return res;
+        }
+
         private void OnChanged()
         {
             var handler = eventHandlers[ChangedEvent] as ChangedEventHandler;
@@ -68,6 +85,11 @@ namespace wacs.core.State
         public IEnumerable<V> Values
         {
             get { return storage.Values; }
+        }
+
+        public IEnumerable<K> Keys
+        {
+            get { return storage.Keys; }
         }
 
         public V this[K key]

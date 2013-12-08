@@ -94,13 +94,12 @@ namespace wacs.Messaging.zmq
         {
             foreach (var message in messageQueue.GetConsumingEnumerable(token))
             {
-                var msg = new Message(
-                    new Envelope {Sender = new Process(message.GetSenderId())},
-                    new Body
-                    {
-                        MessageType = message.GetMessageType(),
-                        Content = message.GetMessage()
-                    });
+                var msg = new Message(new Envelope {Sender = new Process(message.GetSenderId())},
+                                      new Body
+                                      {
+                                          MessageType = message.GetMessageType(),
+                                          Content = message.GetMessage()
+                                      });
                 foreach (var subscription in subscriptions)
                 {
                     subscription.Notify(msg);

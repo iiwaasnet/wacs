@@ -1,6 +1,6 @@
 ﻿using wacs.Messaging;
 
-namespace wacs.ResolutionService.Implementation
+namespace wacs.Resolver.Implementation
 {
     public class ProcessAnnouncementMessage : TypedMessage<ProcessAnnouncementMessage.Payload>
     {

@@ -1,6 +1,6 @@
 ﻿using wacs.Messaging;
 
-namespace wacs.ResolutionService.Implementation
+namespace wacs.Resolver.Implementation
 {
     public class TypedMessage<T> : Message, ITypedMessage<T>
         where T : class

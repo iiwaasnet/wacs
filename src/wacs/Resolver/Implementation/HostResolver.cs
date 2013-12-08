@@ -10,34 +10,48 @@ using wacs.core.State;
 using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging;
-using wacs.ResolutionService.Interface;
+using wacs.Resolver.Interface;
 
-namespace wacs.ResolutionService.Implementation
+namespace wacs.Resolver.Implementation
 {
-    public class ResolutionService : IResolutionService
+    public class HostResolver : IHostResolver
     {
         private readonly IMessageHub messageHub;
         private readonly IObservableCondition synodResolved;
         private volatile IProcess hostingProcess;
-        private readonly IObservableConcurrentDictionary<string, IProcess> processMap;
+        private readonly IObservableConcurrentDictionary<IProcess, string> processMap;
         private readonly string localEndpoint;
         private readonly ILogger logger;
+        private readonly IListener listener;
+        private readonly CancellationTokenSource cancellation;
+        private readonly Task worldLearningTask;
 
-        public ResolutionService(IMessageHub messageHub, ISynodConfiguration config, ILogger logger)
+        public HostResolver(IMessageHub messageHub, ISynodConfiguration config, ILogger logger)
         {
             this.messageHub = messageHub;
             this.logger = logger;
-            processMap = new ObservableConcurrentDictionary<string, IProcess>();
+            processMap = new ObservableConcurrentDictionary<IProcess, string>();
             synodResolved = new ObservableCondition(() => SynodResolved(config.Nodes), new[] {processMap});
             localEndpoint = GetLocalEndpoint(config.Nodes);
-            //hostingProcess = GenerateProcessId();
-            hostingProcess = new Process(12);
+            hostingProcess = new Process();
+            //hostingProcess = new Process(12);
 
-            var listener = messageHub.Subscribe(hostingProcess);
-            listener.Start();
-            listener.Subscribe(new MessageStreamListener(OnMessage));
+            cancellation = new CancellationTokenSource();
 
-            Task.Factory.StartNew(() => ResolveSynod(config.Nodes));
+            listener = messageHub.Subscribe(hostingProcess);
+            worldLearningTask = new Task(() => ResolveSynod(cancellation.Token, config.ProcessIdBroadcastPeriod));
+        }
+
+        public void Start()
+        {
+            worldLearningTask.Start();
+        }
+
+        public void Stop()
+        {
+            cancellation.Cancel(false);
+            worldLearningTask.Wait();
+            worldLearningTask.Dispose();
         }
 
         private bool SynodResolved(IEnumerable<INode> nodes)
@@ -45,34 +59,30 @@ namespace wacs.ResolutionService.Implementation
             return processMap.Count() == nodes.Count();
         }
 
-        private void ResolveSynod(IEnumerable<INode> nodes)
+        private void ResolveSynod(CancellationToken token, TimeSpan processIdBroadcastPeriod)
         {
             try
             {
-                while (!SynodResolved(nodes))
+                listener.Start();
+                using (listener.Subscribe(new MessageStreamListener(OnMessage)))
                 {
-                    messageHub.Broadcast(new ProcessAnnouncementMessage(hostingProcess,
-                                                                        new ProcessAnnouncementMessage.Payload
-                                                                        {
-                                                                            Endpoint = localEndpoint,
-                                                                            ProcessId = hostingProcess.Id
-                                                                        }));
-                    Thread.Sleep(TimeSpan.FromMilliseconds(50));
+                    while (!token.IsCancellationRequested)
+                    {
+                        messageHub.Broadcast(new ProcessAnnouncementMessage(hostingProcess,
+                                                                            new ProcessAnnouncementMessage.Payload
+                                                                            {
+                                                                                Endpoint = localEndpoint,
+                                                                                ProcessId = hostingProcess.Id
+                                                                            }));
+                        Thread.Sleep(processIdBroadcastPeriod);
+                    }
                 }
+                listener.Stop();
             }
             catch (Exception err)
             {
                 logger.Error(err);
             }
-        }
-
-        private static Process GenerateProcessId()
-        {
-            var rnd = new Random((int) (0x0000ffff & DateTime.UtcNow.Ticks));
-            Thread.Sleep(TimeSpan.FromMilliseconds(rnd.Next(20, 100)));
-            Thread.Sleep(TimeSpan.FromMilliseconds(rnd.Next(20, 100)));
-
-            return new Process();
         }
 
         private string GetLocalEndpoint(IEnumerable<INode> nodes)
@@ -125,33 +135,24 @@ namespace wacs.ResolutionService.Implementation
         {
             if (message.Body.MessageType == ProcessAnnouncementMessage.MessageType)
             {
-                var senderIp = new ProcessAnnouncementMessage(message).GetPayload().Endpoint;
+                var senderEndpoint = new ProcessAnnouncementMessage(message).GetPayload().Endpoint;
 
-                if (SenderIdCollidesWithLocal(message.Envelope.Sender, senderIp))
+                string endpoint;
+                var process = message.Envelope.Sender;
+
+                if (processMap.TryGetValue(process, out endpoint) && senderEndpoint != endpoint)
                 {
-                    Console.WriteLine("Restart process {0} at {1}", hostingProcess.Id, localEndpoint);
-                    Interlocked.Exchange(ref hostingProcess, GenerateProcessId());
+                    Console.WriteLine("Conflicting processes! Existing {0}@{1}, joining {2}@{3}",
+                                      process.Id,
+                                      endpoint,
+                                      process.Id,
+                                      senderEndpoint);
                 }
                 else
                 {
-                    processMap[senderIp] = message.Envelope.Sender;
-
-                    if (senderIp != localEndpoint)
-                    {
-                        messageHub.Broadcast(new ProcessAnnouncementMessage(hostingProcess,
-                                                                            new ProcessAnnouncementMessage.Payload
-                                                                            {
-                                                                                Endpoint = localEndpoint,
-                                                                                ProcessId = hostingProcess.Id
-                                                                            }));
-                    }
+                    processMap[process] = senderEndpoint;
                 }
             }
-        }
-
-        private bool SenderIdCollidesWithLocal(IProcess sender, string senderIp)
-        {
-            return hostingProcess.Equals(sender) && senderIp != localEndpoint;
         }
 
         public Task<IEnumerable<IProcess>> GetWorld()
@@ -161,9 +162,9 @@ namespace wacs.ResolutionService.Implementation
                                              synodResolved.Waitable.WaitOne();
                                              foreach (var keyValuePair in processMap)
                                              {
-                                                 Console.WriteLine("{0} @ {1}", keyValuePair.Value.Id, keyValuePair.Key);
+                                                 Console.WriteLine("{0} @ {1}", keyValuePair.Key.Id, keyValuePair.Value);
                                              }
-                                             return processMap.Values;
+                                             return processMap.Keys;
                                          });
         }
 

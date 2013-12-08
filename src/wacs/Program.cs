@@ -6,7 +6,7 @@ using Topshelf;
 using Topshelf.HostConfigurators;
 using Topshelf.Runtime;
 using wacs.Diagnostics;
-using wacs.ResolutionService.Interface;
+using wacs.Resolver.Interface;
 
 namespace wacs
 {
@@ -20,10 +20,11 @@ namespace wacs
             var container = builder.Build();
 
 
-            var resolutionService = container.Resolve<IResolutionService>();
+            var resolutionService = container.Resolve<IHostResolver>();
 
             var timer = new Stopwatch();
             timer.Start();
+            resolutionService.Start();
             foreach (var node in resolutionService.GetWorld().Result)
             {
                 Console.WriteLine(node.Id);    
@@ -31,6 +32,7 @@ namespace wacs
 
             timer.Stop();
             Console.WriteLine("Resolved in {0} msec", timer.ElapsedMilliseconds);
+            resolutionService.Stop();
             return;
 
             HostFactory.New(x => ConfigureService(x, container)).Run();

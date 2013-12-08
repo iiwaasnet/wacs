@@ -8,9 +8,14 @@ namespace wacs.core.State
 
         bool ContainsKey(K key);
 
+        bool TryRemoveKey(K key);
+
+        bool TryGetValue(K key, out V val);
+
         void Set(IEnumerable<KeyValuePair<K, V>> collection);
 
         IEnumerable<V> Values { get; }
+        IEnumerable<K> Keys { get; }
 
         V this[K key] { get; set; }
     }
