@@ -2,7 +2,7 @@
 
 namespace wacs.Messaging
 {
-	public interface IListener : IObservable<IMessage>
+	public interface IListener : IObservable<IMessage>, IDisposable
 	{
 		void Start();
 

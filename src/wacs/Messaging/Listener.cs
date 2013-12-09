@@ -4,80 +4,93 @@ using System.Threading;
 
 namespace wacs.Messaging
 {
-	public class Listener : IListener
-	{
-		private readonly ConcurrentDictionary<IObserver<IMessage>, object> observers;
-		private readonly BlockingCollection<IMessage> messages;
-		private readonly Thread notifyThread;
+    public class Listener : IListener
+    {
+        private readonly ConcurrentDictionary<IObserver<IMessage>, object> observers;
+        private readonly BlockingCollection<IMessage> messages;
+        private readonly Thread notifyThread;
+        private Action<IMessage> appendMessage;
 
-		public Listener(IProcess subscriber)
-		{
-			Subscriber = subscriber;
-			observers = new ConcurrentDictionary<IObserver<IMessage>, object>();
-			messages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
-			notifyThread = new Thread(ForwardMessages);
-		}
+        public Listener(IProcess subscriber)
+        {
+            Subscriber = subscriber;
+            observers = new ConcurrentDictionary<IObserver<IMessage>, object>();
+            messages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
+            appendMessage = DropMessage;
+            notifyThread = new Thread(ForwardMessages);
+            notifyThread.Start();
+        }
 
-		public void Notify(IMessage message)
-		{
-			messages.Add(message);
-		}
+        public void Notify(IMessage message)
+        {
+            appendMessage(message);
+        }
 
-		private void ForwardMessages()
-		{
-			foreach (var message in messages.GetConsumingEnumerable())
-			{
-				foreach (var observer in observers)
-				{
-					observer.Key.OnNext(message);
-				}
-			}
+        private void AddMessageToQueue(IMessage message)
+        {
+            messages.Add(message);
+        }
 
-			messages.Dispose();
-		}
+        private void DropMessage(IMessage message)
+        {
+        }
 
-		public IDisposable Subscribe(IObserver<IMessage> observer)
-		{
-			observers[observer] = null;
+        private void ForwardMessages()
+        {
+            foreach (var message in messages.GetConsumingEnumerable())
+            {
+                foreach (var observer in observers)
+                {
+                    observer.Key.OnNext(message);
+                }
+            }
+            messages.Dispose();
+        }
 
-			return new Unsubscriber(observers, observer);
-		}
+        public IDisposable Subscribe(IObserver<IMessage> observer)
+        {
+            observers[observer] = null;
 
-		public void Start()
-		{
-			notifyThread.Start();
-		}
+            return new Unsubscriber(observers, observer);
+        }
 
-		public void Stop()
-		{
-			foreach (var observer in observers)
-			{
-				observer.Key.OnCompleted();
-			}
-			messages.CompleteAdding();
-		}
+        public void Start()
+        {
+            Interlocked.Exchange(ref appendMessage, AddMessageToQueue);
+        }
 
-		public IProcess Subscriber { get; private set; }
+        public void Stop()
+        {
+            Interlocked.Exchange(ref appendMessage, DropMessage);
+        }
 
-		private class Unsubscriber : IDisposable
-		{
-			private readonly ConcurrentDictionary<IObserver<IMessage>, object> observers;
-			private readonly IObserver<IMessage> observer;
+        public void Dispose()
+        {
+            Stop();
+            messages.CompleteAdding();
+        }
 
-			public Unsubscriber(ConcurrentDictionary<IObserver<IMessage>, object> observers, IObserver<IMessage> observer)
-			{
-				this.observer = observer;
-				this.observers = observers;
-			}
+        public IProcess Subscriber { get; private set; }
 
-			public void Dispose()
-			{
-				if (observer != null)
-				{
-					object val;
-					observers.TryRemove(observer, out val);
-				}
-			}
-		}
-	}
+        private class Unsubscriber : IDisposable
+        {
+            private readonly ConcurrentDictionary<IObserver<IMessage>, object> observers;
+            private readonly IObserver<IMessage> observer;
+
+            public Unsubscriber(ConcurrentDictionary<IObserver<IMessage>, object> observers, IObserver<IMessage> observer)
+            {
+                this.observer = observer;
+                this.observers = observers;
+            }
+
+            public void Dispose()
+            {
+                if (observer != null)
+                {
+                    object val;
+                    observers.TryRemove(observer, out val);
+                }
+            }
+        }
+    }
 }

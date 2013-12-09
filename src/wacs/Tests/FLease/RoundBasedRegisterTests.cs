@@ -36,7 +36,7 @@ namespace wacs.Tests.FLease
 	    [Test(Description = "Lemma R1: Read-abort")]
 		public void TestReadWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
 		{
-            var owner = new Process(UniqueIdGenerator.Generate(3));
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 			
@@ -54,7 +54,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R1: Read-abort")]
 		public void TestReadWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
 		{
-            var owner = new Process(UniqueIdGenerator.Generate(3));
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 			
@@ -72,7 +72,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R2: Write-abort")]
 		public void TestWriteWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
 		{
-            var owner = new Process(UniqueIdGenerator.Generate(3));
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -90,7 +90,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R2: Write-abort")]
 		public void TestWriteWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
 		{
-            var owner = new Process(UniqueIdGenerator.Generate(3));
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -108,7 +108,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R3: Read-write-commit")]
 		public void TestIfReadWithHigherBallotCommits_ThenReadWithLowerOrEqualBallotAborts()
 		{
-            var owner = new Process(UniqueIdGenerator.Generate(3));
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -127,7 +127,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R3: Read-write-commit")]
 		public void TestIfWriteWithHigherBallotCommits_ThenWriteWithLowerBallotAborts()
 		{
-            var owner = new Process(UniqueIdGenerator.Generate(3));
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -145,7 +145,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R4: Read-commit")]
 		public void TestIfReadWithHigherBallotCommitsWithL1_ThenWriteWithLowerBallotCommitedWithL1Before()
 		{
-            var owner = new Process(UniqueIdGenerator.Generate(3));
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -167,7 +167,7 @@ namespace wacs.Tests.FLease
 		[Test(Description = "Lemma R5: Write-commit")]
 		public void TestIfTwoWritesCommitWithL1AndL2_ThenReadWithHigherBallotCommitsWithL2()
 		{
-            var owner = new Process(UniqueIdGenerator.Generate(3));
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
