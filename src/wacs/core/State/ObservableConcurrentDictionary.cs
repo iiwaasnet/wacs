@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 
 namespace wacs.core.State
 {
@@ -30,7 +31,7 @@ namespace wacs.core.State
 
         public void Set(IEnumerable<KeyValuePair<K, V>> collection)
         {
-            storage = new ConcurrentDictionary<K, V>(collection);
+            Interlocked.Exchange(ref storage, new ConcurrentDictionary<K, V>(collection));
             OnChanged();
         }
 
