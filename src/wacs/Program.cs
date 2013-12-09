@@ -32,6 +32,7 @@ namespace wacs
 
             timer.Stop();
             Console.WriteLine("Resolved in {0} msec", timer.ElapsedMilliseconds);
+            Console.ReadLine();
             resolutionService.Stop();
             return;
 

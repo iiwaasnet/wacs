@@ -30,7 +30,6 @@ namespace wacs.FLease
 				{
 					messages.Add(value);
 				}
-				//NOTE: decide on concurrency
                 if (Interlocked.Increment(ref currentCount) == maxCount && !waitable.IsSet)
 				{
 					waitable.Set();
