@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,8 +54,8 @@ namespace wacs.Tests.FLease
 
             var leases = leaseProviders.Select(p => p.GetLease().Result).ToArray();
 
-            Assert.IsTrue(leases.GroupBy(l => l.ExpiresAt).Any(g => g.Count() >= majority));
-            Assert.IsTrue(leases.GroupBy(l => l.Owner.Id).Any(g => g.Count() >= majority));
+            Assert.GreaterOrEqual(leases.GroupBy(l => l.ExpiresAt).Max(g => g.Count()), majority);
+            Assert.GreaterOrEqual(leases.GroupBy(l => l.Owner.Id).Max(g => g.Count()), majority);
 
             leaseProviders.ToList().ForEach(p => p.Stop());
         }

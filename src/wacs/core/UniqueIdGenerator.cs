@@ -6,12 +6,12 @@ namespace wacs.core
     {
         public static int Generate(int length)
         {
-            var rnd = new Random((int)DateTime.UtcNow.Ticks & 0x0000ffff);
+            //var rnd = new Random((int)DateTime.UtcNow.Ticks & 0x0000ffff);
             var id = 0;
 
             for (var i = 0; i < length; i++)
             {
-                id += rnd.Next(0, 9) * (int)Math.Pow(10, i);
+                id += StaticRandom.Instance.Next(0, 9) * (int)Math.Pow(10, i);
             }
 
             return id;
