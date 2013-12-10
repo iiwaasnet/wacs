@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using wacs.Configuration;
+using wacs.core;
 using wacs.Diagnostics;
 using ZMQ;
 using Exception = System.Exception;
@@ -31,7 +32,7 @@ namespace wacs.Messaging.zmq
         {
             this.config = config;
             this.logger = logger;
-            localEndpoint = GetLocalEndpoint(config.Nodes);
+            localEndpoint = config.Nodes.GetLocalEndpoint();
             messageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
             cancellationSource = new CancellationTokenSource();
 
@@ -44,52 +45,7 @@ namespace wacs.Messaging.zmq
             sender = context.Socket(SocketType.PUB);
         }
 
-        private string GetLocalEndpoint(IEnumerable<INode> nodes)
-        {
-            var endpoint = GetLocalConfiguredEndpoint(nodes);
-
-            if (string.IsNullOrWhiteSpace(endpoint))
-            {
-                endpoint = GetLocalResolvedEndpoint(nodes);
-            }
-
-            return endpoint.TrimEnd('/');
-        }
-
-        private string GetLocalResolvedEndpoint(IEnumerable<INode> nodes)
-        {
-            var localIP = Dns.GetHostEntry(Dns.GetHostName())
-                             .AddressList
-                             .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork
-                                                   || ip.AddressFamily == AddressFamily.InterNetworkV6);
-
-            if (localIP == null)
-            {
-                throw new Exception("Unable to resolve host external IP address!");
-            }
-
-            var uri = nodes
-                .Select(n => new Uri(n.Address, UriKind.Absolute))
-                .FirstOrDefault(n => n.Host == localIP.ToString());
-
-            if (uri == null)
-            {
-                throw new Exception("Host is not configured to be part of the cluster!");
-            }
-
-            return uri.AbsoluteUri;
-        }
-
-        private string GetLocalConfiguredEndpoint(IEnumerable<INode> nodes)
-        {
-            var uri = nodes
-                .Where(n => n.IsLocal)
-                .Select(n => new Uri(n.Address).AbsoluteUri)
-                .FirstOrDefault();
-
-            return uri;
-        }
-
+              
         private void ForwardMessagesToListeners(CancellationToken token)
         {
             foreach (var message in messageQueue.GetConsumingEnumerable(token))

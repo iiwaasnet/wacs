@@ -131,6 +131,7 @@
     <Compile Include="Configuration\ISynodConfiguration.cs" />
     <Compile Include="Configuration\IWacsConfiguration.cs" />
     <Compile Include="Configuration\WacsConfiguration.cs" />
+    <Compile Include="core\Net.cs" />
     <Compile Include="core\State\IChangeNotifiable.cs" />
     <Compile Include="core\State\IObservableAtomicValue.cs" />
     <Compile Include="core\State\IObservableConcurrentDictionary.cs" />

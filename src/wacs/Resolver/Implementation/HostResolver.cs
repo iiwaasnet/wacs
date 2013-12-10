@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using wacs.Configuration;
+using wacs.core;
 using wacs.core.State;
 using wacs.Diagnostics;
 using wacs.FLease;
@@ -32,7 +33,7 @@ namespace wacs.Resolver.Implementation
             this.logger = logger;
             processMap = new ObservableConcurrentDictionary<IProcess, string>();
             synodResolved = new ObservableCondition(() => SynodResolved(config.Nodes), new[] {processMap});
-            localEndpoint = GetLocalEndpoint(config.Nodes);
+            localEndpoint = config.Nodes.GetLocalEndpoint();
             hostingProcess = new Process();
             //hostingProcess = new Process(12);
 
@@ -85,18 +86,6 @@ namespace wacs.Resolver.Implementation
             }
         }
 
-        private string GetLocalEndpoint(IEnumerable<INode> nodes)
-        {
-            var endpoint = GetLocalConfiguredEndpoint(nodes);
-
-            if (string.IsNullOrWhiteSpace(endpoint))
-            {
-                endpoint = GetLocalResolvedEndpoint(nodes);
-            }
-
-            return endpoint.TrimEnd('/');
-        }
-
         private string GetLocalResolvedEndpoint(IEnumerable<INode> nodes)
         {
             var localIP = Dns.GetHostEntry(Dns.GetHostName())
@@ -119,16 +108,6 @@ namespace wacs.Resolver.Implementation
             }
 
             return uri.AbsoluteUri;
-        }
-
-        private string GetLocalConfiguredEndpoint(IEnumerable<INode> nodes)
-        {
-            var uri = nodes
-                .Where(n => n.IsLocal)
-                .Select(n => new Uri(n.Address).AbsoluteUri)
-                .FirstOrDefault();
-
-            return uri;
         }
 
         private void OnMessage(IMessage message)
