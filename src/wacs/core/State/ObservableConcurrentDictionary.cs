@@ -26,6 +26,7 @@ namespace wacs.core.State
 
         public int Count()
         {
+            //test
             return storage.Count;
         }
 
