@@ -2,7 +2,7 @@
 {
 	public interface IBallotGenerator
 	{
-		IBallot New(IProcess owner);
+		IBallot New(INode owner);
 
 		IBallot Null();
 	}

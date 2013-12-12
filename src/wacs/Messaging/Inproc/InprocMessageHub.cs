@@ -20,7 +20,7 @@ namespace wacs.Messaging.Inproc
             new Thread(BroadcastMessages).Start();
         }
 
-        public IListener Subscribe(IProcess subscriber)
+        public IListener Subscribe(INode subscriber)
         {
             var listener = new Listener(subscriber);
             subscriptions.Add(listener);
@@ -33,7 +33,7 @@ namespace wacs.Messaging.Inproc
             broadcast.Add(new BroadcastRequest {Message = message});
         }
 
-        public void Send(IProcess recipient, IMessage message)
+        public void Send(INode recipient, IMessage message)
         {
             p2p.Add(new ForwardRequest {Recipient = recipient, Message = message});
         }

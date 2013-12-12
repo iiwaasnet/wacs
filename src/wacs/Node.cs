@@ -2,19 +2,19 @@
 
 namespace wacs
 {
-    public class Process : IProcess
+    public class Node : INode
     {
-        public Process()
+        public Node()
         {
             Id = UniqueIdGenerator.Generate(3);
         }
 
-        public Process(int id)
+        public Node(int id)
         {
             Id = id;
         }
 
-        protected bool Equals(Process other)
+        protected bool Equals(Node other)
         {
             return Id == other.Id;
         }
@@ -33,7 +33,7 @@ namespace wacs
             {
                 return false;
             }
-            return Equals((Process) obj);
+            return Equals((Node) obj);
         }
 
         public override int GetHashCode()
@@ -43,12 +43,12 @@ namespace wacs
 
         public int Id { get; private set; }
 
-        public static bool operator ==(Process x, Process y)
+        public static bool operator ==(Node x, Node y)
         {
             return x.Equals(y);
         }
 
-        public static bool operator !=(Process x, Process y)
+        public static bool operator !=(Node x, Node y)
         {
             return !(x == y);
         }

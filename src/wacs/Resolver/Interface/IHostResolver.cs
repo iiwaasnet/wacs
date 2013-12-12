@@ -5,9 +5,9 @@ namespace wacs.Resolver.Interface
 {
     public interface IHostResolver
     {
-        Task<IEnumerable<IProcess>> GetWorld();
+        Task<IEnumerable<INode>> GetWorld();
 
-        Task<IProcess> GetLocalProcess();
+        Task<INode> GetLocalProcess();
 
         void Start();
 

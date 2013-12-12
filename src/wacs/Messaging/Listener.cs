@@ -11,7 +11,7 @@ namespace wacs.Messaging
         private readonly Thread notifyThread;
         private Action<IMessage> appendMessage;
 
-        public Listener(IProcess subscriber)
+        public Listener(INode subscriber)
         {
             Subscriber = subscriber;
             observers = new ConcurrentDictionary<IObserver<IMessage>, object>();
@@ -70,7 +70,7 @@ namespace wacs.Messaging
             messages.CompleteAdding();
         }
 
-        public IProcess Subscriber { get; private set; }
+        public INode Subscriber { get; private set; }
 
         private class Unsubscriber : IDisposable
         {

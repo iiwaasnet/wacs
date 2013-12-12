@@ -2,6 +2,6 @@
 {
 	public interface ILeaseProviderFactory
 	{
-		ILeaseProvider Build(IProcess owner);
+		ILeaseProvider Build(INode owner);
 	}
 }

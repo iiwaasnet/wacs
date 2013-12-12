@@ -2,6 +2,6 @@
 {
 	public class Envelope : IEnvelope
 	{
-		public IProcess Sender { get; set; }
+		public INode Sender { get; set; }
 	}
 }

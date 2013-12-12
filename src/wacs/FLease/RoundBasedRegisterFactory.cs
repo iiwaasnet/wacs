@@ -28,7 +28,7 @@ namespace wacs.FLease
             this.logger = logger;
         }
 
-        public IRoundBasedRegister Build(IProcess owner)
+        public IRoundBasedRegister Build(INode owner)
         {
             return new RoundBasedRegister(owner, messageHub, ballotGenerator, serializer, synodConfig, leaseConfig, logger);
         }

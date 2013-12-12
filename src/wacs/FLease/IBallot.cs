@@ -4,7 +4,7 @@ namespace wacs.FLease
 {
 	public interface IBallot : IComparable
 	{
-		IProcess Process { get; }
+		INode Node { get; }
 		DateTime Timestamp { get; }
 		int MessageNumber { get; }
 	}

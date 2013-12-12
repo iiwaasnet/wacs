@@ -14,12 +14,12 @@ namespace wacs.Messaging.zmq
             MulticastId = "*".GetBytes();
         }
 
-        public MultipartMessage(IProcess recipient, IMessage message)
+        public MultipartMessage(INode recipient, IMessage message)
         {
             parts = BuildMessageParts(recipient, message).ToArray();
         }
 
-        private IEnumerable<byte[]> BuildMessageParts(IProcess recipient, IMessage message)
+        private IEnumerable<byte[]> BuildMessageParts(INode recipient, IMessage message)
         {
             yield return BuildMessageFilter(recipient);
             yield return BuildSenderId(message);
@@ -42,7 +42,7 @@ namespace wacs.Messaging.zmq
             return message.Envelope.Sender.Id.GetBytes();
         }
 
-        private byte[] BuildMessageFilter(IProcess recipient)
+        private byte[] BuildMessageFilter(INode recipient)
         {
             return (recipient != null)
                        ? recipient.Id.GetBytes()

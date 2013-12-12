@@ -2,6 +2,6 @@
 {
 	public interface IRoundBasedRegisterFactory
 	{
-		IRoundBasedRegister Build(IProcess owner);
+		IRoundBasedRegister Build(INode owner);
 	}
 }

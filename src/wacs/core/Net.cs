@@ -9,7 +9,7 @@ namespace wacs.core
 {
     public static class Net
     {
-        public static string GetLocalEndpoint(this IEnumerable<INode> nodes)
+        public static string GetLocalEndpoint(this IEnumerable<Configuration.INode> nodes)
         {
             var endpoint = GetLocalConfiguredEndpoint(nodes);
 
@@ -21,7 +21,7 @@ namespace wacs.core
             return endpoint.TrimEnd('/');
         }
 
-        private static string GetLocalResolvedEndpoint(IEnumerable<INode> nodes)
+        private static string GetLocalResolvedEndpoint(IEnumerable<Configuration.INode> nodes)
         {
             var localIP = Dns.GetHostEntry(Dns.GetHostName())
                              .AddressList
@@ -45,7 +45,7 @@ namespace wacs.core
             return uri.AbsoluteUri;
         }
 
-        private static string GetLocalConfiguredEndpoint(IEnumerable<INode> nodes)
+        private static string GetLocalConfiguredEndpoint(IEnumerable<Configuration.INode> nodes)
         {
             var uri = nodes
                 .Where(n => n.IsLocal)

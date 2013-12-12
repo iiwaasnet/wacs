@@ -50,7 +50,7 @@ namespace wacs.Messaging.zmq
         {
             foreach (var message in messageQueue.GetConsumingEnumerable(token))
             {
-                var msg = new Message(new Envelope {Sender = new Process(message.GetSenderId())},
+                var msg = new Message(new Envelope {Sender = new Node(message.GetSenderId())},
                                       new Body
                                       {
                                           MessageType = message.GetMessageType(),
@@ -75,7 +75,7 @@ namespace wacs.Messaging.zmq
             context.Dispose();
         }
 
-        public IListener Subscribe(IProcess subscriber)
+        public IListener Subscribe(INode subscriber)
         {
             BindSenderToSocket();
 
@@ -93,7 +93,7 @@ namespace wacs.Messaging.zmq
             sender.Bind(localEndpoint);
         }
 
-        private void SubscribeListeningSockets(IProcess subscriber)
+        private void SubscribeListeningSockets(INode subscriber)
         {
             unicastListener.Subscribe(subscriber.Id.GetBytes());
             var unicastPoller = unicastListener.CreatePollItem(IOMultiPlex.POLLIN);
@@ -133,7 +133,7 @@ namespace wacs.Messaging.zmq
             }
         }
 
-        private void ConnectToListeners(IEnumerable<Socket> sockets, IEnumerable<INode> listeners)
+        private void ConnectToListeners(IEnumerable<Socket> sockets, IEnumerable<Configuration.INode> listeners)
         {
             foreach (var socket in sockets)
             {
@@ -151,7 +151,7 @@ namespace wacs.Messaging.zmq
             SendMessage(multipartMessage);
         }
 
-        public void Send(IProcess recipient, IMessage message)
+        public void Send(INode recipient, IMessage message)
         {
             var multipartMessage = new MultipartMessage(recipient, message);
 

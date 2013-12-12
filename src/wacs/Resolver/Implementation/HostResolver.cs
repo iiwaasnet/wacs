@@ -19,8 +19,8 @@ namespace wacs.Resolver.Implementation
     {
         private readonly IMessageHub messageHub;
         private readonly IObservableCondition synodResolved;
-        private volatile IProcess hostingProcess;
-        private readonly IObservableConcurrentDictionary<IProcess, string> processMap;
+        private volatile INode localNode;
+        private readonly IObservableConcurrentDictionary<INode, string> processMap;
         private readonly string localEndpoint;
         private readonly ILogger logger;
         private readonly IListener listener;
@@ -31,15 +31,15 @@ namespace wacs.Resolver.Implementation
         {
             this.messageHub = messageHub;
             this.logger = logger;
-            processMap = new ObservableConcurrentDictionary<IProcess, string>();
+            processMap = new ObservableConcurrentDictionary<INode, string>();
             synodResolved = new ObservableCondition(() => SynodResolved(config.Nodes), new[] {processMap});
             localEndpoint = config.Nodes.GetLocalEndpoint();
-            hostingProcess = new Process();
-            //hostingProcess = new Process(12);
+            localNode = new Node();
+            //localNode = new Node(12);
 
             cancellation = new CancellationTokenSource();
 
-            listener = messageHub.Subscribe(hostingProcess);
+            listener = messageHub.Subscribe(localNode);
             worldLearningTask = new Task(() => ResolveSynod(cancellation.Token, config.ProcessIdBroadcastPeriod));
         }
 
@@ -55,7 +55,7 @@ namespace wacs.Resolver.Implementation
             worldLearningTask.Dispose();
         }
 
-        private bool SynodResolved(IEnumerable<INode> nodes)
+        private bool SynodResolved(IEnumerable<Configuration.INode> nodes)
         {
             return processMap.Count() == nodes.Count();
         }
@@ -69,11 +69,11 @@ namespace wacs.Resolver.Implementation
                 {
                     while (!token.IsCancellationRequested)
                     {
-                        messageHub.Broadcast(new ProcessAnnouncementMessage(hostingProcess,
+                        messageHub.Broadcast(new ProcessAnnouncementMessage(localNode,
                                                                             new ProcessAnnouncementMessage.Payload
                                                                             {
                                                                                 Endpoint = localEndpoint,
-                                                                                ProcessId = hostingProcess.Id
+                                                                                ProcessId = localNode.Id
                                                                             }));
                         Thread.Sleep(processIdBroadcastPeriod);
                     }
@@ -86,7 +86,7 @@ namespace wacs.Resolver.Implementation
             }
         }
 
-        private string GetLocalResolvedEndpoint(IEnumerable<INode> nodes)
+        private string GetLocalResolvedEndpoint(IEnumerable<Configuration.INode> nodes)
         {
             var localIP = Dns.GetHostEntry(Dns.GetHostName())
                              .AddressList
@@ -134,7 +134,7 @@ namespace wacs.Resolver.Implementation
             }
         }
 
-        public Task<IEnumerable<IProcess>> GetWorld()
+        public Task<IEnumerable<INode>> GetWorld()
         {
             return Task.Factory.StartNew(() =>
                                          {
@@ -147,12 +147,12 @@ namespace wacs.Resolver.Implementation
                                          });
         }
 
-        public Task<IProcess> GetLocalProcess()
+        public Task<INode> GetLocalProcess()
         {
             return Task.Factory.StartNew(() =>
                                          {
                                              synodResolved.Waitable.WaitOne();
-                                             return hostingProcess;
+                                             return localNode;
                                          });
         }
     }

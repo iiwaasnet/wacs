@@ -12,7 +12,7 @@ namespace wacs.Resolver.Implementation
         {
         }
 
-        protected TypedMessage(IProcess sender, T payload, string messageType)
+        protected TypedMessage(INode sender, T payload, string messageType)
         {
             Envelope = new Envelope {Sender = sender};
             Body = new Body

@@ -4,10 +4,10 @@ namespace wacs.Messaging
 {
 	public interface IMessageHub : IDisposable
 	{
-		IListener Subscribe(IProcess subscriber);
+		IListener Subscribe(INode subscriber);
 
 		void Broadcast(IMessage message);
 
-		void Send(IProcess recipient, IMessage message);
+		void Send(INode recipient, IMessage message);
 	}
 }

@@ -4,7 +4,7 @@ namespace wacs.FLease
 {
 	public interface ILease
 	{
-		IProcess Owner { get; }
+		INode Owner { get; }
 
 		DateTime ExpiresAt { get; }
 	}

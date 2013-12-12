@@ -21,7 +21,7 @@ namespace wacs.FLease
 			this.logger = logger;
 		}
 
-		public ILeaseProvider Build(IProcess owner)
+		public ILeaseProvider Build(INode owner)
 		{
 			return new LeaseProvider(owner, registerFactory, ballotGenerator, config, logger);
 		}

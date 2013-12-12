@@ -11,7 +11,7 @@ namespace wacs.FLease
 {
     public partial class RoundBasedRegister : IRoundBasedRegister
     {
-        private readonly IProcess owner;
+        private readonly INode owner;
         private readonly IMessageHub messageHub;
         private Ballot readBallot;
         private Ballot writeBallot;
@@ -27,7 +27,7 @@ namespace wacs.FLease
         private readonly IObservable<IMessage> nackWriteStream;
         private readonly IMessageSerializer serializer;
 
-        public RoundBasedRegister(IProcess owner,
+        public RoundBasedRegister(INode owner,
                                   IMessageHub messageHub,
                                   IBallotGenerator ballotGenerator,
                                   IMessageSerializer serializer,
@@ -62,10 +62,10 @@ namespace wacs.FLease
             var writeMessage = serializer.Deserialize<WritePayload>(message.Body.Content);
             var ballot = new Ballot(new DateTime(writeMessage.Ballot.Timestamp, DateTimeKind.Utc),
                                     writeMessage.Ballot.MessageNumber,
-                                    new Process(writeMessage.Ballot.ProcessId));
+                                    new Node(writeMessage.Ballot.ProcessId));
             if (writeBallot > ballot || readBallot > ballot)
             {
-                messageHub.Send(new Process(message.Envelope.Sender.Id),
+                messageHub.Send(new Node(message.Envelope.Sender.Id),
                                 new Message(
                                     new Envelope {Sender = owner},
                                     new Body
@@ -77,7 +77,7 @@ namespace wacs.FLease
             else
             {
                 writeBallot = ballot;
-                lease = new Lease(new Process(writeMessage.Lease.ProcessId),
+                lease = new Lease(new Node(writeMessage.Lease.ProcessId),
                                   new DateTime(writeMessage.Lease.ExpiresAt, DateTimeKind.Utc));
 
                 var msg = new AckWritePayload {Ballot = writeMessage.Ballot};
@@ -97,13 +97,13 @@ namespace wacs.FLease
             var readMessage = serializer.Deserialize<ReadPayload>(message.Body.Content);
             var ballot = new Ballot(new DateTime(readMessage.Ballot.Timestamp, DateTimeKind.Utc),
                                     readMessage.Ballot.MessageNumber,
-                                    new Process(readMessage.Ballot.ProcessId));
+                                    new Node(readMessage.Ballot.ProcessId));
 
             if (writeBallot >= ballot || readBallot >= ballot)
             {
                 LogNackRead(ballot);
 
-                messageHub.Send(new Process(message.Envelope.Sender.Id),
+                messageHub.Send(new Node(message.Envelope.Sender.Id),
                                 new Message(
                                     new Envelope {Sender = owner},
                                     new Body
@@ -120,7 +120,7 @@ namespace wacs.FLease
                               Ballot = readMessage.Ballot,
                               KnownWriteBallot = new Messages.Ballot
                                                  {
-                                                     ProcessId = writeBallot.Process.Id,
+                                                     ProcessId = writeBallot.Node.Id,
                                                      Timestamp = writeBallot.Timestamp.Ticks,
                                                      MessageNumber = writeBallot.MessageNumber
                                                  },
@@ -218,7 +218,7 @@ namespace wacs.FLease
             {
                 var ackRead = serializer.Deserialize<TPayload>(message.Body.Content);
 
-                return ackRead.Ballot.ProcessId == ballot.Process.Id && ackRead.Ballot.Timestamp == ballot.Timestamp.Ticks;
+                return ackRead.Ballot.ProcessId == ballot.Node.Id && ackRead.Ballot.Timestamp == ballot.Timestamp.Ticks;
             }
 
             return false;
@@ -250,7 +250,7 @@ namespace wacs.FLease
                                                    {
                                                        Ballot = new Messages.Ballot
                                                                 {
-                                                                    ProcessId = ballot.Process.Id,
+                                                                    ProcessId = ballot.Node.Id,
                                                                     Timestamp = ballot.Timestamp.Ticks,
                                                                     MessageNumber = ballot.MessageNumber
                                                                 },
@@ -276,7 +276,7 @@ namespace wacs.FLease
                                                    {
                                                        Ballot = new Messages.Ballot
                                                                 {
-                                                                    ProcessId = ballot.Process.Id,
+                                                                    ProcessId = ballot.Node.Id,
                                                                     Timestamp = ballot.Timestamp.Ticks,
                                                                     MessageNumber = ballot.MessageNumber
                                                                 }
