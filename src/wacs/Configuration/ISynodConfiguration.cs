@@ -5,7 +5,6 @@ namespace wacs.Configuration
 {
     public interface ISynodConfiguration
     {
-        TimeSpan ProcessIdBroadcastPeriod { get; }
         IEnumerable<INode> Nodes { get; }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using SimpleConfigSections;
+﻿using SimpleConfigSections;
 
 namespace wacs.Configuration
 {

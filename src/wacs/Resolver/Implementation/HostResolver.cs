@@ -11,6 +11,7 @@ using wacs.core.State;
 using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging;
+using wacs.Paxos.Interface;
 using wacs.Resolver.Interface;
 
 namespace wacs.Resolver.Implementation
@@ -27,15 +28,17 @@ namespace wacs.Resolver.Implementation
         private readonly CancellationTokenSource cancellation;
         private readonly Task worldLearningTask;
 
-        public HostResolver(IMessageHub messageHub, ISynodConfiguration config, ILogger logger)
+        public HostResolver(IMessageHub messageHub,
+                            ISynodConfigurationProvider configProvider,
+                            IHostResolverConfiguration config,
+                            ILogger logger)
         {
             this.messageHub = messageHub;
             this.logger = logger;
             processMap = new ObservableConcurrentDictionary<INode, string>();
-            synodResolved = new ObservableCondition(() => SynodResolved(config.Nodes), new[] {processMap});
-            localEndpoint = config.Nodes.GetLocalEndpoint();
-            localNode = new Node();
-            //localNode = new Node(12);
+            synodResolved = new ObservableCondition(() => SynodResolved(configProvider.World), new[] {processMap});
+            localEndpoint = configProvider.World.GetLocalEndpoint();
+            localNode = configProvider.LocalNode;
 
             cancellation = new CancellationTokenSource();
 
