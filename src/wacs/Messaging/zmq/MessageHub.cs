@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading;
-using wacs.Configuration;
 using wacs.core;
 using wacs.Diagnostics;
+using wacs.Paxos.Interface;
 using ZMQ;
 using Exception = System.Exception;
-using Socket = ZMQ.Socket;
-using SocketType = ZMQ.SocketType;
 
 namespace wacs.Messaging.zmq
 {
@@ -21,18 +16,18 @@ namespace wacs.Messaging.zmq
         private readonly Socket multicastListener;
         private readonly Socket unicastListener;
         private readonly Socket sender;
-        private readonly ISynodConfiguration config;
+        private readonly ISynodConfigurationProvider configProvider;
         private readonly ILogger logger;
         private readonly ConcurrentBag<Listener> subscriptions;
         private readonly BlockingCollection<MultipartMessage> messageQueue;
         private readonly CancellationTokenSource cancellationSource;
         private readonly string localEndpoint;
 
-        public MessageHub(ISynodConfiguration config, ILogger logger)
+        public MessageHub(ISynodConfigurationProvider configProvider, ILogger logger)
         {
-            this.config = config;
+            this.configProvider = configProvider;
             this.logger = logger;
-            localEndpoint = config.Nodes.GetLocalEndpoint();
+            localEndpoint = configProvider.World.GetLocalEndpoint();
             messageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
             cancellationSource = new CancellationTokenSource();
 
@@ -45,7 +40,6 @@ namespace wacs.Messaging.zmq
             sender = context.Socket(SocketType.PUB);
         }
 
-              
         private void ForwardMessagesToListeners(CancellationToken token)
         {
             foreach (var message in messageQueue.GetConsumingEnumerable(token))
@@ -80,7 +74,7 @@ namespace wacs.Messaging.zmq
             BindSenderToSocket();
 
             SubscribeListeningSockets(subscriber);
-            ConnectToListeners(new[] {unicastListener, multicastListener}, config.Nodes);
+            ConnectToListeners(new[] {unicastListener, multicastListener}, configProvider.World);
 
             var listener = new Listener(subscriber);
             subscriptions.Add(listener);
