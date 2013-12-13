@@ -35,9 +35,41 @@ namespace wacs.Messaging.zmq
             context = new Context();
             subscriptions = new ConcurrentBag<Listener>();
 
-            multicastListener = context.Socket(SocketType.SUB);
-            unicastListener = context.Socket(SocketType.SUB);
-            sender = context.Socket(SocketType.PUB);
+            multicastListener = CreateMulticastListener();
+            unicastListener = CreateUnicastListener(configProvider);
+            StartListening(new[] {multicastListener, unicastListener}, cancellationSource.Token);
+            sender = CreateSender();
+        }
+
+        private void StartListening(IEnumerable<Socket> sockets, CancellationToken cancellationToken)
+        {
+            new Thread(() => PollReceivers(SubscribeListeningSockets(sockets).ToArray(), cancellationToken)).Start();
+
+            ConnectToListeners(sockets, configProvider.World);
+        }
+
+        private Socket CreateUnicastListener(ISynodConfigurationProvider configProvider)
+        {
+            var socket = context.Socket(SocketType.SUB);
+            socket.Subscribe(configProvider.LocalNode.Id.GetBytes());
+
+            return socket;
+        }
+
+        private Socket CreateMulticastListener()
+        {
+            var socket = context.Socket(SocketType.SUB);
+            socket.Subscribe(MultipartMessage.MulticastId);
+
+            return socket;
+        }
+
+        private Socket CreateSender()
+        {
+            var socket = context.Socket(SocketType.PUB);
+            socket.Bind(localEndpoint);
+
+            return socket;
         }
 
         private void ForwardMessagesToListeners(CancellationToken token)
@@ -69,35 +101,23 @@ namespace wacs.Messaging.zmq
             context.Dispose();
         }
 
-        public IListener Subscribe(INode subscriber)
+        public IListener Subscribe()
         {
-            BindSenderToSocket();
-
-            SubscribeListeningSockets(subscriber);
-            ConnectToListeners(new[] {unicastListener, multicastListener}, configProvider.World);
-
-            var listener = new Listener(subscriber);
+            var listener = new Listener();
             subscriptions.Add(listener);
 
             return listener;
         }
 
-        private void BindSenderToSocket()
+        private IEnumerable<PollItem> SubscribeListeningSockets(IEnumerable<Socket> listeningSockets)
         {
-            sender.Bind(localEndpoint);
-        }
+            foreach (var listeningSocket in listeningSockets)
+            {
+                var poller = listeningSocket.CreatePollItem(IOMultiPlex.POLLIN);
+                poller.PollInHandler += PollInMessageHandler;
 
-        private void SubscribeListeningSockets(INode subscriber)
-        {
-            unicastListener.Subscribe(subscriber.Id.GetBytes());
-            var unicastPoller = unicastListener.CreatePollItem(IOMultiPlex.POLLIN);
-            unicastPoller.PollInHandler += PollInMessageHandler;
-
-            multicastListener.Subscribe(MultipartMessage.MulticastId);
-            var multicastPoller = multicastListener.CreatePollItem(IOMultiPlex.POLLIN);
-            multicastPoller.PollInHandler += PollInMessageHandler;
-
-            new Thread(() => PollReceivers(new[] {unicastPoller, multicastPoller}, cancellationSource.Token)).Start();
+                yield return poller;
+            }
         }
 
         private void PollReceivers(PollItem[] pollItems, CancellationToken token)

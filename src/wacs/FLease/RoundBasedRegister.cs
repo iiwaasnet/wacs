@@ -44,7 +44,7 @@ namespace wacs.FLease
             this.serializer = serializer;
             this.owner = owner;
 
-            listener = messageHub.Subscribe(owner);
+            listener = messageHub.Subscribe();
 
             listener.Where(m => m.Body.MessageType.ToMessageType() == FLeaseMessageType.Read)
                     .Subscribe(new MessageStreamListener(OnReadReceived));

@@ -39,7 +39,7 @@ namespace wacs.Resolver.Implementation
 
             cancellation = new CancellationTokenSource();
 
-            listener = messageHub.Subscribe(localNode);
+            listener = messageHub.Subscribe();
             worldLearningTask = new Task(() => ResolveSynod(cancellation.Token, config.ProcessIdBroadcastPeriod));
         }
 

@@ -20,9 +20,9 @@ namespace wacs.Messaging.Inproc
             new Thread(BroadcastMessages).Start();
         }
 
-        public IListener Subscribe(INode subscriber)
+        public IListener Subscribe()
         {
-            var listener = new Listener(subscriber);
+            var listener = new Listener();
             subscriptions.Add(listener);
 
             return listener;
@@ -55,7 +55,7 @@ namespace wacs.Messaging.Inproc
         {
             foreach (var forwardRequest in p2p.GetConsumingEnumerable())
             {
-                foreach (var subscription in subscriptions.Where(l => l.Subscriber.Id == forwardRequest.Recipient.Id))
+                foreach (var subscription in subscriptions)
                 {
                     subscription.Notify(forwardRequest.Message);
                 }

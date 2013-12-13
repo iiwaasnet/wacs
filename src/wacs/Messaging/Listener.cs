@@ -11,9 +11,8 @@ namespace wacs.Messaging
         private readonly Thread notifyThread;
         private Action<IMessage> appendMessage;
 
-        public Listener(INode subscriber)
+        public Listener()
         {
-            Subscriber = subscriber;
             observers = new ConcurrentDictionary<IObserver<IMessage>, object>();
             messages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             appendMessage = DropMessage;
@@ -69,8 +68,6 @@ namespace wacs.Messaging
             Stop();
             messages.CompleteAdding();
         }
-
-        public INode Subscriber { get; private set; }
 
         private class Unsubscriber : IDisposable
         {
