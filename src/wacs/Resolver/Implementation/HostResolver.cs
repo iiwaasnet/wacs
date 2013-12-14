@@ -1,8 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using wacs.Configuration;
@@ -19,14 +18,14 @@ namespace wacs.Resolver.Implementation
     public class HostResolver : IHostResolver
     {
         private readonly IMessageHub messageHub;
-        private readonly IObservableCondition synodResolved;
         private volatile INode localNode;
-        private readonly IObservableConcurrentDictionary<INode, string> processMap;
+        private readonly ConcurrentDictionary<INode, string> processMap;
         private readonly string localEndpoint;
         private readonly ILogger logger;
         private readonly IListener listener;
         private readonly CancellationTokenSource cancellation;
         private readonly Task worldLearningTask;
+        private readonly ISynodConfigurationProvider configProvider;
 
         public HostResolver(IMessageHub messageHub,
                             ISynodConfigurationProvider configProvider,
@@ -35,15 +34,31 @@ namespace wacs.Resolver.Implementation
         {
             this.messageHub = messageHub;
             this.logger = logger;
-            processMap = new ObservableConcurrentDictionary<INode, string>();
-            synodResolved = new ObservableCondition(() => SynodResolved(configProvider.World), new[] {processMap});
-            localEndpoint = configProvider.World.GetLocalEndpoint();
+            processMap = new ConcurrentDictionary<INode, string>();
+            localEndpoint = configProvider.Synod.GetLocalEndpoint();
             localNode = configProvider.LocalNode;
+            configProvider.WorldChanged += OnWorldChanged;
+            this.configProvider = configProvider;
 
             cancellation = new CancellationTokenSource();
 
             listener = messageHub.Subscribe();
-            worldLearningTask = new Task(() => ResolveSynod(cancellation.Token, config.ProcessIdBroadcastPeriod));
+            worldLearningTask = new Task(() => ResolveWorld(cancellation.Token, config.ProcessIdBroadcastPeriod));
+        }
+
+        private void OnWorldChanged()
+        {
+            var world = configProvider.World.Select(w => w.NormalizeEndpointAddress());
+
+            var deadNodes = processMap
+                .Where(node => !world.Contains(node.Value))
+                .Aggregate(Enumerable.Empty<INode>(), (current, node) => current.Concat(new[] {node.Key}));
+
+            var val = string.Empty;
+            foreach (var deadNode in deadNodes)
+            {
+                processMap.TryRemove(deadNode, out val);
+            }
         }
 
         public void Start()
@@ -58,12 +73,8 @@ namespace wacs.Resolver.Implementation
             worldLearningTask.Dispose();
         }
 
-        private bool SynodResolved(IEnumerable<Configuration.INode> nodes)
-        {
-            return processMap.Count() == nodes.Count();
-        }
-
-        private void ResolveSynod(CancellationToken token, TimeSpan processIdBroadcastPeriod)
+       
+        private void ResolveWorld(CancellationToken token, TimeSpan processIdBroadcastPeriod)
         {
             try
             {
@@ -87,30 +98,6 @@ namespace wacs.Resolver.Implementation
             {
                 logger.Error(err);
             }
-        }
-
-        private string GetLocalResolvedEndpoint(IEnumerable<Configuration.INode> nodes)
-        {
-            var localIP = Dns.GetHostEntry(Dns.GetHostName())
-                             .AddressList
-                             .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork
-                                                   || ip.AddressFamily == AddressFamily.InterNetworkV6);
-
-            if (localIP == null)
-            {
-                throw new Exception("Unable to resolve host external IP address!");
-            }
-
-            var uri = nodes
-                .Select(n => new Uri(n.Address, UriKind.Absolute))
-                .FirstOrDefault(n => n.Host == localIP.ToString());
-
-            if (uri == null)
-            {
-                throw new Exception("Host is not configured to be part of the cluster!");
-            }
-
-            return uri.AbsoluteUri;
         }
 
         private void OnMessage(IMessage message)
@@ -137,26 +124,14 @@ namespace wacs.Resolver.Implementation
             }
         }
 
-        public Task<IEnumerable<INode>> GetWorld()
+        public IEnumerable<INode> GetWorld()
         {
-            return Task.Factory.StartNew(() =>
-                                         {
-                                             synodResolved.Waitable.WaitOne();
-                                             foreach (var keyValuePair in processMap)
-                                             {
-                                                 Console.WriteLine("{0} @ {1}", keyValuePair.Key.Id, keyValuePair.Value);
-                                             }
-                                             return processMap.Keys;
-                                         });
+            return processMap.Keys;
         }
 
-        public Task<INode> GetLocalProcess()
+        public INode GetLocalProcess()
         {
-            return Task.Factory.StartNew(() =>
-                                         {
-                                             synodResolved.Waitable.WaitOne();
-                                             return localNode;
-                                         });
+            return localNode;
         }
     }
 }

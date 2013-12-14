@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -21,6 +22,7 @@ namespace wacs.Messaging.zmq
         private readonly ConcurrentBag<Listener> subscriptions;
         private readonly BlockingCollection<MultipartMessage> messageQueue;
         private readonly CancellationTokenSource cancellationSource;
+        private readonly ConcurrentBag<string> listeningEndpoints;
         private readonly string localEndpoint;
 
         public MessageHub(ISynodConfigurationProvider configProvider, ILogger logger)
@@ -28,8 +30,10 @@ namespace wacs.Messaging.zmq
             this.configProvider = configProvider;
             this.logger = logger;
             localEndpoint = configProvider.World.GetLocalEndpoint();
+            configProvider.WorldChanged += OnWorldChanged;
             messageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
             cancellationSource = new CancellationTokenSource();
+            listeningEndpoints = new ConcurrentBag<string>();
 
             new Thread(() => ForwardMessagesToListeners(cancellationSource.Token)).Start();
             context = new Context();
@@ -39,6 +43,11 @@ namespace wacs.Messaging.zmq
             unicastListener = CreateUnicastListener(configProvider);
             StartListening(new[] {multicastListener, unicastListener}, cancellationSource.Token);
             sender = CreateSender();
+        }
+
+        private void OnWorldChanged()
+        {
+            ConnectToListeners(new[] {unicastListener, multicastListener}, configProvider.World);
         }
 
         private void StartListening(IEnumerable<Socket> sockets, CancellationToken cancellationToken)
@@ -94,7 +103,6 @@ namespace wacs.Messaging.zmq
         public void Dispose()
         {
             cancellationSource.Cancel(false);
-            multicastListener.Unsubscribe(MultipartMessage.MulticastId);
             multicastListener.Dispose();
             unicastListener.Dispose();
             sender.Dispose();
@@ -147,13 +155,14 @@ namespace wacs.Messaging.zmq
             }
         }
 
-        private void ConnectToListeners(IEnumerable<Socket> sockets, IEnumerable<Configuration.INode> listeners)
+        private void ConnectToListeners(IEnumerable<Socket> sockets, IEnumerable<Configuration.INode> nodes)
         {
             foreach (var socket in sockets)
             {
-                foreach (var ipEndPoint in listeners)
+                foreach (var ipEndPoint in nodes.Where(n => !listeningEndpoints.Contains(n.Address)))
                 {
                     socket.Connect(ipEndPoint.Address);
+                    listeningEndpoints.Add(ipEndPoint.Address);
                 }
             }
         }

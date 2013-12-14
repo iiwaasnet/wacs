@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using wacs.Configuration;
 
 namespace wacs.core
 {
@@ -19,6 +18,11 @@ namespace wacs.core
             }
 
             return endpoint.TrimEnd('/');
+        }
+
+        public static string NormalizeEndpointAddress(this Configuration.INode node)
+        {
+            return new Uri(node.Address).AbsoluteUri.TrimEnd('/');
         }
 
         private static string GetLocalResolvedEndpoint(IEnumerable<Configuration.INode> nodes)
@@ -54,6 +58,5 @@ namespace wacs.core
 
             return uri;
         }
-
     }
 }
