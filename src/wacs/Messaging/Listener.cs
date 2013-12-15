@@ -8,16 +8,18 @@ namespace wacs.Messaging
     {
         private readonly ConcurrentDictionary<IObserver<IMessage>, object> observers;
         private readonly BlockingCollection<IMessage> messages;
-        private readonly Thread notifyThread;
+        private readonly CancellationTokenSource cancellationSource;
         private Action<IMessage> appendMessage;
+        private readonly Action<Listener> unsubscribe;
 
-        public Listener()
+        public Listener(Action<Listener> unsubscribe)
         {
             observers = new ConcurrentDictionary<IObserver<IMessage>, object>();
             messages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             appendMessage = DropMessage;
-            notifyThread = new Thread(ForwardMessages);
-            notifyThread.Start();
+            this.unsubscribe = unsubscribe;
+            cancellationSource = new CancellationTokenSource();
+            new Thread(() => ForwardMessages(cancellationSource.Token)).Start();
         }
 
         public void Notify(IMessage message)
@@ -34,9 +36,9 @@ namespace wacs.Messaging
         {
         }
 
-        private void ForwardMessages()
+        private void ForwardMessages(CancellationToken token)
         {
-            foreach (var message in messages.GetConsumingEnumerable())
+            foreach (var message in messages.GetConsumingEnumerable(token))
             {
                 foreach (var observer in observers)
                 {
@@ -65,8 +67,9 @@ namespace wacs.Messaging
 
         public void Dispose()
         {
+            unsubscribe(this);
             Stop();
-            messages.CompleteAdding();
+            cancellationSource.Cancel(false);
         }
 
         private class Unsubscriber : IDisposable

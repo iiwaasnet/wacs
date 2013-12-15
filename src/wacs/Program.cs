@@ -25,7 +25,7 @@ namespace wacs
             var timer = new Stopwatch();
             timer.Start();
             resolutionService.Start();
-            foreach (var node in resolutionService.GetWorld().Result)
+            foreach (var node in resolutionService.GetWorld())
             {
                 Console.WriteLine(node.Id);    
             }

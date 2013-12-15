@@ -6,13 +6,13 @@ namespace wacs.Messaging.Inproc
 {
     public class InprocMessageHub : IMessageHub
     {
-        private readonly ConcurrentBag<Listener> subscriptions;
+        private readonly ConcurrentDictionary<Listener, object> subscriptions;
         private readonly BlockingCollection<ForwardRequest> p2p;
         private readonly BlockingCollection<BroadcastRequest> broadcast;
 
         public InprocMessageHub()
         {
-            subscriptions = new ConcurrentBag<Listener>();
+            subscriptions = new ConcurrentDictionary<Listener, object>();
             p2p = new BlockingCollection<ForwardRequest>();
             broadcast = new BlockingCollection<BroadcastRequest>();
 
@@ -22,10 +22,16 @@ namespace wacs.Messaging.Inproc
 
         public IListener Subscribe()
         {
-            var listener = new Listener();
-            subscriptions.Add(listener);
+            var listener = new Listener(Unsubscribe);
+            subscriptions.TryAdd(listener, null);
 
             return listener;
+        }
+
+        private void Unsubscribe(Listener listener)
+        {
+            object val;
+            subscriptions.TryRemove(listener, out val);
         }
 
         public void Broadcast(IMessage message)
@@ -42,7 +48,7 @@ namespace wacs.Messaging.Inproc
         {
             foreach (var forwardRequest in broadcast.GetConsumingEnumerable())
             {
-                foreach (var subscription in subscriptions)
+                foreach (var subscription in subscriptions.Keys)
                 {
                     subscription.Notify(forwardRequest.Message);
                 }
@@ -55,7 +61,7 @@ namespace wacs.Messaging.Inproc
         {
             foreach (var forwardRequest in p2p.GetConsumingEnumerable())
             {
-                foreach (var subscription in subscriptions)
+                foreach (var subscription in subscriptions.Keys)
                 {
                     subscription.Notify(forwardRequest.Message);
                 }

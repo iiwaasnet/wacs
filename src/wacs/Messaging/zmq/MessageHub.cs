@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -19,10 +18,11 @@ namespace wacs.Messaging.zmq
         private readonly Socket sender;
         private readonly ISynodConfigurationProvider configProvider;
         private readonly ILogger logger;
-        private readonly ConcurrentBag<Listener> subscriptions;
+        private readonly ConcurrentDictionary<Listener, object> subscriptions;
+        private readonly ConcurrentDictionary<PollItem, object> pollItems;
         private readonly BlockingCollection<MultipartMessage> messageQueue;
         private readonly CancellationTokenSource cancellationSource;
-        private readonly ConcurrentBag<string> listeningEndpoints;
+        private readonly ConcurrentDictionary<string, NodeConnection> listeningConnections;
         private readonly string localEndpoint;
 
         public MessageHub(ISynodConfigurationProvider configProvider, ILogger logger)
@@ -30,31 +30,80 @@ namespace wacs.Messaging.zmq
             this.configProvider = configProvider;
             this.logger = logger;
             localEndpoint = configProvider.World.GetLocalEndpoint();
-            configProvider.WorldChanged += OnWorldChanged;
             messageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
+            listeningConnections = new ConcurrentDictionary<string, NodeConnection>();
             cancellationSource = new CancellationTokenSource();
-            listeningEndpoints = new ConcurrentBag<string>();
 
-            new Thread(() => ForwardMessagesToListeners(cancellationSource.Token)).Start();
             context = new Context();
-            subscriptions = new ConcurrentBag<Listener>();
+            subscriptions = new ConcurrentDictionary<Listener, object>();
+            pollItems = new ConcurrentDictionary<PollItem, object>();
 
             multicastListener = CreateMulticastListener();
             unicastListener = CreateUnicastListener(configProvider);
-            StartListening(new[] {multicastListener, unicastListener}, cancellationSource.Token);
+            ConnectListeningSockets(configProvider.Synod.Select(n => n.Address));
+
             sender = CreateSender();
+
+            this.configProvider.WorldChanged += OnWorldChanged;
+            new Thread(() => PollReceivers(cancellationSource.Token)).Start();
+            new Thread(() => ForwardMessagesToListeners(cancellationSource.Token)).Start();
         }
 
         private void OnWorldChanged()
         {
-            ConnectToListeners(new[] {unicastListener, multicastListener}, configProvider.World);
+            var world = configProvider.World.Select(w => w.Address);
+            var dead = listeningConnections.Where(c => !world.Contains(c.Key));
+            var newNodes = world.Where(w => !listeningConnections.ContainsKey(w));
+
+            ConnectListeningSockets(newNodes);
+            CloseDeadSockets(dead);
         }
 
-        private void StartListening(IEnumerable<Socket> sockets, CancellationToken cancellationToken)
+        private void CloseDeadSockets(IEnumerable<KeyValuePair<string, NodeConnection>> deadSockets)
         {
-            new Thread(() => PollReceivers(SubscribeListeningSockets(sockets).ToArray(), cancellationToken)).Start();
+            object obj;
+            foreach (var deadSocket in deadSockets)
+            {
+                foreach (var pollItem in deadSocket.Value.PollItems)
+                {
+                    pollItem.PollInHandler -= PollInMessageHandler;
+                    pollItems.TryRemove(pollItem, out obj);
+                }
+                foreach (var socket in deadSocket.Value.Sockets)
+                {
+                    socket.Dispose();
+                }
 
-            ConnectToListeners(sockets, configProvider.World);
+                NodeConnection con;
+                listeningConnections.TryRemove(deadSocket.Key, out con);
+            }
+        }
+
+        private void ConnectListeningSockets(IEnumerable<string> newNodes)
+        {
+            foreach (var newNode in newNodes)
+            {
+                var nodeConnection = new NodeConnection();
+                if (listeningConnections.TryAdd(newNode, nodeConnection))
+                {
+                    nodeConnection.Sockets = new[]
+                                             {
+                                                 CreateMulticastListener(),
+                                                 CreateUnicastListener(configProvider)
+                                             };
+                    nodeConnection.PollItems = SubscribeListeningSockets(nodeConnection.Sockets).ToArray();
+
+                    foreach (var pollItem in nodeConnection.PollItems)
+                    {
+                        pollItems.TryAdd(pollItem, null);
+                    }
+
+                    foreach (var socket in nodeConnection.Sockets)
+                    {
+                        socket.Connect(newNode);
+                    }
+                }
+            }
         }
 
         private Socket CreateUnicastListener(ISynodConfigurationProvider configProvider)
@@ -91,7 +140,7 @@ namespace wacs.Messaging.zmq
                                           MessageType = message.GetMessageType(),
                                           Content = message.GetMessage()
                                       });
-                foreach (var subscription in subscriptions)
+                foreach (var subscription in subscriptions.Keys)
                 {
                     subscription.Notify(msg);
                 }
@@ -111,10 +160,16 @@ namespace wacs.Messaging.zmq
 
         public IListener Subscribe()
         {
-            var listener = new Listener();
-            subscriptions.Add(listener);
+            var listener = new Listener(Unsubscribe);
+            subscriptions.TryAdd(listener, null);
 
             return listener;
+        }
+
+        private void Unsubscribe(Listener listener)
+        {
+            object obj;
+            subscriptions.TryRemove(listener, out obj);
         }
 
         private IEnumerable<PollItem> SubscribeListeningSockets(IEnumerable<Socket> listeningSockets)
@@ -128,13 +183,13 @@ namespace wacs.Messaging.zmq
             }
         }
 
-        private void PollReceivers(PollItem[] pollItems, CancellationToken token)
+        private void PollReceivers(CancellationToken token)
         {
             try
             {
                 while (!token.IsCancellationRequested)
                 {
-                    context.Poll(pollItems);
+                    context.Poll(pollItems.Keys.ToArray());
                 }
             }
             catch (Exception err)
@@ -152,18 +207,6 @@ namespace wacs.Messaging.zmq
                 var multipartMessage = new MultipartMessage(queue);
                 logger.InfoFormat("MSG RECEIVED: {0} {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
                 messageQueue.Add(multipartMessage);
-            }
-        }
-
-        private void ConnectToListeners(IEnumerable<Socket> sockets, IEnumerable<Configuration.INode> nodes)
-        {
-            foreach (var socket in sockets)
-            {
-                foreach (var ipEndPoint in nodes.Where(n => !listeningEndpoints.Contains(n.Address)))
-                {
-                    socket.Connect(ipEndPoint.Address);
-                    listeningEndpoints.Add(ipEndPoint.Address);
-                }
             }
         }
 
@@ -188,6 +231,12 @@ namespace wacs.Messaging.zmq
             sender.Send(multipartMessage.GetSenderIdBytes(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
             sender.Send(multipartMessage.GetMessageTypeBytes(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
             sender.Send(multipartMessage.GetMessage(), SendRecvOpt.NOBLOCK);
+        }
+
+        private class NodeConnection
+        {
+            internal IEnumerable<Socket> Sockets { get; set; }
+            internal IEnumerable<PollItem> PollItems { get; set; }
         }
     }
 }

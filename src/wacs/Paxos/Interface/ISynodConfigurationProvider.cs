@@ -5,8 +5,8 @@ namespace wacs.Paxos.Interface
     public delegate void WorldChangedHandler();
     public interface ISynodConfigurationProvider
     {
-        void ChangeSynod(IEnumerable<Configuration.INode> newSynod);
-        void ChangeWorld(IEnumerable<Configuration.INode> newWorld);
+        void NewSynod(IEnumerable<Configuration.INode> newSynod);
+        void AddNodeToWorld(Configuration.INode newNodes);
         IEnumerable<Configuration.INode> World { get; }
         IEnumerable<Configuration.INode> Synod { get; }
         INode LocalNode { get; }

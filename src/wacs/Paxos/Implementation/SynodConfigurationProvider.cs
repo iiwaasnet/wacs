@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using wacs.Configuration;
+using wacs.core;
 using wacs.Paxos.Interface;
 
 namespace wacs.Paxos.Implementation
@@ -17,9 +19,37 @@ namespace wacs.Paxos.Implementation
         public SynodConfigurationProvider(ISynodConfiguration config)
         {
             eventHandlers = new EventHandlerList();
-            world = config.Nodes;
-            synod = config.Nodes;
+            world = config.Nodes.Select(n => new Endpoint(n));
+            synod = config.Nodes.Select(n => new Endpoint(n));
             localNode = new Node();
+        }
+
+        public void NewSynod(IEnumerable<Configuration.INode> newSynod)
+        {
+            OnSynodChanged();
+        }
+
+        public void AddNodeToWorld(Configuration.INode newNodes)
+        {
+            OnWorldChanged();
+        }
+
+        private void OnWorldChanged()
+        {
+            var handler = eventHandlers[WorldChangedEvent] as WorldChangedHandler;
+            if (handler != null)
+            {
+                handler();
+            }
+        }
+
+        private void OnSynodChanged()
+        {
+            var handler = eventHandlers[SynodChangedEvent] as WorldChangedHandler;
+            if (handler != null)
+            {
+                handler();
+            }
         }
 
         public event WorldChangedHandler WorldChanged
@@ -47,6 +77,18 @@ namespace wacs.Paxos.Implementation
         public INode LocalNode
         {
             get { return localNode; }
+        }
+
+        private class Endpoint : Configuration.INode
+        {
+            public Endpoint(Configuration.INode node)
+            {
+                Address = node.NormalizeEndpointAddress();
+                IsLocal = node.IsLocal;
+            }
+
+            public string Address { get; private set; }
+            public bool IsLocal { get; private set; }
         }
     }
 }

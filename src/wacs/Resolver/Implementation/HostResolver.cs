@@ -48,7 +48,7 @@ namespace wacs.Resolver.Implementation
 
         private void OnWorldChanged()
         {
-            var world = configProvider.World.Select(w => w.NormalizeEndpointAddress());
+            var world = configProvider.World.Select(w => w.Address);
 
             var deadNodes = processMap
                 .Where(node => !world.Contains(node.Value))
