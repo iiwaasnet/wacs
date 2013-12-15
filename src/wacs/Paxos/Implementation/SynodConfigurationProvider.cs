@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using wacs.Configuration;
 using wacs.core;
 using wacs.Paxos.Interface;
@@ -12,26 +14,35 @@ namespace wacs.Paxos.Implementation
         private readonly EventHandlerList eventHandlers;
         private static readonly object WorldChangedEvent = new object();
         private static readonly object SynodChangedEvent = new object();
-        private readonly IEnumerable<Configuration.INode> world;
-        private readonly IEnumerable<Configuration.INode> synod;
+        private readonly ConcurrentDictionary<Configuration.INode, object> world;
+        private volatile ConcurrentDictionary<Configuration.INode, object> synod;
         private readonly INode localNode;
 
         public SynodConfigurationProvider(ISynodConfiguration config)
         {
             eventHandlers = new EventHandlerList();
-            world = config.Nodes.Select(n => new Endpoint(n));
-            synod = config.Nodes.Select(n => new Endpoint(n));
+            var dictionary = config.Nodes.ToDictionary(n => (Configuration.INode) new Endpoint(n), n => new object());
+
+            world = new ConcurrentDictionary<Configuration.INode, object>(dictionary);
+            synod = new ConcurrentDictionary<Configuration.INode, object>(dictionary);
             localNode = new Node();
         }
 
         public void NewSynod(IEnumerable<Configuration.INode> newSynod)
         {
+            var dictionary = newSynod.ToDictionary(n => (Configuration.INode) new Endpoint(n), n => new object());
+            Interlocked.Exchange(ref synod, new ConcurrentDictionary<Configuration.INode, object>(dictionary));
+
             OnSynodChanged();
+            OnWorldChanged();
         }
 
-        public void AddNodeToWorld(Configuration.INode newNodes)
+        public void AddNodeToWorld(Configuration.INode newNode)
         {
-            OnWorldChanged();
+            if (world.TryAdd(newNode, null))
+            {
+                OnWorldChanged();
+            }
         }
 
         private void OnWorldChanged()
@@ -66,12 +77,12 @@ namespace wacs.Paxos.Implementation
 
         public IEnumerable<Configuration.INode> World
         {
-            get { return world; }
+            get { return world.Keys; }
         }
 
         public IEnumerable<Configuration.INode> Synod
         {
-            get { return synod; }
+            get { return synod.Keys; }
         }
 
         public INode LocalNode

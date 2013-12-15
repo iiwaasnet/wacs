@@ -6,7 +6,7 @@ namespace wacs.Paxos.Interface
     public interface ISynodConfigurationProvider
     {
         void NewSynod(IEnumerable<Configuration.INode> newSynod);
-        void AddNodeToWorld(Configuration.INode newNodes);
+        void AddNodeToWorld(Configuration.INode newNode);
         IEnumerable<Configuration.INode> World { get; }
         IEnumerable<Configuration.INode> Synod { get; }
         INode LocalNode { get; }
