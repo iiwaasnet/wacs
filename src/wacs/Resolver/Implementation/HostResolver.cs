@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using wacs.Configuration;
 using wacs.core;
-using wacs.core.State;
 using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging;
@@ -73,7 +72,6 @@ namespace wacs.Resolver.Implementation
             worldLearningTask.Dispose();
         }
 
-       
         private void ResolveWorld(CancellationToken token, TimeSpan processIdBroadcastPeriod)
         {
             try

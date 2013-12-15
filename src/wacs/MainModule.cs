@@ -5,6 +5,8 @@ using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.zmq;
+using wacs.Paxos.Implementation;
+using wacs.Paxos.Interface;
 using wacs.Resolver.Implementation;
 using wacs.Resolver.Interface;
 
@@ -35,6 +37,7 @@ namespace wacs
             builder.RegisterType<MessageHub>().As<IMessageHub>().SingleInstance();
             builder.RegisterType<MessageSerializer>().As<IMessageSerializer>().SingleInstance();
             builder.RegisterType<HostResolver>().As<IHostResolver>().SingleInstance();
+            builder.RegisterType<SynodConfigurationProvider>().As<ISynodConfigurationProvider>().SingleInstance();
             RegisterConfigurations(builder);
         }
 
@@ -49,6 +52,9 @@ namespace wacs
                    .SingleInstance();
             builder.Register(c => c.Resolve<IWacsConfiguration>().Synod)
                    .As<ISynodConfiguration>()
+                   .SingleInstance();
+            builder.Register(c => c.Resolve<IWacsConfiguration>().HostResolver)
+                   .As<IHostResolverConfiguration>()
                    .SingleInstance();
         }
 
