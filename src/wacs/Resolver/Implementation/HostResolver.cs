@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Castle.Core.Internal;
 using wacs.Configuration;
 using wacs.core;
 using wacs.Diagnostics;
@@ -18,26 +19,28 @@ namespace wacs.Resolver.Implementation
     {
         private readonly IMessageHub messageHub;
         private volatile INode localNode;
-        private readonly ConcurrentDictionary<INode, string> processMap;
+        private readonly ConcurrentDictionary<string, INode> uriToProcessMap;
+        private readonly ConcurrentDictionary<INode, string> processToUriMap;
         private readonly string localEndpoint;
         private readonly ILogger logger;
         private readonly IListener listener;
         private readonly CancellationTokenSource cancellation;
         private readonly Task worldLearningTask;
-        private readonly ISynodConfigurationProvider configProvider;
+        private readonly ISynodConfigurationProvider synodConfigProvider;
 
         public HostResolver(IMessageHub messageHub,
-                            ISynodConfigurationProvider configProvider,
+                            ISynodConfigurationProvider synodConfigProvider,
                             IHostResolverConfiguration config,
                             ILogger logger)
         {
             this.messageHub = messageHub;
             this.logger = logger;
-            processMap = new ConcurrentDictionary<INode, string>();
-            localEndpoint = configProvider.Synod.GetLocalEndpoint();
-            localNode = configProvider.LocalNode;
-            configProvider.WorldChanged += OnWorldChanged;
-            this.configProvider = configProvider;
+            localEndpoint = synodConfigProvider.Synod.GetLocalEndpoint();
+            localNode = synodConfigProvider.LocalNode;
+            uriToProcessMap = new ConcurrentDictionary<string, INode>(new[] {new KeyValuePair<string, INode>(localEndpoint, localNode)});
+            processToUriMap = new ConcurrentDictionary<INode, string>(new[] {new KeyValuePair<INode, string>(localNode, localEndpoint)});
+            synodConfigProvider.WorldChanged += RemoveDeadNodes;
+            this.synodConfigProvider = synodConfigProvider;
 
             cancellation = new CancellationTokenSource();
 
@@ -45,18 +48,24 @@ namespace wacs.Resolver.Implementation
             worldLearningTask = new Task(() => ResolveWorld(cancellation.Token, config.ProcessIdBroadcastPeriod));
         }
 
-        private void OnWorldChanged()
+        private void RemoveDeadNodes()
         {
-            var world = configProvider.World.Select(w => w.Address);
+            var world = synodConfigProvider.World.Select(w => w.Address);
 
-            var deadNodes = processMap
-                .Where(node => !world.Contains(node.Value))
-                .Aggregate(Enumerable.Empty<INode>(), (current, node) => current.Concat(new[] {node.Key}));
+            var deadNodes = uriToProcessMap
+                .Where(node => !world.Contains(node.Key))
+                .Aggregate(Enumerable.Empty<string>(), (current, node) => current.Concat(new[] {node.Key}));
 
-            var val = string.Empty;
-            foreach (var deadNode in deadNodes)
+            deadNodes.ForEach(RemoveProcessMapping);
+        }
+
+        private void RemoveProcessMapping(string deadNodeUri)
+        {
+            INode val;
+            if (uriToProcessMap.TryRemove(deadNodeUri, out val))
             {
-                processMap.TryRemove(deadNode, out val);
+                string uri;
+                processToUriMap.TryRemove(val, out uri);
             }
         }
 
@@ -102,32 +111,39 @@ namespace wacs.Resolver.Implementation
         {
             if (message.Body.MessageType == ProcessAnnouncementMessage.MessageType)
             {
-                var senderEndpoint = new ProcessAnnouncementMessage(message).GetPayload().Endpoint;
+                var announcement = new ProcessAnnouncementMessage(message).GetPayload();
+                var joiningProcess = new Node(announcement.ProcessId);
 
-                string endpoint;
-                var process = message.Envelope.Sender;
-
-                if (processMap.TryGetValue(process, out endpoint) && senderEndpoint != endpoint)
+                string registeredUri;
+                if(processToUriMap.TryGetValue(joiningProcess, out registeredUri) && announcement.Endpoint != registeredUri)
                 {
-                    Console.WriteLine("Conflicting processes! Existing {0}@{1}, joining {2}@{3}",
-                                      process.Id,
-                                      endpoint,
-                                      process.Id,
-                                      senderEndpoint);
+                    //TODO: Add to conflict list to be displayed on management console
+                    logger.WarnFormat("Conflicting processes! Existing {0}@{1}, joining {2}@{3}",
+                                      announcement.ProcessId,
+                                      registeredUri,
+                                      announcement.ProcessId,
+                                      announcement.Endpoint);
                 }
                 else
                 {
-                    processMap[process] = senderEndpoint;
+                    if (processToUriMap.TryAdd(joiningProcess, announcement.Endpoint))
+                    {
+                        uriToProcessMap[announcement.Endpoint] = joiningProcess;
+                    }
                 }
             }
         }
 
-        public IEnumerable<INode> GetWorld()
+        
+        public INode ResolveRemoteProcess(Configuration.INode node)
         {
-            return processMap.Keys;
+            INode resolved;
+            uriToProcessMap.TryGetValue(node.Address, out resolved);
+
+            return resolved;
         }
 
-        public INode GetLocalProcess()
+        public INode ResolveLocalProcess()
         {
             return localNode;
         }

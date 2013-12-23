@@ -20,21 +20,21 @@ namespace wacs
             var container = builder.Build();
 
 
-            var resolutionService = container.Resolve<IHostResolver>();
+            //var resolutionService = container.Resolve<IHostResolver>();
 
-            var timer = new Stopwatch();
-            timer.Start();
-            resolutionService.Start();
-            foreach (var node in resolutionService.GetWorld())
-            {
-                Console.WriteLine(node.Id);    
-            }
+            //var timer = new Stopwatch();
+            //timer.Start();
+            //resolutionService.Start();
+            //foreach (var node in resolutionService.GetWorld())
+            //{
+            //    Console.WriteLine(node.Id);    
+            //}
 
-            timer.Stop();
-            Console.WriteLine("Resolved in {0} msec", timer.ElapsedMilliseconds);
-            Console.ReadLine();
-            resolutionService.Stop();
-            return;
+            //timer.Stop();
+            //Console.WriteLine("Resolved in {0} msec", timer.ElapsedMilliseconds);
+            //Console.ReadLine();
+            //resolutionService.Stop();
+            //return;
 
             HostFactory.New(x => ConfigureService(x, container)).Run();
         }

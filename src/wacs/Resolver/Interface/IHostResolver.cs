@@ -4,9 +4,11 @@ namespace wacs.Resolver.Interface
 {
     public interface IHostResolver
     {
-        IEnumerable<INode> GetWorld();
+        //IEnumerable<INode> GetWorld();
 
-        INode GetLocalProcess();
+        INode ResolveLocalProcess();
+
+        INode ResolveRemoteProcess(Configuration.INode node);
 
         void Start();
 

@@ -90,12 +90,18 @@ namespace wacs.Paxos.Implementation
             get { return localNode; }
         }
 
-        private class Endpoint : Configuration.INode
+        public class Endpoint : Configuration.INode
         {
-            public Endpoint(Configuration.INode node)
+            internal Endpoint(Configuration.INode node)
             {
                 Address = node.NormalizeEndpointAddress();
                 IsLocal = node.IsLocal;
+            }
+
+            public Endpoint(string uri)
+            {
+                Address = uri.NormalizeEndpointAddress();
+                IsLocal = false;
             }
 
             public string Address { get; private set; }

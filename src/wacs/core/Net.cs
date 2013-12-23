@@ -22,7 +22,12 @@ namespace wacs.core
 
         public static string NormalizeEndpointAddress(this Configuration.INode node)
         {
-            return new Uri(node.Address).AbsoluteUri.TrimEnd('/');
+            return node.Address.NormalizeEndpointAddress();
+        }
+
+        public static string NormalizeEndpointAddress(this string uri)
+        {
+            return new Uri(uri).AbsoluteUri.TrimEnd('/');
         }
 
         private static string GetLocalResolvedEndpoint(IEnumerable<Configuration.INode> nodes)
