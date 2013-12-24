@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -17,6 +18,7 @@ namespace wacs.Paxos.Implementation
         private readonly ConcurrentDictionary<Configuration.INode, object> world;
         private volatile ConcurrentDictionary<Configuration.INode, object> synod;
         private readonly INode localNode;
+        private readonly object locker = new object();
 
         public SynodConfigurationProvider(ISynodConfiguration config)
         {
@@ -39,9 +41,34 @@ namespace wacs.Paxos.Implementation
 
         public void AddNodeToWorld(Configuration.INode newNode)
         {
-            if (world.TryAdd(newNode, null))
+            lock (locker)
             {
-                OnWorldChanged();
+                if (world.TryAdd(newNode, null))
+                {
+                    OnWorldChanged();
+                }
+            }
+        }
+
+        public void DetachNodeFromWorld(Configuration.INode detachedNode)
+        {
+            lock (locker)
+            {
+                AssertNodeIsNotInSynode(detachedNode);
+
+                object value;
+                if (world.TryRemove(detachedNode, out value))
+                {
+                    OnWorldChanged();
+                }
+            }
+        }
+
+        private void AssertNodeIsNotInSynode(Configuration.INode detachedNode)
+        {
+            if (synod.ContainsKey(detachedNode))
+            {
+                throw new Exception(string.Format("Unable to detach node from world! Node {0} is part of the synod.", detachedNode.Address));
             }
         }
 

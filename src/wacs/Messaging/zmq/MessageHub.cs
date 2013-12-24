@@ -51,6 +51,7 @@ namespace wacs.Messaging.zmq
 
         private void OnWorldChanged()
         {
+            //TODO: Check that nodes being removed are not in the Synod!!!
             var world = configProvider.World.Select(w => w.Address);
             var dead = listeningConnections.Where(c => !world.Contains(c.Key));
             var newNodes = world.Where(w => !listeningConnections.ContainsKey(w));

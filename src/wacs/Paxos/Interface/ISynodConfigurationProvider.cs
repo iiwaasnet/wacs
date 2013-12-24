@@ -7,6 +7,7 @@ namespace wacs.Paxos.Interface
     {
         void NewSynod(IEnumerable<Configuration.INode> newSynod);
         void AddNodeToWorld(Configuration.INode newNode);
+        void DetachNodeFromWorld(Configuration.INode detachedNode);
         IEnumerable<Configuration.INode> World { get; }
         IEnumerable<Configuration.INode> Synod { get; }
         INode LocalNode { get; }
