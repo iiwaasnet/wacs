@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Moq;
 using NUnit.Framework;
+using tests.Unit.Helpers;
+using wacs;
 using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.Inproc;
-using wacs.Tests.Helpers;
 
-namespace wacs.Tests.FLease
+namespace tests.Unit.FLease
 {
     [TestFixture]
     public class LeaseProviderTests

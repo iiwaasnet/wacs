@@ -2,14 +2,14 @@
 using Autofac;
 using Moq;
 using NUnit.Framework;
+using tests.Unit.Helpers;
+using wacs;
 using wacs.Configuration;
-using wacs.core;
 using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.Inproc;
-using wacs.Tests.Helpers;
 
-namespace wacs.Tests.FLease
+namespace tests.Unit.FLease
 {
 	[TestFixture]
 	public class RoundBasedRegisterTests

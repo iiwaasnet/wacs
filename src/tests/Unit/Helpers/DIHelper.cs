@@ -1,7 +1,7 @@
 ﻿using Autofac;
 using Autofac.Configuration;
 
-namespace wacs.Tests.Helpers
+namespace tests.Unit.Helpers
 {
 	public static class DIHelper
 	{

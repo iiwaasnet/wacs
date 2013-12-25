@@ -225,9 +225,6 @@
     <Compile Include="Resolver\Implementation\TypedMessage.cs" />
     <Compile Include="Resolver\Interface\IHostResolver.cs" />
     <Compile Include="Resolver\Implementation\HostResolver.cs" />
-    <Compile Include="Tests\FLease\LeaseProviderTests.cs" />
-    <Compile Include="Tests\FLease\RoundBasedRegisterTests.cs" />
-    <Compile Include="Tests\Helpers\DIHelper.cs" />
     <Compile Include="WACService.cs" />
   </ItemGroup>
   <ItemGroup>
