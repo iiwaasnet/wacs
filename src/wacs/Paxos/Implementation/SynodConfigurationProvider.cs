@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Threading;
 using wacs.Configuration;
 using wacs.core;
 using wacs.Paxos.Interface;
@@ -15,28 +14,52 @@ namespace wacs.Paxos.Implementation
         private readonly EventHandlerList eventHandlers;
         private static readonly object WorldChangedEvent = new object();
         private static readonly object SynodChangedEvent = new object();
-        private readonly ConcurrentDictionary<Configuration.INode, object> world;
-        private volatile ConcurrentDictionary<Configuration.INode, object> synod;
+        private ConcurrentDictionary<Configuration.INode, object> world;
+        private ConcurrentDictionary<Configuration.INode, object> synod;
         private readonly INode localNode;
         private readonly object locker = new object();
 
         public SynodConfigurationProvider(ISynodConfiguration config)
         {
             eventHandlers = new EventHandlerList();
-            var dictionary = config.Nodes.ToDictionary(n => (Configuration.INode) new Endpoint(n), n => new object());
+            var dictionary = config.Nodes.ToDictionary(n => (Configuration.INode) new Endpoint(n), n => (object) null);
 
             world = new ConcurrentDictionary<Configuration.INode, object>(dictionary);
             synod = new ConcurrentDictionary<Configuration.INode, object>(dictionary);
             localNode = new Node();
         }
 
-        public void NewSynod(IEnumerable<Configuration.INode> newSynod)
+        public void ActivateNewSynod(IEnumerable<Configuration.INode> newSynod)
         {
-            var dictionary = newSynod.ToDictionary(n => (Configuration.INode) new Endpoint(n), n => new object());
-            Interlocked.Exchange(ref synod, new ConcurrentDictionary<Configuration.INode, object>(dictionary));
+            lock (locker)
+            {
+                var tmpSynod = newSynod.ToDictionary(n => (Configuration.INode) new Endpoint(n), n => (object) null);
 
-            OnSynodChanged();
-            OnWorldChanged();
+                var tmpWorld = MergeNewSynodAndRemainedWorld(tmpSynod, RemoveOldSynodFromWorld());
+
+                synod = new ConcurrentDictionary<Configuration.INode, object>(tmpSynod);
+                world = new ConcurrentDictionary<Configuration.INode, object>(tmpWorld);
+
+                OnSynodChanged();
+                OnWorldChanged();
+            }
+        }
+
+        private IEnumerable<KeyValuePair<Configuration.INode, object>> MergeNewSynodAndRemainedWorld(Dictionary<Configuration.INode, object> tmpSynod, IDictionary<Configuration.INode, object> tmpWorld)
+        {
+            foreach (var node in tmpSynod)
+            {
+                tmpWorld[node.Key] = null;
+            }
+
+            return tmpWorld;
+        }
+
+        private IDictionary<Configuration.INode, object> RemoveOldSynodFromWorld()
+        {
+            return world
+                .Where(pair => !synod.ContainsKey(pair.Key))
+                .ToDictionary(pair => pair.Key, pair => pair.Value);
         }
 
         public void AddNodeToWorld(Configuration.INode newNode)
@@ -129,6 +152,33 @@ namespace wacs.Paxos.Implementation
             {
                 Address = uri.NormalizeEndpointAddress();
                 IsLocal = false;
+            }
+
+            protected bool Equals(Endpoint other)
+            {
+                return string.Equals(Address, other.Address);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+                if (obj.GetType() != this.GetType())
+                {
+                    return false;
+                }
+                return Equals((Endpoint) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return (Address != null ? Address.GetHashCode() : 0);
             }
 
             public string Address { get; private set; }
