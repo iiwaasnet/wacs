@@ -328,6 +328,33 @@ namespace tests.Unit
             Assert.IsNotNull(synodConfigProvider.LocalNode);
             Assert.AreNotEqual(0, synodConfigProvider.LocalNode.Id);
         }
+
+        [Test]
+        public void TestSynodConfigurationProvider_CanBeInitializedWithEmptySynodAndCanAddNodesToWorld()
+        {
+            var worldChangedFired = false;
+            var synodChangedFired = false;
+            var config = new SynodConfiguration {Nodes = Enumerable.Empty<INode>()};
+
+            var synodConfigProvider = new SynodConfigurationProvider(config);
+            synodConfigProvider.WorldChanged += () => { worldChangedFired = true; };
+            synodConfigProvider.SynodChanged += () => { synodChangedFired = true; };
+
+            var node1 = new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:234/");
+            var node2 = new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:235/");
+            var world = new[]
+                        {
+                            node1,
+                            node2
+                        };
+            synodConfigProvider.AddNodeToWorld(node1);
+            synodConfigProvider.AddNodeToWorld(node2);
+
+            Assert.IsTrue(synodConfigProvider.World.Select(n => n.Address).OrderBy(a => a)
+                                             .SequenceEqual(world.Select(n => n.Address).OrderBy(a => a)));
+            Assert.IsTrue(worldChangedFired);
+            Assert.IsFalse(synodChangedFired);
+        }
     }
 
     internal class SynodConfiguration : ISynodConfiguration
