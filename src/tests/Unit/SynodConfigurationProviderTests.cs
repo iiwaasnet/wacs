@@ -12,10 +12,10 @@ namespace tests.Unit
     public class SynodConfigurationProviderTests
     {
         [Test]
-        public void TestAddExistingNodeToWorld_DoesntAddNodeToWorldAndNoWorldChangedEventRisen()
+        public void TestAddExistingNodeToWorld_DoesntAddNodeToWorldAndNoWorldChangedEventRisenAndThrowsNoException()
         {
-            var uri = "tcp://127.0.0.1:234".NormalizeEndpointAddress();
-            var joiningUri = uri;
+            var sameUri = "tcp://127.0.0.1:234";
+            var joiningNode = new SynodConfigurationProvider.Endpoint(sameUri);
             var worldChangedFired = false;
             var synodChangedFired = false;
 
@@ -23,7 +23,8 @@ namespace tests.Unit
                                      {
                                          Nodes = new[]
                                                  {
-                                                     new SynodConfigurationProvider.Endpoint(uri)
+                                                     new SynodConfigurationProvider.Endpoint(sameUri),
+                                                     new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:235")
                                                  }
                                      };
             var synodConfigProvider = new SynodConfigurationProvider(synodConfiguration);
@@ -31,23 +32,27 @@ namespace tests.Unit
             synodConfigProvider.WorldChanged += () => { worldChangedFired = true; };
             synodConfigProvider.SynodChanged += () => { synodChangedFired = true; };
 
-            Assert.True(synodConfigProvider.Synod.Select(n => n.Address).SequenceEqual(synodConfiguration.Nodes.Select(n => n.Address)));
-            Assert.True(synodConfigProvider.World.Select(n => n.Address).SequenceEqual(synodConfiguration.Nodes.Select(n => n.Address)));
+            Assert.True(synodConfigProvider.Synod.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synodConfiguration.Nodes.Select(n => n.Address).OrderBy(a => a)));
+            Assert.True(synodConfigProvider.World.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synodConfiguration.Nodes.Select(n => n.Address).OrderBy(a => a)));
 
-            synodConfigProvider.AddNodeToWorld(new SynodConfigurationProvider.Endpoint(joiningUri));
+            synodConfigProvider.AddNodeToWorld(joiningNode);
+            synodConfigProvider.AddNodeToWorld(joiningNode);
 
             Assert.IsFalse(synodChangedFired);
             Assert.IsFalse(worldChangedFired);
 
-            Assert.AreEqual(synodConfiguration.Nodes.Count(), synodConfigProvider.World.Count());
-            Assert.AreEqual(synodConfiguration.Nodes.Count(), synodConfigProvider.Synod.Count());
+            Assert.True(synodConfigProvider.Synod.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synodConfiguration.Nodes.Select(n => n.Address).OrderBy(a => a)));
+            Assert.True(synodConfigProvider.World.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synodConfiguration.Nodes.Select(n => n.Address).OrderBy(a => a)));
         }
 
         [Test]
         public void TestAddNewNodeToWorld_RaisesWorldChangedEventAndAddsNodeToWorldOnly()
         {
-            var uri = "tcp://127.0.0.1:234".NormalizeEndpointAddress();
-            var joiningUri = "tcp://127.0.0.1:235/".NormalizeEndpointAddress();
+            var joiningNode = new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:124");
             var worldChangedFired = false;
             var synodChangedFired = false;
 
@@ -55,7 +60,8 @@ namespace tests.Unit
                                      {
                                          Nodes = new[]
                                                  {
-                                                     new SynodConfigurationProvider.Endpoint(uri)
+                                                     new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:121"),
+                                                     new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:122")
                                                  }
                                      };
             var synodConfigProvider = new SynodConfigurationProvider(synodConfiguration);
@@ -63,16 +69,22 @@ namespace tests.Unit
             synodConfigProvider.WorldChanged += () => { worldChangedFired = true; };
             synodConfigProvider.SynodChanged += () => { synodChangedFired = true; };
 
-            Assert.True(synodConfigProvider.Synod.Select(n => n.Address).SequenceEqual(synodConfiguration.Nodes.Select(n => n.Address)));
-            Assert.True(synodConfigProvider.World.Select(n => n.Address).SequenceEqual(synodConfiguration.Nodes.Select(n => n.Address)));
+            Assert.True(synodConfigProvider.Synod.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synodConfiguration.Nodes.Select(n => n.Address).OrderBy(a => a)));
+            Assert.True(synodConfigProvider.World.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synodConfiguration.Nodes.Select(n => n.Address).OrderBy(a => a)));
 
-            synodConfigProvider.AddNodeToWorld(new SynodConfigurationProvider.Endpoint(joiningUri));
+            synodConfigProvider.AddNodeToWorld(joiningNode);
 
             Assert.IsFalse(synodChangedFired);
             Assert.IsTrue(worldChangedFired);
 
-            Assert.IsTrue(synodConfigProvider.World.Any(n => n.Address == joiningUri));
-            Assert.IsFalse(synodConfigProvider.Synod.Any(n => n.Address == joiningUri));
+            var world = synodConfiguration.Nodes.Concat(new[] {joiningNode});
+
+            Assert.True(synodConfigProvider.Synod.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synodConfiguration.Nodes.Select(n => n.Address).OrderBy(a => a)));
+            Assert.True(synodConfigProvider.World.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(world.Select(n => n.Address).OrderBy(a => a)));
         }
 
         [Test]
@@ -84,7 +96,7 @@ namespace tests.Unit
         }
 
         [Test]
-        public void TestInitialConfiguratioLoad_ReturnsSynodAndWorld()
+        public void TestInitialConfigurationLoad_ReturnsSynodAndWorld()
         {
             var synodConfiguration = new SynodConfiguration
                                      {
@@ -206,12 +218,115 @@ namespace tests.Unit
         [Test]
         public void TestActivatingNewSynod_RaisesWorldChangedEventRemovesOldSynodFromWorldAndAddsNewSynodToWorld()
         {
-            // world should have more nodes, than synod
+            var worldChangedFired = false;
+            var synodChangedFired = false;
+
+            var listenerNode = new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:230");
+            var synod = new SynodConfiguration
+                        {
+                            Nodes = new[]
+                                    {
+                                        new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:234"),
+                                        new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:235")
+                                    }
+                        };
+            var world = synod.Nodes.Concat(new[] {listenerNode});
+
+            var synodConfigProvider = new SynodConfigurationProvider(synod);
+
+            synodConfigProvider.AddNodeToWorld(listenerNode);
+
+            synodConfigProvider.WorldChanged += () => { worldChangedFired = true; };
+            synodConfigProvider.SynodChanged += () => { synodChangedFired = true; };
+
+            Assert.True(synodConfigProvider.Synod.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synod.Nodes.Select(n => n.Address).OrderBy(a => a)));
+            Assert.True(synodConfigProvider.World.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(world.Select(n => n.Address).OrderBy(a => a)));
+
+            var newSynod = new[]
+                           {
+                               new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:236"),
+                               new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:237")
+                           };
+            world = newSynod.Concat(new[] {listenerNode});
+            synodConfigProvider.ActivateNewSynod(newSynod);
+
+            Assert.IsTrue(synodChangedFired);
+            Assert.IsTrue(worldChangedFired);
+
+            Assert.True(synodConfigProvider.Synod.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(newSynod.Select(n => n.Address).OrderBy(a => a)));
+            Assert.True(synodConfigProvider.World.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(world.Select(n => n.Address).OrderBy(a => a)));
         }
 
         [Test]
-        public void TestCreatingSynodConfigurationProviderWithTwoSameNodesInConfig_AddsNonDuplicatedNodes()
+        public void TestCreatingSynodConfigurationProviderWithTwoSameNodesInConfig_ThrowsException()
         {
+            var oneEndpoint = new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:234");
+            var otherEndpoint = new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:234");
+
+            var synodConfiguration = new SynodConfiguration
+                                     {
+                                         Nodes = new[]
+                                                 {
+                                                     oneEndpoint,
+                                                     oneEndpoint,
+                                                     otherEndpoint
+                                                 }
+                                     };
+            Assert.Throws<ArgumentException>(() => new SynodConfigurationProvider(synodConfiguration));
+        }
+
+        [Test]
+        public void TestActivatingNewSynodWithDuplicatedNodesInSynod_NoSynodAndWorldChangedAndExceptionIsThrown()
+        {
+            var worldChangedFired = false;
+            var synodChangedFired = false;
+
+            var synod = new SynodConfiguration
+                        {
+                            Nodes = new[]
+                                    {
+                                        new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:234"),
+                                        new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:235")
+                                    }
+                        };
+
+            var synodConfigProvider = new SynodConfigurationProvider(synod);
+            synodConfigProvider.WorldChanged += () => { worldChangedFired = true; };
+            synodConfigProvider.SynodChanged += () => { synodChangedFired = true; };
+
+            Assert.True(synodConfigProvider.Synod.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synod.Nodes.Select(n => n.Address).OrderBy(a => a)));
+            Assert.True(synodConfigProvider.World.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synod.Nodes.Select(n => n.Address).OrderBy(a => a)));
+
+            var newSynod = new[]
+                           {
+                               new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:236"),
+                               new SynodConfigurationProvider.Endpoint("tcp://127.0.0.1:236")
+                           };
+
+            Assert.Throws<ArgumentException>(() => synodConfigProvider.ActivateNewSynod(newSynod));
+
+            Assert.IsFalse(synodChangedFired);
+            Assert.IsFalse(worldChangedFired);
+
+            Assert.True(synodConfigProvider.Synod.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synod.Nodes.Select(n => n.Address).OrderBy(a => a)));
+            Assert.True(synodConfigProvider.World.Select(n => n.Address).OrderBy(a => a)
+                                           .SequenceEqual(synod.Nodes.Select(n => n.Address).OrderBy(a => a)));
+        }
+
+        [Test]
+        public void TestSynodConfigurationProvider_ReturnsLocalInitializedNode()
+        {
+            var synodConfigProvider = new SynodConfigurationProvider(new SynodConfiguration {Nodes = Enumerable.Empty<INode>()});
+
+            Assert.IsNotNull(synodConfigProvider.LocalNode);
+            Assert.AreNotEqual(0, synodConfigProvider.LocalNode.Id);
         }
     }
 
