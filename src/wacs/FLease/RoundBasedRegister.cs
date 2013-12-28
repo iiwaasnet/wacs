@@ -226,7 +226,7 @@ namespace wacs.FLease
 
         private int GetQuorum()
         {
-            return synodConfig.Nodes.Count() / 2 + 1;
+            return synodConfig.Members.Count() / 2 + 1;
         }
 
         public void Start()

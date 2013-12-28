@@ -128,7 +128,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\IHostResolverConfiguration.cs" />
-    <Compile Include="Configuration\INode.cs" />
+    <Compile Include="Configuration\IEndpoint.cs" />
     <Compile Include="Configuration\ISynodConfiguration.cs" />
     <Compile Include="Configuration\IWacsConfiguration.cs" />
     <Compile Include="Configuration\WacsConfiguration.cs" />
@@ -208,6 +208,7 @@
     <Compile Include="Messaging\zmq\MultipartMessage.cs" />
     <Compile Include="Messaging\zmq\DataEncoder.cs" />
     <Compile Include="PaxosMachine.cs" />
+    <Compile Include="Paxos\Implementation\Endpoint.cs" />
     <Compile Include="Paxos\Interface\ICommand.cs" />
     <Compile Include="Paxos\Interface\ILogEntry.cs" />
     <Compile Include="Paxos\Interface\ILogIndex.cs" />

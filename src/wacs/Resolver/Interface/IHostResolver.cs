@@ -8,7 +8,7 @@ namespace wacs.Resolver.Interface
 
         INode ResolveLocalProcess();
 
-        INode ResolveRemoteProcess(Configuration.INode node);
+        INode ResolveRemoteProcess(Configuration.IEndpoint endpoint);
 
         void Start();
 

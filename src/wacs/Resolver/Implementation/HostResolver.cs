@@ -21,7 +21,7 @@ namespace wacs.Resolver.Implementation
         private volatile INode localNode;
         private readonly ConcurrentDictionary<string, INode> uriToProcessMap;
         private readonly ConcurrentDictionary<INode, string> processToUriMap;
-        private readonly string localEndpoint;
+        private readonly IEndpoint localEndpoint;
         private readonly ILogger logger;
         private readonly IListener listener;
         private readonly CancellationTokenSource cancellation;
@@ -35,10 +35,10 @@ namespace wacs.Resolver.Implementation
         {
             this.messageHub = messageHub;
             this.logger = logger;
-            localEndpoint = synodConfigProvider.Synod.GetLocalEndpoint();
+            localEndpoint = synodConfigProvider.LocalEndpoint;
             localNode = synodConfigProvider.LocalNode;
-            uriToProcessMap = new ConcurrentDictionary<string, INode>(new[] {new KeyValuePair<string, INode>(localEndpoint, localNode)});
-            processToUriMap = new ConcurrentDictionary<INode, string>(new[] {new KeyValuePair<INode, string>(localNode, localEndpoint)});
+            uriToProcessMap = new ConcurrentDictionary<string, INode>(new[] {new KeyValuePair<string, INode>(localEndpoint.Address, localNode)});
+            processToUriMap = new ConcurrentDictionary<INode, string>(new[] {new KeyValuePair<INode, string>(localNode, localEndpoint.Address)});
             synodConfigProvider.WorldChanged += RemoveDeadNodes;
             this.synodConfigProvider = synodConfigProvider;
 
@@ -93,7 +93,7 @@ namespace wacs.Resolver.Implementation
                         messageHub.Broadcast(new ProcessAnnouncementMessage(localNode,
                                                                             new ProcessAnnouncementMessage.Payload
                                                                             {
-                                                                                Endpoint = localEndpoint,
+                                                                                Endpoint = localEndpoint.Address,
                                                                                 ProcessId = localNode.Id
                                                                             }));
                         Thread.Sleep(processIdBroadcastPeriod);
@@ -115,7 +115,7 @@ namespace wacs.Resolver.Implementation
                 var joiningProcess = new Node(announcement.ProcessId);
 
                 string registeredUri;
-                if(processToUriMap.TryGetValue(joiningProcess, out registeredUri) && announcement.Endpoint != registeredUri)
+                if (processToUriMap.TryGetValue(joiningProcess, out registeredUri) && announcement.Endpoint != registeredUri)
                 {
                     //TODO: Add to conflict list to be displayed on management console
                     logger.WarnFormat("Conflicting processes! Existing {0}@{1}, joining {2}@{3}",
@@ -134,11 +134,10 @@ namespace wacs.Resolver.Implementation
             }
         }
 
-        
-        public INode ResolveRemoteProcess(Configuration.INode node)
+        public INode ResolveRemoteProcess(IEndpoint endpoint)
         {
             INode resolved;
-            uriToProcessMap.TryGetValue(node.Address, out resolved);
+            uriToProcessMap.TryGetValue(endpoint.Address, out resolved);
 
             return resolved;
         }

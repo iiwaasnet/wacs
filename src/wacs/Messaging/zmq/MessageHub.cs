@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using wacs.Configuration;
 using wacs.core;
 using wacs.Diagnostics;
 using wacs.Paxos.Interface;
@@ -23,13 +24,13 @@ namespace wacs.Messaging.zmq
         private readonly BlockingCollection<MultipartMessage> messageQueue;
         private readonly CancellationTokenSource cancellationSource;
         private readonly ConcurrentDictionary<string, NodeConnection> listeningConnections;
-        private readonly string localEndpoint;
+        private readonly IEndpoint localEndpoint;
 
         public MessageHub(ISynodConfigurationProvider configProvider, ILogger logger)
         {
             this.configProvider = configProvider;
             this.logger = logger;
-            localEndpoint = configProvider.World.GetLocalEndpoint();
+            localEndpoint = configProvider.LocalEndpoint;
             messageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
             listeningConnections = new ConcurrentDictionary<string, NodeConnection>();
             cancellationSource = new CancellationTokenSource();
@@ -40,7 +41,7 @@ namespace wacs.Messaging.zmq
 
             multicastListener = CreateMulticastListener();
             unicastListener = CreateUnicastListener(configProvider);
-            ConnectListeningSockets(configProvider.Synod.Select(n => n.Address));
+            ConnectListeningSockets(configProvider.World.Select(n => n.Address));
 
             sender = CreateSender();
 
@@ -125,7 +126,7 @@ namespace wacs.Messaging.zmq
         private Socket CreateSender()
         {
             var socket = context.Socket(SocketType.PUB);
-            socket.Bind(localEndpoint);
+            socket.Bind(localEndpoint.Address);
 
             return socket;
         }

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using wacs.Configuration;
-using wacs.core;
 using wacs.Paxos.Interface;
 
 namespace wacs.Paxos.Implementation
@@ -14,38 +13,58 @@ namespace wacs.Paxos.Implementation
         private readonly EventHandlerList eventHandlers;
         private static readonly object WorldChangedEvent = new object();
         private static readonly object SynodChangedEvent = new object();
-        private ConcurrentDictionary<Configuration.INode, object> world;
-        private ConcurrentDictionary<Configuration.INode, object> synod;
+        private ConcurrentDictionary<IEndpoint, object> world;
+        private ConcurrentDictionary<IEndpoint, object> synod;
         private readonly INode localNode;
+        private readonly IEndpoint localEndpoint;
         private readonly object locker = new object();
 
         public SynodConfigurationProvider(ISynodConfiguration config)
         {
             eventHandlers = new EventHandlerList();
-            var dictionary = config.Nodes.ToDictionary(n => (Configuration.INode) new Endpoint(n), n => (object) null);
 
-            world = new ConcurrentDictionary<Configuration.INode, object>(dictionary);
-            synod = new ConcurrentDictionary<Configuration.INode, object>(dictionary);
             localNode = new Node();
+            localEndpoint = new Endpoint(config.LocalNode);
+            var dictionary = config.Members.ToDictionary(n => (IEndpoint) new Endpoint(n), n => (object) null);
+
+            AssertNotEmptySynodIncludesLocalNode(dictionary.Keys);
+
+            synod = new ConcurrentDictionary<IEndpoint, object>(dictionary);
+            world = new ConcurrentDictionary<IEndpoint, object>(dictionary);
+            EnsureInitialWorldIncludesLocalNode(world, localEndpoint);
         }
 
-        public void ActivateNewSynod(IEnumerable<Configuration.INode> newSynod)
+        private void EnsureInitialWorldIncludesLocalNode(ConcurrentDictionary<IEndpoint, object> world, IEndpoint localEndpoint)
+        {
+            world.TryAdd(localEndpoint, null);
+        }
+
+        private void AssertNotEmptySynodIncludesLocalNode(IEnumerable<IEndpoint> synod)
+        {
+            if (synod != null && synod.Any() && !synod.Any(ep => ep.Address == localEndpoint.Address))
+            {
+                throw new Exception(string.Format("Synod should be empty or include local node {0}!", localEndpoint.Address));
+            }
+        }
+
+        public void ActivateNewSynod(IEnumerable<IEndpoint> newSynod)
         {
             lock (locker)
             {
-                var tmpSynod = newSynod.ToDictionary(n => (Configuration.INode) new Endpoint(n), n => (object) null);
+                var tmpSynod = newSynod.ToDictionary(n => (IEndpoint) new Endpoint(n), n => (object) null);
 
                 var tmpWorld = MergeNewSynodAndRemainedWorld(tmpSynod, RemoveOldSynodFromWorld());
 
-                synod = new ConcurrentDictionary<Configuration.INode, object>(tmpSynod);
-                world = new ConcurrentDictionary<Configuration.INode, object>(tmpWorld);
+                synod = new ConcurrentDictionary<IEndpoint, object>(tmpSynod);
+                world = new ConcurrentDictionary<IEndpoint, object>(tmpWorld);
 
                 OnSynodChanged();
                 OnWorldChanged();
             }
         }
 
-        private IEnumerable<KeyValuePair<Configuration.INode, object>> MergeNewSynodAndRemainedWorld(Dictionary<Configuration.INode, object> tmpSynod, IDictionary<Configuration.INode, object> tmpWorld)
+        private IEnumerable<KeyValuePair<IEndpoint, object>> MergeNewSynodAndRemainedWorld(Dictionary<IEndpoint, object> tmpSynod,
+                                                                                           IDictionary<IEndpoint, object> tmpWorld)
         {
             foreach (var node in tmpSynod)
             {
@@ -55,43 +74,43 @@ namespace wacs.Paxos.Implementation
             return tmpWorld;
         }
 
-        private IDictionary<Configuration.INode, object> RemoveOldSynodFromWorld()
+        private IDictionary<IEndpoint, object> RemoveOldSynodFromWorld()
         {
             return world
                 .Where(pair => !synod.ContainsKey(pair.Key))
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
         }
 
-        public void AddNodeToWorld(Configuration.INode newNode)
+        public void AddNodeToWorld(IEndpoint newEndpoint)
         {
             lock (locker)
             {
-                if (world.TryAdd(newNode, null))
+                if (world.TryAdd(newEndpoint, null))
                 {
                     OnWorldChanged();
                 }
             }
         }
 
-        public void DetachNodeFromWorld(Configuration.INode detachedNode)
+        public void DetachNodeFromWorld(IEndpoint detachedEndpoint)
         {
             lock (locker)
             {
-                AssertNodeIsNotInSynode(detachedNode);
+                AssertNodeIsNotInSynode(detachedEndpoint);
 
                 object value;
-                if (world.TryRemove(detachedNode, out value))
+                if (world.TryRemove(detachedEndpoint, out value))
                 {
                     OnWorldChanged();
                 }
             }
         }
 
-        private void AssertNodeIsNotInSynode(Configuration.INode detachedNode)
+        private void AssertNodeIsNotInSynode(IEndpoint detachedEndpoint)
         {
-            if (synod.ContainsKey(detachedNode))
+            if (synod.ContainsKey(detachedEndpoint))
             {
-                throw new Exception(string.Format("Unable to detach node from world! Node {0} is part of the synod.", detachedNode.Address));
+                throw new Exception(string.Format("Unable to detach node from world! Node {0} is part of the synod.", detachedEndpoint.Address));
             }
         }
 
@@ -125,12 +144,12 @@ namespace wacs.Paxos.Implementation
             remove { eventHandlers.RemoveHandler(SynodChangedEvent, value); }
         }
 
-        public IEnumerable<Configuration.INode> World
+        public IEnumerable<IEndpoint> World
         {
             get { return world.Keys; }
         }
 
-        public IEnumerable<Configuration.INode> Synod
+        public IEnumerable<IEndpoint> Synod
         {
             get { return synod.Keys; }
         }
@@ -140,49 +159,9 @@ namespace wacs.Paxos.Implementation
             get { return localNode; }
         }
 
-        public class Endpoint : Configuration.INode
+        public IEndpoint LocalEndpoint
         {
-            internal Endpoint(Configuration.INode node)
-            {
-                Address = node.NormalizeEndpointAddress();
-                IsLocal = node.IsLocal;
-            }
-
-            public Endpoint(string uri)
-            {
-                Address = uri.NormalizeEndpointAddress();
-                IsLocal = false;
-            }
-
-            protected bool Equals(Endpoint other)
-            {
-                return string.Equals(Address, other.Address);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj))
-                {
-                    return false;
-                }
-                if (ReferenceEquals(this, obj))
-                {
-                    return true;
-                }
-                if (obj.GetType() != this.GetType())
-                {
-                    return false;
-                }
-                return Equals((Endpoint) obj);
-            }
-
-            public override int GetHashCode()
-            {
-                return (Address != null ? Address.GetHashCode() : 0);
-            }
-
-            public string Address { get; private set; }
-            public bool IsLocal { get; private set; }
+            get { return localEndpoint; }
         }
     }
 }

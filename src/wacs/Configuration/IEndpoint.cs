@@ -1,8 +1,7 @@
 ﻿namespace wacs.Configuration
 {
-    public interface INode
+    public interface IEndpoint
     {
         string Address { get; }
-        bool IsLocal { get; }
     }
 }

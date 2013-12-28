@@ -1,6 +1,4 @@
-﻿using wacs.Resolver.Interface;
-
-namespace wacs.Configuration
+﻿namespace wacs.Configuration
 {
     public interface IWacsConfiguration
     {

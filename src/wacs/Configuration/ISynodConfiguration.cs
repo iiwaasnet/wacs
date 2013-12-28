@@ -4,6 +4,8 @@ namespace wacs.Configuration
 {
     public interface ISynodConfiguration
     {
-        IEnumerable<INode> Nodes { get; }
+        IEndpoint LocalNode { get; }
+
+        IEnumerable<IEndpoint> Members { get; }
     }
 }
