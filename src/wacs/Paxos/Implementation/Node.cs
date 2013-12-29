@@ -1,22 +1,28 @@
-﻿using wacs.core;
+using System;
+using wacs.Configuration;
 
-namespace wacs
+namespace wacs.Paxos.Implementation
 {
     public class Node : INode
     {
-        public Node()
+        public Node(INode node)
         {
-            Id = UniqueIdGenerator.Generate(3);
+            Address = NormalizeEndpointAddress(node.Address);
         }
 
-        public Node(int id)
+        public Node(string uri)
         {
-            Id = id;
+            Address = NormalizeEndpointAddress(uri);
+        }
+
+        private static string NormalizeEndpointAddress(string uri)
+        {
+            return new Uri(uri).AbsoluteUri.TrimEnd('/');
         }
 
         protected bool Equals(Node other)
         {
-            return Id == other.Id;
+            return string.Equals(Address, other.Address);
         }
 
         public override bool Equals(object obj)
@@ -38,19 +44,9 @@ namespace wacs
 
         public override int GetHashCode()
         {
-            return Id;
+            return (Address != null ? Address.GetHashCode() : 0);
         }
 
-        public int Id { get; private set; }
-
-        public static bool operator ==(Node x, Node y)
-        {
-            return x.Equals(y);
-        }
-
-        public static bool operator !=(Node x, Node y)
-        {
-            return !(x == y);
-        }
+        public string Address { get; private set; }
     }
 }

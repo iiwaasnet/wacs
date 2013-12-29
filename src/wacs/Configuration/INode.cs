@@ -1,6 +1,6 @@
 ﻿namespace wacs.Configuration
 {
-    public interface IEndpoint
+    public interface INode
     {
         string Address { get; }
     }

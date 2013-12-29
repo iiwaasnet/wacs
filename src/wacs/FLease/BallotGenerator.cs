@@ -14,7 +14,7 @@ namespace wacs.FLease
 			lastBallotTimestamp = new BallotTimestamp {MessageNumber = 0, Timestamp = DateTime.UtcNow};
 		}
 
-		public IBallot New(INode owner)
+		public IBallot New(IProcess owner)
 		{
 			var now = DateTime.UtcNow;
 
@@ -35,7 +35,7 @@ namespace wacs.FLease
 
 		public IBallot Null()
 		{
-			return new Ballot(DateTime.MinValue, 0, new Node(0));
+			return new Ballot(DateTime.MinValue, 0, new Process(0));
 		}
 	}
 

@@ -24,13 +24,13 @@ namespace wacs.Messaging.zmq
         private readonly BlockingCollection<MultipartMessage> messageQueue;
         private readonly CancellationTokenSource cancellationSource;
         private readonly ConcurrentDictionary<string, NodeConnection> listeningConnections;
-        private readonly IEndpoint localEndpoint;
+        private readonly INode localNode;
 
         public MessageHub(ISynodConfigurationProvider configProvider, ILogger logger)
         {
             this.configProvider = configProvider;
             this.logger = logger;
-            localEndpoint = configProvider.LocalEndpoint;
+            localNode = configProvider.LocalNode;
             messageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
             listeningConnections = new ConcurrentDictionary<string, NodeConnection>();
             cancellationSource = new CancellationTokenSource();
@@ -110,7 +110,7 @@ namespace wacs.Messaging.zmq
         private Socket CreateUnicastListener(ISynodConfigurationProvider configProvider)
         {
             var socket = context.Socket(SocketType.SUB);
-            socket.Subscribe(configProvider.LocalNode.Id.GetBytes());
+            socket.Subscribe(configProvider.LocalProcess.Id.GetBytes());
 
             return socket;
         }
@@ -126,7 +126,7 @@ namespace wacs.Messaging.zmq
         private Socket CreateSender()
         {
             var socket = context.Socket(SocketType.PUB);
-            socket.Bind(localEndpoint.Address);
+            socket.Bind(localNode.Address);
 
             return socket;
         }
@@ -135,7 +135,7 @@ namespace wacs.Messaging.zmq
         {
             foreach (var message in messageQueue.GetConsumingEnumerable(token))
             {
-                var msg = new Message(new Envelope {Sender = new Node(message.GetSenderId())},
+                var msg = new Message(new Envelope {Sender = new Process(message.GetSenderId())},
                                       new Body
                                       {
                                           MessageType = message.GetMessageType(),
@@ -218,7 +218,7 @@ namespace wacs.Messaging.zmq
             SendMessage(multipartMessage);
         }
 
-        public void Send(INode recipient, IMessage message)
+        public void Send(IProcess recipient, IMessage message)
         {
             var multipartMessage = new MultipartMessage(recipient, message);
 

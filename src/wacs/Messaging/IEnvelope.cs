@@ -2,6 +2,6 @@
 {
 	public interface IEnvelope
 	{
-		INode Sender { get; }
+		IProcess Sender { get; }
 	}
 }

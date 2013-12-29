@@ -20,14 +20,14 @@ namespace wacs
             var container = builder.Build();
 
 
-            //var resolutionService = container.Resolve<IHostResolver>();
+            //var resolutionService = container.Resolve<INodeResolver>();
 
             //var timer = new Stopwatch();
             //timer.Start();
             //resolutionService.Start();
-            //foreach (var node in resolutionService.GetWorld())
+            //foreach (var process in resolutionService.GetWorld())
             //{
-            //    Console.WriteLine(node.Id);    
+            //    Console.WriteLine(process.Id);    
             //}
 
             //timer.Stop();

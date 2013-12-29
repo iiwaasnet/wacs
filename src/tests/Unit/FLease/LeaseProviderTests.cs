@@ -19,7 +19,7 @@ namespace tests.Unit.FLease
         [Test]
         public void TestGetLease_ReturnsTask()
         {
-            var lease = new Lease(new Node(), DateTime.UtcNow + TimeSpan.FromSeconds(3));
+            var lease = new Lease(new Process(), DateTime.UtcNow + TimeSpan.FromSeconds(3));
             var leaseProvider = new Mock<ILeaseProvider>();
             leaseProvider.Setup(m => m.GetLease()).Returns(Task.FromResult<ILease>(lease));
 
@@ -44,7 +44,7 @@ namespace tests.Unit.FLease
             var leaseProviders = new List<ILeaseProvider>();
             for (var i = 0; i < numberOfNodes; i++)
             {
-                leaseProviders.Add(leaseProviderFactory.Build(new Node()));
+                leaseProviders.Add(leaseProviderFactory.Build(new Process()));
             }
 
             var majority = numberOfNodes / 2 + 1;
@@ -65,10 +65,10 @@ namespace tests.Unit.FLease
             var builder = DIHelper.CreateBuilder();
 
             builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
-            var owner = new Node();
+            var owner = new Process();
             var register = new Mock<IRoundBasedRegister>();
             var registerFactory = new Mock<IRoundBasedRegisterFactory>();
-            registerFactory.Setup(m => m.Build(It.Is<INode>(v => v.Id == owner.Id))).Returns(register.Object);
+            registerFactory.Setup(m => m.Build(It.Is<IProcess>(v => v.Id == owner.Id))).Returns(register.Object);
 
             builder.Register(c => registerFactory.Object).As<IRoundBasedRegisterFactory>().SingleInstance();
 
@@ -85,10 +85,10 @@ namespace tests.Unit.FLease
             var builder = DIHelper.CreateBuilder();
 
             builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
-            var owner = new Node();
+            var owner = new Process();
             var register = new Mock<IRoundBasedRegister>();
             var registerFactory = new Mock<IRoundBasedRegisterFactory>();
-            registerFactory.Setup(m => m.Build(It.Is<INode>(v => v.Id == owner.Id))).Returns(register.Object);
+            registerFactory.Setup(m => m.Build(It.Is<IProcess>(v => v.Id == owner.Id))).Returns(register.Object);
 
             builder.Register(c => registerFactory.Object).As<IRoundBasedRegisterFactory>().SingleInstance();
 

@@ -8,6 +8,6 @@ namespace wacs.Messaging
 
 		void Broadcast(IMessage message);
 
-		void Send(INode recipient, IMessage message);
+		void Send(IProcess recipient, IMessage message);
 	}
 }

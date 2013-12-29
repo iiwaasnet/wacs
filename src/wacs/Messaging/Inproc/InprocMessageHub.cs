@@ -39,7 +39,7 @@ namespace wacs.Messaging.Inproc
             broadcast.Add(new BroadcastRequest {Message = message});
         }
 
-        public void Send(INode recipient, IMessage message)
+        public void Send(IProcess recipient, IMessage message)
         {
             p2p.Add(new ForwardRequest {Recipient = recipient, Message = message});
         }

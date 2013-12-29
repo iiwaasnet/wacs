@@ -128,9 +128,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\IHostResolverConfiguration.cs" />
-    <Compile Include="Configuration\IEndpoint.cs" />
-    <Compile Include="Configuration\ISynodConfiguration.cs" />
+    <Compile Include="Configuration\INode.cs" />
+    <Compile Include="Configuration\ISynod.cs" />
+    <Compile Include="Configuration\ITopologyConfiguration.cs" />
     <Compile Include="Configuration\IWacsConfiguration.cs" />
+    <Compile Include="Configuration\Synod.cs" />
+    <Compile Include="Configuration\Topology.cs" />
     <Compile Include="Configuration\WacsConfiguration.cs" />
     <Compile Include="core\Net.cs" />
     <Compile Include="core\State\IChangeNotifiable.cs" />
@@ -173,6 +176,7 @@
     <Compile Include="FLease\LeaseProviderFactory.cs" />
     <Compile Include="FLease\LeaseProviderLogging.cs" />
     <Compile Include="FLease\LeaseTxResult.cs" />
+    <Compile Include="FLease\LeaderElectionMessageFilter.cs" />
     <Compile Include="FLease\MessageSerializer.cs" />
     <Compile Include="FLease\MessageStreamListener.cs" />
     <Compile Include="FLease\Messages\AckReadPayload.cs" />
@@ -203,12 +207,12 @@
     <Compile Include="Messaging\IMessageHub.cs" />
     <Compile Include="Messaging\Listener.cs" />
     <Compile Include="Messaging\Inproc\InprocMessageHub.cs" />
-    <Compile Include="INode.cs" />
+    <Compile Include="IProcess.cs" />
     <Compile Include="Messaging\zmq\MessageHub.cs" />
     <Compile Include="Messaging\zmq\MultipartMessage.cs" />
     <Compile Include="Messaging\zmq\DataEncoder.cs" />
     <Compile Include="PaxosMachine.cs" />
-    <Compile Include="Paxos\Implementation\Endpoint.cs" />
+    <Compile Include="Paxos\Implementation\Node.cs" />
     <Compile Include="Paxos\Interface\ICommand.cs" />
     <Compile Include="Paxos\Interface\ILogEntry.cs" />
     <Compile Include="Paxos\Interface\ILogIndex.cs" />
@@ -217,15 +221,15 @@
     <Compile Include="Paxos\Interface\ISynodConfigurationProvider.cs" />
     <Compile Include="Paxos\Interface\IValue.cs" />
     <Compile Include="Paxos\Interface\LogEntryState.cs" />
-    <Compile Include="Node.cs" />
+    <Compile Include="Process.cs" />
     <Compile Include="Paxos\Implementation\SynodConfigurationProvider.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Messaging\ITypedMessage.cs" />
     <Compile Include="Resolver\Implementation\ProcessAnnouncementMessage.cs" />
     <Compile Include="Resolver\Implementation\TypedMessage.cs" />
-    <Compile Include="Resolver\Interface\IHostResolver.cs" />
-    <Compile Include="Resolver\Implementation\HostResolver.cs" />
+    <Compile Include="Resolver\Interface\INodeResolver.cs" />
+    <Compile Include="Resolver\Implementation\NodeResolver.cs" />
     <Compile Include="WACService.cs" />
   </ItemGroup>
   <ItemGroup>

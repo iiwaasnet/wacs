@@ -11,9 +11,9 @@ namespace wacs.FLease
 		{
 			this.writeBallot = new Ballot(new DateTime(writeBallot.Timestamp, DateTimeKind.Utc),
 			                              writeBallot.MessageNumber,
-			                              new Node(writeBallot.ProcessId));
+			                              new Process(writeBallot.ProcessId));
 			this.lease = (lease != null)
-				             ? new Lease(new Node(lease.ProcessId), new DateTime(lease.ExpiresAt, DateTimeKind.Utc))
+				             ? new Lease(new Process(lease.ProcessId), new DateTime(lease.ExpiresAt, DateTimeKind.Utc))
 				             : null;
 		}
 

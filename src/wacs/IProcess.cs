@@ -1,6 +1,6 @@
 ﻿namespace wacs
 {
-	public interface INode
+	public interface IProcess
 	{
 	    int Id { get; }
 	}

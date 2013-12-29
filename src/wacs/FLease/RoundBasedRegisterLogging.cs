@@ -6,24 +6,24 @@
 		{
 			if (writeBallot >= ballot)
 			{
-				logger.DebugFormat("Node {6} ==WB== {0}-{1}-{2} >= {3}-{4}-{5}",
+				logger.DebugFormat("process {6} ==WB== {0}-{1}-{2} >= {3}-{4}-{5}",
 				                   writeBallot.Timestamp.ToString("HH:mm:ss fff"),
 				                   writeBallot.MessageNumber,
-				                   writeBallot.Node.Id,
+				                   writeBallot.Process.Id,
 				                   ballot.Timestamp.ToString("HH:mm:ss fff"),
 				                   ballot.MessageNumber,
-				                   ballot.Node.Id,
+				                   ballot.Process.Id,
 				                   owner.Id);
 			}
 			if (readBallot >= ballot)
 			{
-				logger.DebugFormat("Node {6} ==RB== {0}-{1}-{2} >= {3}-{4}-{5}",
+				logger.DebugFormat("process {6} ==RB== {0}-{1}-{2} >= {3}-{4}-{5}",
 				                   readBallot.Timestamp.ToString("HH:mm:ss fff"),
 				                   readBallot.MessageNumber,
-				                   readBallot.Node.Id,
+				                   readBallot.Process.Id,
 				                   ballot.Timestamp.ToString("HH:mm:ss fff"),
 				                   ballot.MessageNumber,
-				                   ballot.Node.Id,
+				                   ballot.Process.Id,
 				                   owner.Id);
 			}
 		}

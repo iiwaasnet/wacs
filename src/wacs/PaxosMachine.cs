@@ -22,7 +22,7 @@ namespace wacs
         {
             id = UniqueIdGenerator.Generate(3);
             this.logger = logger;
-            leaseProvider = leaseProviderFactory.Build(new Node(id));
+            leaseProvider = leaseProviderFactory.Build(new Process(id));
             this.ballotGenerator = ballotGenerator;
             token = new CancellationTokenSource();
         }
@@ -33,16 +33,16 @@ namespace wacs
 
             while (!token.IsCancellationRequested)
             {
-                var ballot = ballotGenerator.New(new Node(id));
+                var ballot = ballotGenerator.New(new Process(id));
                 timer.Reset();
                 timer.Start();
                 var lease = leaseProvider.GetLease().Result;
                 timer.Stop();
                 if (lease != null)
                 {
-                    logger.DebugFormat("[{4}] Requested Ballot: Timestamp {0}, Node {1} === Received Lease: Leader {2} ExpiresAt {3} [{5}]",
+                    logger.DebugFormat("[{4}] Requested Ballot: Timestamp {0}, process {1} === Received Lease: Leader {2} ExpiresAt {3} [{5}]",
                                       ballot.Timestamp.ToString("HH:mm:ss fff"),
-                                      ballot.Node.Id,
+                                      ballot.Process.Id,
                                       lease.Owner.Id,
                                       lease.ExpiresAt.ToString("HH:mm:ss fff"),
                                       DateTime.UtcNow.ToString("HH:mm:ss fff"),
@@ -50,9 +50,9 @@ namespace wacs
                 }
                 else
                 {
-                    logger.DebugFormat("[{2}] Requested Ballot: Timestamp {0}, Node {1} === Received Lease: NULL [{3}]",
+                    logger.DebugFormat("[{2}] Requested Ballot: Timestamp {0}, process {1} === Received Lease: NULL [{3}]",
                                       ballot.Timestamp.ToString("HH:mm:ss fff"),
-                                      ballot.Node.Id,
+                                      ballot.Process.Id,
                                       DateTime.UtcNow.ToString("HH:mm:ss fff"),
                                       timer.ElapsedMilliseconds);
                 }

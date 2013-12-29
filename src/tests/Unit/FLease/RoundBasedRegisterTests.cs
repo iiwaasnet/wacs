@@ -8,6 +8,7 @@ using wacs.Configuration;
 using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.Inproc;
+using wacs.Paxos.Implementation;
 
 namespace tests.Unit.FLease
 {
@@ -23,12 +24,15 @@ namespace tests.Unit.FLease
 
             builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
             var config = new Mock<IWacsConfiguration>();
-            config.Setup(m => m.FarmSize).Returns(1);
             var leaseConfig = new Mock<ILeaseConfiguration>();
-            var synodConfig = new Mock<ISynodConfiguration>();
+            var topology = new Mock<ITopologyConfiguration>();
+            var synod = new Mock<ISynod>();
             leaseConfig.Setup(m => m.NodeResponseTimeout).Returns(TimeSpan.FromSeconds(1));
+            topology.Setup(m => m.LocalNode).Returns(new Node("tcp://127.0.0.1:3030"));
+            synod.Setup(m => m.Members).Returns(new[] { topology.Object.LocalNode });
+            topology.Setup(m => m.Synod).Returns(synod.Object);
             config.Setup(m => m.Lease).Returns(leaseConfig.Object);
-            config.Setup(m => m.Synod).Returns(synodConfig.Object);
+            config.Setup(m => m.Topology).Returns(topology.Object);
 
             builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
 	    }
@@ -36,7 +40,7 @@ namespace tests.Unit.FLease
 	    [Test(Description = "Lemma R1: Read-abort")]
 		public void TestReadWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
 		{
-            var owner = new Node();
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 			
@@ -54,7 +58,7 @@ namespace tests.Unit.FLease
 		[Test(Description = "Lemma R1: Read-abort")]
 		public void TestReadWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
 		{
-            var owner = new Node();
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 			
@@ -72,7 +76,7 @@ namespace tests.Unit.FLease
 		[Test(Description = "Lemma R2: Write-abort")]
 		public void TestWriteWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
 		{
-            var owner = new Node();
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -90,7 +94,7 @@ namespace tests.Unit.FLease
 		[Test(Description = "Lemma R2: Write-abort")]
 		public void TestWriteWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
 		{
-            var owner = new Node();
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -108,7 +112,7 @@ namespace tests.Unit.FLease
 		[Test(Description = "Lemma R3: Read-write-commit")]
 		public void TestIfReadWithHigherBallotCommits_ThenReadWithLowerOrEqualBallotAborts()
 		{
-            var owner = new Node();
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -127,7 +131,7 @@ namespace tests.Unit.FLease
 		[Test(Description = "Lemma R3: Read-write-commit")]
 		public void TestIfWriteWithHigherBallotCommits_ThenWriteWithLowerBallotAborts()
 		{
-            var owner = new Node();
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -145,7 +149,7 @@ namespace tests.Unit.FLease
 		[Test(Description = "Lemma R4: Read-commit")]
 		public void TestIfReadWithHigherBallotCommitsWithL1_ThenWriteWithLowerBallotCommitedWithL1Before()
 		{
-            var owner = new Node();
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -167,7 +171,7 @@ namespace tests.Unit.FLease
 		[Test(Description = "Lemma R5: Write-commit")]
 		public void TestIfTwoWritesCommitWithL1AndL2_ThenReadWithHigherBallotCommitsWithL2()
 		{
-            var owner = new Node();
+            var owner = new Process();
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 

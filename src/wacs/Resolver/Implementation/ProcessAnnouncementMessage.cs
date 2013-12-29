@@ -11,7 +11,7 @@ namespace wacs.Resolver.Implementation
         {
         }
 
-        public ProcessAnnouncementMessage(INode sender, Payload payload)
+        public ProcessAnnouncementMessage(IProcess sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }

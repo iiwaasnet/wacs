@@ -4,11 +4,11 @@ namespace wacs.FLease
 {
 	public class Ballot : IBallot
 	{
-		public Ballot(DateTime timestamp, int messageNumber, INode node)
+		public Ballot(DateTime timestamp, int messageNumber, IProcess process)
 		{
 			Timestamp = timestamp;
 			MessageNumber = messageNumber;
-			Node = node;
+			Process = process;
 		}
 
 		public static bool operator <=(Ballot x, Ballot y)
@@ -51,10 +51,10 @@ namespace wacs.FLease
 				return res;
 			}
 
-			return Node.Id.CompareTo(ballot.Node.Id);
+			return Process.Id.CompareTo(ballot.Process.Id);
 		}
 
-		public INode Node { get; private set; }
+		public IProcess Process { get; private set; }
 		public DateTime Timestamp { get; private set; }
 		public int MessageNumber { get; private set; }
 	}

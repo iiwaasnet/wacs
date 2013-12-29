@@ -2,7 +2,7 @@
 {
 	public class ForwardRequest
 	{
-		public INode Recipient { get; set; }
+		public IProcess Recipient { get; set; }
 
 		public IMessage Message { get; set; }
 	}

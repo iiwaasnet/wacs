@@ -11,14 +11,14 @@ namespace wacs.FLease
         private DateTime startTime;
         private readonly IRoundBasedRegister register;
         private readonly IBallotGenerator ballotGenerator;
-        private readonly INode owner;
+        private readonly IProcess owner;
         private readonly ILeaseConfiguration config;
         private volatile ILease lastKnownLease;
         private readonly ILogger logger;
         private readonly Timer leaseTimer;
         private readonly SemaphoreSlim renewGateway;
 
-        public LeaseProvider(INode owner,
+        public LeaseProvider(IProcess owner,
                              IRoundBasedRegisterFactory registerFactory,
                              IBallotGenerator ballotGenerator,
                              ILeaseConfiguration config,

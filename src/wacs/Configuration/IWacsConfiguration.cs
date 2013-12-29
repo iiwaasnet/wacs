@@ -3,10 +3,7 @@
     public interface IWacsConfiguration
     {
         IHostResolverConfiguration HostResolver { get; }
-
-        int FarmSize { get; }
-        ISynodConfiguration Synod { get; }
-
+        ITopologyConfiguration Topology { get; }
         ILeaseConfiguration Lease { get; }
     }
 }

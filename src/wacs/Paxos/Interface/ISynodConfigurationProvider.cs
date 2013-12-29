@@ -7,19 +7,19 @@ namespace wacs.Paxos.Interface
 
     public interface ISynodConfigurationProvider
     {
-        void ActivateNewSynod(IEnumerable<IEndpoint> newSynod);
+        void ActivateNewSynod(IEnumerable<INode> newSynod);
 
-        void AddNodeToWorld(IEndpoint newEndpoint);
+        void AddNodeToWorld(INode newNode);
 
-        void DetachNodeFromWorld(IEndpoint detachedEndpoint);
+        void DetachNodeFromWorld(INode detachedNode);
 
         event WorldChangedHandler WorldChanged;
 
         event WorldChangedHandler SynodChanged;
 
-        IEnumerable<IEndpoint> World { get; }
-        IEnumerable<IEndpoint> Synod { get; }
+        IEnumerable<INode> World { get; }
+        IEnumerable<INode> Synod { get; }
+        IProcess LocalProcess { get; }
         INode LocalNode { get; }
-        IEndpoint LocalEndpoint { get; }
     }
 }

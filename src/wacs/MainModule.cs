@@ -36,7 +36,7 @@ namespace wacs
             builder.RegisterType<WACService>().As<ServiceControl>().SingleInstance();
             builder.RegisterType<MessageHub>().As<IMessageHub>().SingleInstance();
             builder.RegisterType<MessageSerializer>().As<IMessageSerializer>().SingleInstance();
-            builder.RegisterType<HostResolver>().As<IHostResolver>().SingleInstance();
+            builder.RegisterType<NodeResolver>().As<INodeResolver>().SingleInstance();
             builder.RegisterType<SynodConfigurationProvider>().As<ISynodConfigurationProvider>().SingleInstance();
             RegisterConfigurations(builder);
         }
@@ -50,8 +50,8 @@ namespace wacs
             builder.Register(c => c.Resolve<IWacsConfiguration>().Lease)
                    .As<ILeaseConfiguration>()
                    .SingleInstance();
-            builder.Register(c => c.Resolve<IWacsConfiguration>().Synod)
-                   .As<ISynodConfiguration>()
+            builder.Register(c => c.Resolve<IWacsConfiguration>().Topology)
+                   .As<ITopologyConfiguration>()
                    .SingleInstance();
             builder.Register(c => c.Resolve<IWacsConfiguration>().HostResolver)
                    .As<IHostResolverConfiguration>()
