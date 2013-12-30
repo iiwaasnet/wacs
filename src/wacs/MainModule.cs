@@ -22,10 +22,10 @@ namespace wacs
 
         private void RegisterPerInstance(ContainerBuilder builder)
         {
-            RegisterPaxosInstances(builder);
+            builder.RegisterType<PaxosMachine>().As<IStateMachine>().SingleInstance();
 
-            builder.RegisterType<LeaseProviderFactory>().As<ILeaseProviderFactory>();
-            builder.RegisterType<RoundBasedRegisterFactory>().As<IRoundBasedRegisterFactory>();
+            builder.RegisterType<LeaseProvider>().As<ILeaseProvider>();
+            builder.RegisterType<RoundBasedRegister>().As<IRoundBasedRegister>();
 
             builder.RegisterType<BallotGenerator>().As<IBallotGenerator>();
         }
@@ -56,15 +56,6 @@ namespace wacs
             builder.Register(c => c.Resolve<IWacsConfiguration>().HostResolver)
                    .As<IHostResolverConfiguration>()
                    .SingleInstance();
-        }
-
-        private static void RegisterPaxosInstances(ContainerBuilder builder)
-        {
-            builder.Register(c => new PaxosMachine(c.Resolve<ILeaseProviderFactory>(),
-                                                   c.Resolve<IBallotGenerator>(),
-                                                   c.Resolve<INodeResolver>(),
-                                                   c.Resolve<ILogger>()))
-                   .As<IStateMachine>();
         }
     }
 }

@@ -177,7 +177,6 @@
     <Compile Include="FLease\Lease.cs" />
     <Compile Include="FLease\LeaseProvider.cs" />
     <Compile Include="FLease\AwaitableMessageStreamFilter.cs" />
-    <Compile Include="FLease\LeaseProviderFactory.cs" />
     <Compile Include="FLease\LeaseProviderLogging.cs" />
     <Compile Include="FLease\LeaseTxResult.cs" />
     <Compile Include="FLease\LeaderElectionMessageFilter.cs" />
@@ -194,7 +193,6 @@
     <Compile Include="FLease\Messages\Lease.cs" />
     <Compile Include="Messaging\Message.cs" />
     <Compile Include="FLease\RoundBasedRegister.cs" />
-    <Compile Include="FLease\RoundBasedRegisterFactory.cs" />
     <Compile Include="FLease\RoundBasedRegisterLogging.cs" />
     <Compile Include="FLease\TxOutcome.cs" />
     <Compile Include="IStateMachine.cs" />

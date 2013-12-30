@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using wacs.core;
 using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Resolver.Interface;
@@ -11,21 +10,19 @@ namespace wacs
 {
     public class PaxosMachine : IStateMachine
     {
-        private readonly int id;
         private readonly ILeaseProvider leaseProvider;
         private readonly CancellationTokenSource token;
         private readonly IBallotGenerator ballotGenerator;
         private readonly ILogger logger;
         private readonly INodeResolver nodeResolver;
 
-        public PaxosMachine(ILeaseProviderFactory leaseProviderFactory,
+        public PaxosMachine(ILeaseProvider leaseProvider,
                             IBallotGenerator ballotGenerator,
                             INodeResolver nodeResolver,
                             ILogger logger)
         {
-            id = UniqueIdGenerator.Generate(3);
             this.logger = logger;
-            leaseProvider = leaseProviderFactory.Build(new Process(id));
+            this.leaseProvider = leaseProvider;
             this.ballotGenerator = ballotGenerator;
             this.nodeResolver = nodeResolver;
             token = new CancellationTokenSource();
@@ -37,7 +34,7 @@ namespace wacs
 
             while (!token.IsCancellationRequested)
             {
-                var ballot = ballotGenerator.New(new Process(id));
+                var ballot = ballotGenerator.New(nodeResolver.ResolveLocalNode());
                 timer.Reset();
                 timer.Start();
                 var lease = leaseProvider.GetLease().Result;
@@ -84,7 +81,7 @@ namespace wacs
 
         public int Id
         {
-            get { return id; }
+            get { return nodeResolver.ResolveLocalNode().Id; }
         }
     }
 }

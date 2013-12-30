@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using wacs.Configuration;
 using wacs.Diagnostics;
+using wacs.Resolver.Interface;
 
 namespace wacs.FLease
 {
@@ -18,17 +19,17 @@ namespace wacs.FLease
         private readonly Timer leaseTimer;
         private readonly SemaphoreSlim renewGateway;
 
-        public LeaseProvider(IProcess owner,
-                             IRoundBasedRegisterFactory registerFactory,
+        public LeaseProvider(IRoundBasedRegister register,
                              IBallotGenerator ballotGenerator,
                              ILeaseConfiguration config,
+                             INodeResolver nodeResolver,
                              ILogger logger)
         {
+            owner = nodeResolver.ResolveLocalNode();
             this.logger = logger;
-            this.owner = owner;
             this.config = config;
             this.ballotGenerator = ballotGenerator;
-            register = registerFactory.Build(owner);
+            this.register = register;
 
             renewGateway = new SemaphoreSlim(1);
             leaseTimer = new Timer(state => ScheduledReadOrRenewLease(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));

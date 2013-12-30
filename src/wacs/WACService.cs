@@ -1,43 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using Topshelf;
+﻿using Topshelf;
 using wacs.Diagnostics;
 
 namespace wacs
 {
-	public class WACService : ServiceControl
-	{
-		private readonly IEnumerable<IStateMachine> farm;
-		private readonly ILogger logger;
+    public class WACService : ServiceControl
+    {
+        private readonly IStateMachine stateMachine;
+        private readonly ILogger logger;
 
-		public WACService(IEnumerable<IStateMachine> members, ILogger logger)
-		{
-			farm = members;
-			this.logger = logger;
-		}
+        public WACService(IStateMachine stateMachine, ILogger logger)
+        {
+            this.stateMachine = stateMachine;
+            this.logger = logger;
+        }
 
-		public bool Start(HostControl hostControl)
-		{
-			foreach (var stateMachine in farm)
-			{
-				stateMachine.Start();
+        public bool Start(HostControl hostControl)
+        {
+            stateMachine.Start();
 
-				logger.InfoFormat("WACS Id:[{0}] started", stateMachine.Id);
-			}
+            logger.InfoFormat("WACS Id:[{0}] started", stateMachine.Id);
 
-			return true;
-		}
+            return true;
+        }
 
-		public bool Stop(HostControl hostControl)
-		{
-			foreach (var stateMachine in farm)
-			{
-				stateMachine.Stop();
+        public bool Stop(HostControl hostControl)
+        {
+            stateMachine.Stop();
 
-				logger.InfoFormat("WACS Id:[{0}] stopped", stateMachine.Id);
-			}
+            logger.InfoFormat("WACS Id:[{0}] stopped", stateMachine.Id);
 
-			return true;
-		}
-	}
+            return true;
+        }
+    }
 }

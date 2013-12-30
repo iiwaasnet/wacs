@@ -28,8 +28,7 @@ namespace wacs.FLease
         private readonly IObservable<IMessage> nackWriteStream;
         private readonly INodeResolver nodeResolver;
 
-        public RoundBasedRegister(IProcess owner,
-                                  IMessageHub messageHub,
+        public RoundBasedRegister(IMessageHub messageHub,
                                   IBallotGenerator ballotGenerator,
                                   ITopologyConfiguration topology,
                                   ILeaseConfiguration leaseConfig,
@@ -42,7 +41,7 @@ namespace wacs.FLease
             this.messageHub = messageHub;
             readBallot = (Ballot) ballotGenerator.Null();
             writeBallot = (Ballot) ballotGenerator.Null();
-            this.owner = owner;
+            owner = nodeResolver.ResolveLocalNode();
             this.nodeResolver = nodeResolver;
 
             listener = messageHub.Subscribe();
