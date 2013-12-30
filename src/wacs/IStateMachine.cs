@@ -1,11 +1,11 @@
 ﻿namespace wacs
 {
-	public interface IStateMachine
-	{
-		void Start();
+    public interface IStateMachine
+    {
+        void Start();
 
-		void Stop();
+        void Stop();
 
-		int Id { get; }
-	}
+        int Id { get; }
+    }
 }

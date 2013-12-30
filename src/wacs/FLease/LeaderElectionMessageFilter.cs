@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using wacs.Configuration;
 using wacs.FLease.Messages;
@@ -7,19 +8,18 @@ using wacs.Resolver.Interface;
 
 namespace wacs.FLease
 {
-    public class LeaderElectionMessageFilter<TPayload>
-        where TPayload : IMessagePayload
+    public class LeaderElectionMessageFilter
     {
         private readonly ConcurrentDictionary<IProcess, object> responses;
         private readonly IBallot ballot;
-        private readonly FLeaseMessageType messageType;
+        private readonly string messageType;
         private readonly ISynod synod;
-        private readonly IMessageSerializer serializer;
+        private readonly Func<IMessage, ILeaseMessagePayload> payload;
         private readonly INodeResolver nodeResolver;
 
         public LeaderElectionMessageFilter(IBallot ballot,
-                                           FLeaseMessageType messageType,
-                                           IMessageSerializer serializer,
+                                           string messageType,
+                                           Func<IMessage, ILeaseMessagePayload> payload,
                                            INodeResolver nodeResolver,
                                            ISynod synod)
         {
@@ -27,7 +27,7 @@ namespace wacs.FLease
             this.messageType = messageType;
             this.ballot = ballot;
             this.synod = synod;
-            this.serializer = serializer;
+            this.payload = payload;
             this.nodeResolver = nodeResolver;
         }
 
@@ -37,12 +37,12 @@ namespace wacs.FLease
 
             if (ProcessIsInSynod(process))
             {
-                if (message.Body.MessageType.ToMessageType() == messageType)
+                if (message.Body.MessageType == messageType)
                 {
-                    var ackRead = serializer.Deserialize<TPayload>(message.Body.Content);
+                    var messagePayload = payload(message);
 
-                    return ackRead.Ballot.ProcessId == ballot.Process.Id
-                           && ackRead.Ballot.Timestamp == ballot.Timestamp.Ticks
+                    return messagePayload.Ballot.ProcessId == ballot.Process.Id
+                           && messagePayload.Ballot.Timestamp == ballot.Timestamp.Ticks
                            && responses.TryAdd(process, null);
                 }
             }

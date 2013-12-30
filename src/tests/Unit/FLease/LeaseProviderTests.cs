@@ -33,8 +33,9 @@ namespace tests.Unit.FLease
         }
 
         [Test]
-        [TestCase(3)]
-        [TestCase(4)]
+        //[TestCase(3)]
+        //[TestCase(4)]
+        [TestCase(2)]
         public void TestLeaseIsIssuedByQuorum(int numberOfNodes)
         {
             var builder = DIHelper.CreateBuilder();
@@ -49,9 +50,9 @@ namespace tests.Unit.FLease
             var nodeResolver = new Mock<INodeResolver>();
             var nodes = new List<INode>();
             var processes = new List<IProcess>();
-            for (var port = 0; port < numberOfNodes; port++)
+            for (var i = 0; i < numberOfNodes; i++)
             {
-                var node = new Node(string.Format("tcp://127.0.0.1:303{0}", port));
+                var node = new Node(string.Format("tcp://127.0.0.1:303{0}", i));
                 nodes.Add(node);
                 var process = new Process();
                 processes.Add(process);
@@ -70,17 +71,16 @@ namespace tests.Unit.FLease
 
             builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
 
-            builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
-
             var container = builder.Build();
             var leaseProviderFactory = container.Resolve<ILeaseProviderFactory>();
 
             var leaseProviders = new List<ILeaseProvider>();
-            for (var i = 0; i < numberOfNodes; i++)
-            {
-                var process = new Process();
-                leaseProviders.Add(leaseProviderFactory.Build(process));
-            }
+            processes.ForEach(p => leaseProviders.Add(leaseProviderFactory.Build(p)));
+            //for (var i = 0; i < numberOfNodes; i++)
+            //{
+            //    var process = new Process();
+            //    leaseProviders.Add(leaseProviderFactory.Build(process));
+            //}
 
             var majority = numberOfNodes / 2 + 1;
 

@@ -1,6 +1,6 @@
 ﻿namespace wacs.FLease.Messages
 {
-	public interface IMessagePayload
+	public interface ILeaseMessagePayload
 	{
 		Ballot Ballot { get; }
 	}

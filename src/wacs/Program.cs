@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
 using Autofac;
 using Autofac.Configuration;
 using Topshelf;
 using Topshelf.HostConfigurators;
 using Topshelf.Runtime;
 using wacs.Diagnostics;
-using wacs.Resolver.Interface;
 
 namespace wacs
 {
@@ -18,7 +16,6 @@ namespace wacs
             builder.RegisterModule(new ConfigurationSettingsReader());
 
             var container = builder.Build();
-
 
             //var resolutionService = container.Resolve<INodeResolver>();
 

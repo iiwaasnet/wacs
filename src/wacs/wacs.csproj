@@ -12,6 +12,8 @@
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <CodeContractsAssemblyMode>0</CodeContractsAssemblyMode>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -77,10 +79,12 @@
     <Reference Include="Castle.Core">
       <HintPath>..\packages\Castle.Core.3.0.0.4001\lib\net40-client\Castle.Core.dll</HintPath>
     </Reference>
-    <Reference Include="clrzmq">
+    <Reference Include="clrzmq, Version=2.2.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\clrzmq-x64.2.2.5\lib\clrzmq.dll</HintPath>
     </Reference>
-    <Reference Include="clrzmq-ext">
+    <Reference Include="clrzmq-ext, Version=2.2.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\clrzmq-x64.2.2.5\lib\clrzmq-ext.dll</HintPath>
     </Reference>
     <Reference Include="Moq">
@@ -179,16 +183,16 @@
     <Compile Include="FLease\LeaderElectionMessageFilter.cs" />
     <Compile Include="FLease\MessageSerializer.cs" />
     <Compile Include="FLease\MessageStreamListener.cs" />
-    <Compile Include="FLease\Messages\AckReadPayload.cs" />
-    <Compile Include="FLease\Messages\AckWritePayload.cs" />
     <Compile Include="FLease\Messages\Ballot.cs" />
-    <Compile Include="FLease\Messages\IMessagePayload.cs" />
-    <Compile Include="FLease\Messages\NackWritePayload.cs" />
-    <Compile Include="FLease\Messages\NackReadPayload.cs" />
+    <Compile Include="FLease\Messages\ILeaseMessagePayload.cs" />
+    <Compile Include="FLease\Messages\LeaseWrite.cs" />
+    <Compile Include="FLease\Messages\LeaseRead.cs" />
+    <Compile Include="FLease\Messages\LeaseNackWrite.cs" />
+    <Compile Include="FLease\Messages\LeaseAckWrite.cs" />
+    <Compile Include="FLease\Messages\LeaseNackRead.cs" />
+    <Compile Include="FLease\Messages\LeaseAckRead.cs" />
     <Compile Include="FLease\Messages\Lease.cs" />
     <Compile Include="Messaging\Message.cs" />
-    <Compile Include="FLease\Messages\ReadPayload.cs" />
-    <Compile Include="FLease\Messages\WritePayload.cs" />
     <Compile Include="FLease\RoundBasedRegister.cs" />
     <Compile Include="FLease\RoundBasedRegisterFactory.cs" />
     <Compile Include="FLease\RoundBasedRegisterLogging.cs" />
@@ -198,7 +202,6 @@
     <Compile Include="Messaging\Body.cs" />
     <Compile Include="Messaging\BroadcastRequest.cs" />
     <Compile Include="Messaging\Envelope.cs" />
-    <Compile Include="Messaging\FLeaseMessageType.cs" />
     <Compile Include="Messaging\ForwardRequest.cs" />
     <Compile Include="Messaging\IBody.cs" />
     <Compile Include="Messaging\IEnvelope.cs" />
@@ -252,6 +255,7 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

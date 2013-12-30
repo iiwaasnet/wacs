@@ -2,6 +2,7 @@
 
 namespace wacs.Resolver.Implementation
 {
+    //TODO: Move to more generic namespace, hence it's a base class for all messages
     public class TypedMessage<T> : Message, ITypedMessage<T>
         where T : class
     {
@@ -12,12 +13,12 @@ namespace wacs.Resolver.Implementation
         {
         }
 
-        protected TypedMessage(IProcess sender, T payload, string messageType)
+        protected TypedMessage(IProcess sender, T payload)
         {
             Envelope = new Envelope {Sender = sender};
             Body = new Body
                    {
-                       MessageType = messageType,
+                       MessageType = MessageType,
                        Content = Serialize(payload)
                    };
         }
@@ -26,5 +27,7 @@ namespace wacs.Resolver.Implementation
         {
             return payload ?? (payload = Deserialize<T>(Body.Content));
         }
+
+        public static string MessageType { get; protected set; }
     }
 }

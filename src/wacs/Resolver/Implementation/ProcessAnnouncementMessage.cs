@@ -4,7 +4,10 @@ namespace wacs.Resolver.Implementation
 {
     public class ProcessAnnouncementMessage : TypedMessage<ProcessAnnouncementMessage.Payload>
     {
-        public const string MessageType = "PROC_ANN";
+        static ProcessAnnouncementMessage()
+        {
+            MessageType = "PROC_ANN";
+        }
 
         public ProcessAnnouncementMessage(IMessage message)
             : base(message)
@@ -12,7 +15,7 @@ namespace wacs.Resolver.Implementation
         }
 
         public ProcessAnnouncementMessage(IProcess sender, Payload payload)
-            : base(sender, payload, MessageType)
+            : base(sender, payload)
         {
         }
 

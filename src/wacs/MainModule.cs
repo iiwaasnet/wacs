@@ -62,18 +62,9 @@ namespace wacs
         {
             builder.Register(c => new PaxosMachine(c.Resolve<ILeaseProviderFactory>(),
                                                    c.Resolve<IBallotGenerator>(),
+                                                   c.Resolve<INodeResolver>(),
                                                    c.Resolve<ILogger>()))
                    .As<IStateMachine>();
-            //builder.Register(c => new PaxosMachine(2.ToString(),
-            //                                       c.Resolve<ILeaseProviderFactory>(),
-            //                                       c.Resolve<IBallotGenerator>(),
-            //                                       c.Resolve<ILogger>()))
-            //       .As<IStateMachine>();
-            //builder.Register(c => new PaxosMachine(3.ToString(),
-            //                                       c.Resolve<ILeaseProviderFactory>(),
-            //                                       c.Resolve<IBallotGenerator>(),
-            //                                       c.Resolve<ILogger>()))
-            //       .As<IStateMachine>();
         }
     }
 }
