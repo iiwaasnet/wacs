@@ -9,6 +9,7 @@ using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.Inproc;
 using wacs.Paxos.Implementation;
+using wacs.Resolver.Interface;
 
 namespace tests.Unit.FLease
 {
@@ -16,6 +17,7 @@ namespace tests.Unit.FLease
 	public class RoundBasedRegisterTests
 	{
 	    private ContainerBuilder builder;
+	    private INode node;
 
         [SetUp]
 	    public void Setup()
@@ -28,7 +30,8 @@ namespace tests.Unit.FLease
             var topology = new Mock<ITopologyConfiguration>();
             var synod = new Mock<ISynod>();
             leaseConfig.Setup(m => m.NodeResponseTimeout).Returns(TimeSpan.FromSeconds(1));
-            topology.Setup(m => m.LocalNode).Returns(new Node("tcp://127.0.0.1:3030"));
+            node = new Node("tcp://127.0.0.1:3030");
+            topology.Setup(m => m.LocalNode).Returns(node);
             synod.Setup(m => m.Members).Returns(new[] { topology.Object.LocalNode });
             topology.Setup(m => m.Synod).Returns(synod.Object);
             config.Setup(m => m.Lease).Returns(leaseConfig.Object);
@@ -41,6 +44,11 @@ namespace tests.Unit.FLease
 		public void TestReadWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
 		{
             var owner = new Process();
+
+	        var nodeResolver = new Mock<INodeResolver>();
+            nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+	        builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
+
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 			
@@ -59,6 +67,11 @@ namespace tests.Unit.FLease
 		public void TestReadWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
 		{
             var owner = new Process();
+
+            var nodeResolver = new Mock<INodeResolver>();
+            nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
+
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 			
@@ -77,6 +90,11 @@ namespace tests.Unit.FLease
 		public void TestWriteWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
 		{
             var owner = new Process();
+
+            var nodeResolver = new Mock<INodeResolver>();
+            nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
+
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -95,6 +113,11 @@ namespace tests.Unit.FLease
 		public void TestWriteWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
 		{
             var owner = new Process();
+
+            var nodeResolver = new Mock<INodeResolver>();
+            nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
+
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -113,6 +136,11 @@ namespace tests.Unit.FLease
 		public void TestIfReadWithHigherBallotCommits_ThenReadWithLowerOrEqualBallotAborts()
 		{
             var owner = new Process();
+
+            var nodeResolver = new Mock<INodeResolver>();
+            nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
+
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -132,6 +160,11 @@ namespace tests.Unit.FLease
 		public void TestIfWriteWithHigherBallotCommits_ThenWriteWithLowerBallotAborts()
 		{
             var owner = new Process();
+
+            var nodeResolver = new Mock<INodeResolver>();
+            nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
+
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -150,6 +183,11 @@ namespace tests.Unit.FLease
 		public void TestIfReadWithHigherBallotCommitsWithL1_ThenWriteWithLowerBallotCommitedWithL1Before()
 		{
             var owner = new Process();
+
+            var nodeResolver = new Mock<INodeResolver>();
+            nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
+
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 
@@ -172,6 +210,11 @@ namespace tests.Unit.FLease
 		public void TestIfTwoWritesCommitWithL1AndL2_ThenReadWithHigherBallotCommitsWithL2()
 		{
             var owner = new Process();
+
+            var nodeResolver = new Mock<INodeResolver>();
+            nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
+
 			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
 			register.Start();
 

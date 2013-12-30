@@ -7,9 +7,12 @@ using Moq;
 using NUnit.Framework;
 using tests.Unit.Helpers;
 using wacs;
+using wacs.Configuration;
 using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.Inproc;
+using wacs.Paxos.Implementation;
+using wacs.Resolver.Interface;
 
 namespace tests.Unit.FLease
 {
@@ -37,6 +40,37 @@ namespace tests.Unit.FLease
             var builder = DIHelper.CreateBuilder();
 
             builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
+            var config = new Mock<IWacsConfiguration>();
+            var leaseConfig = new Mock<ILeaseConfiguration>();
+            var topology = new Mock<ITopologyConfiguration>();
+            var synod = new Mock<ISynod>();
+            leaseConfig.Setup(m => m.NodeResponseTimeout).Returns(TimeSpan.FromSeconds(1));
+
+            var nodeResolver = new Mock<INodeResolver>();
+            var nodes = new List<INode>();
+            var processes = new List<IProcess>();
+            for (var port = 0; port < numberOfNodes; port++)
+            {
+                var node = new Node(string.Format("tcp://127.0.0.1:303{0}", port));
+                nodes.Add(node);
+                var process = new Process();
+                processes.Add(process);
+
+                nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == process.Id))).Returns(node);
+            }
+
+            builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
+
+            topology.Setup(m => m.LocalNode).Returns(nodes[0]);
+
+            synod.Setup(m => m.Members).Returns(nodes);
+            topology.Setup(m => m.Synod).Returns(synod.Object);
+            config.Setup(m => m.Lease).Returns(leaseConfig.Object);
+            config.Setup(m => m.Topology).Returns(topology.Object);
+
+            builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
+
+            builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
 
             var container = builder.Build();
             var leaseProviderFactory = container.Resolve<ILeaseProviderFactory>();
@@ -44,7 +78,8 @@ namespace tests.Unit.FLease
             var leaseProviders = new List<ILeaseProvider>();
             for (var i = 0; i < numberOfNodes; i++)
             {
-                leaseProviders.Add(leaseProviderFactory.Build(new Process()));
+                var process = new Process();
+                leaseProviders.Add(leaseProviderFactory.Build(process));
             }
 
             var majority = numberOfNodes / 2 + 1;
