@@ -13,6 +13,8 @@ namespace wacs.Paxos.Interface
 
         void DetachNodeFromWorld(INode detachedNode);
 
+        bool IsMemberOfSynod(INode node);
+
         event WorldChangedHandler WorldChanged;
 
         event WorldChangedHandler SynodChanged;

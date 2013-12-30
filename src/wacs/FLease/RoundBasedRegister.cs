@@ -6,6 +6,7 @@ using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.FLease.Messages;
 using wacs.Messaging;
+using wacs.Paxos.Interface;
 using wacs.Resolver.Interface;
 
 namespace wacs.FLease
@@ -18,7 +19,7 @@ namespace wacs.FLease
         private Ballot writeBallot;
         private ILease lease;
         private readonly IListener listener;
-        private readonly ITopologyConfiguration topology;
+        private readonly ISynodConfigurationProvider synodConfigurationProvider;
         private readonly ILeaseConfiguration leaseConfig;
         private readonly ILogger logger;
 
@@ -30,13 +31,13 @@ namespace wacs.FLease
 
         public RoundBasedRegister(IMessageHub messageHub,
                                   IBallotGenerator ballotGenerator,
-                                  ITopologyConfiguration topology,
+                                  ISynodConfigurationProvider synodConfigurationProvider,
                                   ILeaseConfiguration leaseConfig,
                                   INodeResolver nodeResolver,
                                   ILogger logger)
         {
             this.logger = logger;
-            this.topology = topology;
+            this.synodConfigurationProvider = synodConfigurationProvider;
             this.leaseConfig = leaseConfig;
             this.messageHub = messageHub;
             readBallot = (Ballot) ballotGenerator.Null();
@@ -106,8 +107,8 @@ namespace wacs.FLease
 
         public ILeaseTxResult Read(IBallot ballot)
         {
-            var ackFilter = new LeaderElectionMessageFilter(ballot, LeaseAckRead.MessageType, (m) => new LeaseAckRead(m).GetPayload(), nodeResolver, topology.Synod);
-            var nackFilter = new LeaderElectionMessageFilter(ballot, LeaseNackRead.MessageType, (m) => new LeaseNackRead(m).GetPayload(), nodeResolver, topology.Synod);
+            var ackFilter = new LeaderElectionMessageFilter(ballot, LeaseAckRead.MessageType, (m) => new LeaseAckRead(m).GetPayload(), nodeResolver, synodConfigurationProvider);
+            var nackFilter = new LeaderElectionMessageFilter(ballot, LeaseNackRead.MessageType, (m) => new LeaseNackRead(m).GetPayload(), nodeResolver, synodConfigurationProvider);
 
             var ackReadFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
             var nackReadFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());
@@ -144,8 +145,8 @@ namespace wacs.FLease
 
         public ILeaseTxResult Write(IBallot ballot, ILease lease)
         {
-            var ackFilter = new LeaderElectionMessageFilter(ballot, LeaseAckWrite.MessageType, (m) => new LeaseAckWrite(m).GetPayload(), nodeResolver, topology.Synod);
-            var nackFilter = new LeaderElectionMessageFilter(ballot, LeaseNackWrite.MessageType, (m) => new LeaseNackWrite(m).GetPayload(), nodeResolver, topology.Synod);
+            var ackFilter = new LeaderElectionMessageFilter(ballot, LeaseAckWrite.MessageType, (m) => new LeaseAckWrite(m).GetPayload(), nodeResolver, synodConfigurationProvider);
+            var nackFilter = new LeaderElectionMessageFilter(ballot, LeaseNackWrite.MessageType, (m) => new LeaseNackWrite(m).GetPayload(), nodeResolver, synodConfigurationProvider);
 
             var ackWriteFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
             var nackWriteFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());
@@ -182,7 +183,7 @@ namespace wacs.FLease
 
         private int GetQuorum()
         {
-            return topology.Synod.Members.Count() / 2 + 1;
+            return synodConfigurationProvider.Synod.Count() / 2 + 1;
         }
 
         public void Start()

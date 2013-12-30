@@ -7,7 +7,7 @@ namespace wacs.FLease.Messages
     {
         static LeaseWrite()
         {
-            MessageType = "LEASEWRITE";
+            MessageType = "LEASE_WRITE";
         }
 
         public LeaseWrite(IMessage message)

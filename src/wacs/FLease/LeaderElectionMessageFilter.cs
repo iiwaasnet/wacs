@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using wacs.Configuration;
 using wacs.FLease.Messages;
 using wacs.Messaging;
+using wacs.Paxos.Interface;
 using wacs.Resolver.Interface;
 
 namespace wacs.FLease
@@ -13,7 +13,7 @@ namespace wacs.FLease
         private readonly ConcurrentDictionary<IProcess, object> responses;
         private readonly IBallot ballot;
         private readonly string messageType;
-        private readonly ISynod synod;
+        private readonly ISynodConfigurationProvider synodConfigurationProvider;
         private readonly Func<IMessage, ILeaseMessagePayload> payload;
         private readonly INodeResolver nodeResolver;
 
@@ -21,12 +21,12 @@ namespace wacs.FLease
                                            string messageType,
                                            Func<IMessage, ILeaseMessagePayload> payload,
                                            INodeResolver nodeResolver,
-                                           ISynod synod)
+                                           ISynodConfigurationProvider synodConfigurationProvider)
         {
             responses = new ConcurrentDictionary<IProcess, object>();
             this.messageType = messageType;
             this.ballot = ballot;
-            this.synod = synod;
+            this.synodConfigurationProvider = synodConfigurationProvider;
             this.payload = payload;
             this.nodeResolver = nodeResolver;
         }
@@ -54,7 +54,7 @@ namespace wacs.FLease
         {
             var node = nodeResolver.ResolveRemoteProcess(process);
 
-            return node != null && synod.Members.Contains(node);
+            return node != null && synodConfigurationProvider.IsMemberOfSynod(node);
         }
     }
 }

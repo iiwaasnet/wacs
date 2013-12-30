@@ -145,6 +145,7 @@ namespace wacs.FLease
                     lease = new Lease(owner, now + config.MaxLeaseTimeSpan);
                 }
 
+                logger.InfoFormat("Write lease: Owner {0}", lease.Owner);
                 var write = register.Write(ballot, lease);
                 if (write.TxOutcome == TxOutcome.Commit)
                 {

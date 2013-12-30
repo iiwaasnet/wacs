@@ -7,7 +7,7 @@ namespace wacs.FLease.Messages
     {
         static LeaseRead()
         {
-            MessageType = "LEASEREAD";
+            MessageType = "LEASE_READ";
         }
 
         public LeaseRead(IMessage message)

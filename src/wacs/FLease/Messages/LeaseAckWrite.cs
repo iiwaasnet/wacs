@@ -7,7 +7,7 @@ namespace wacs.FLease.Messages
     {
         static LeaseAckWrite()
         {
-            MessageType = "LEASEACKWRITE";
+            MessageType = "LEASE_ACKWRITE";
         }
 
         public LeaseAckWrite(IMessage message)

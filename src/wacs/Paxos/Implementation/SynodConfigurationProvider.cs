@@ -106,6 +106,12 @@ namespace wacs.Paxos.Implementation
             }
         }
 
+        public bool IsMemberOfSynod(INode node)
+        {
+            return synod.ContainsKey(node);
+        }
+
+
         private void AssertNodeIsNotInSynode(INode detachedNode)
         {
             if (synod.ContainsKey(detachedNode))
