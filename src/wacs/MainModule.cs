@@ -53,8 +53,8 @@ namespace wacs
             builder.Register(c => c.Resolve<IWacsConfiguration>().Topology)
                    .As<ITopologyConfiguration>()
                    .SingleInstance();
-            builder.Register(c => c.Resolve<IWacsConfiguration>().HostResolver)
-                   .As<IHostResolverConfiguration>()
+            builder.Register(c => c.Resolve<IWacsConfiguration>().NodeResolver)
+                   .As<INodeResolverConfiguration>()
                    .SingleInstance();
         }
     }

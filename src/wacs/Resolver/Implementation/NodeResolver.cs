@@ -30,7 +30,7 @@ namespace wacs.Resolver.Implementation
 
         public NodeResolver(IMessageHub messageHub,
                             ISynodConfigurationProvider synodConfigProvider,
-                            IHostResolverConfiguration config,
+                            INodeResolverConfiguration config,
                             ILogger logger)
         {
             this.messageHub = messageHub;

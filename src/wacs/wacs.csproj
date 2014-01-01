@@ -141,7 +141,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration\IHostResolverConfiguration.cs" />
+    <Compile Include="Configuration\INodeResolverConfiguration.cs" />
     <Compile Include="Configuration\INode.cs" />
     <Compile Include="Configuration\ISynod.cs" />
     <Compile Include="Configuration\ITopologyConfiguration.cs" />

@@ -2,7 +2,7 @@
 
 namespace wacs.Configuration
 {
-    public interface IHostResolverConfiguration
+    public interface INodeResolverConfiguration
     {
         TimeSpan ProcessIdBroadcastPeriod { get; }
     }

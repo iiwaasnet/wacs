@@ -2,7 +2,7 @@
 {
     public interface IWacsConfiguration
     {
-        IHostResolverConfiguration HostResolver { get; }
+        INodeResolverConfiguration NodeResolver { get; }
         ITopologyConfiguration Topology { get; }
         ILeaseConfiguration Lease { get; }
     }

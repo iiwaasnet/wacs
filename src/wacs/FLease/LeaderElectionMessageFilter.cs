@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using wacs.Configuration;
 using wacs.FLease.Messages;
 using wacs.Messaging;
 using wacs.Paxos.Interface;
@@ -10,12 +9,12 @@ namespace wacs.FLease
 {
     public class LeaderElectionMessageFilter
     {
-        private readonly ConcurrentDictionary<IProcess, object> responses;
         private readonly IBallot ballot;
         private readonly string messageType;
-        private readonly ISynodConfigurationProvider synodConfigurationProvider;
-        private readonly Func<IMessage, ILeaseMessagePayload> payload;
         private readonly INodeResolver nodeResolver;
+        private readonly Func<IMessage, ILeaseMessagePayload> payload;
+        private readonly ConcurrentDictionary<IProcess, object> responses;
+        private readonly ISynodConfigurationProvider synodConfigurationProvider;
 
         public LeaderElectionMessageFilter(IBallot ballot,
                                            string messageType,
