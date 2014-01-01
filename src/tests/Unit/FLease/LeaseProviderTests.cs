@@ -33,9 +33,8 @@ namespace tests.Unit.FLease
         }
 
         [Test]
-        //[TestCase(3)]
-        //[TestCase(4)]
-        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
         public void TestLeaseIsIssuedByQuorum(int numberOfNodes)
         {
             var builder = DIHelper.CreateBuilder();
@@ -70,17 +69,12 @@ namespace tests.Unit.FLease
             config.Setup(m => m.Topology).Returns(topology.Object);
 
             builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
+            builder.RegisterType<LeaseProvider>().As<ILeaseProvider>();
 
             var container = builder.Build();
-            var leaseProviderFactory = container.Resolve<ILeaseProviderFactory>();
 
             var leaseProviders = new List<ILeaseProvider>();
-            processes.ForEach(p => leaseProviders.Add(leaseProviderFactory.Build(p)));
-            //for (var i = 0; i < numberOfNodes; i++)
-            //{
-            //    var process = new Process();
-            //    leaseProviders.Add(leaseProviderFactory.Build(process));
-            //}
+            processes.ForEach(p => leaseProviders.Add(container.Resolve<ILeaseProvider>()));
 
             var majority = numberOfNodes / 2 + 1;
 
@@ -100,14 +94,11 @@ namespace tests.Unit.FLease
             var builder = DIHelper.CreateBuilder();
 
             builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
-            var owner = new Process();
             var register = new Mock<IRoundBasedRegister>();
-            var registerFactory = new Mock<IRoundBasedRegisterFactory>();
-            registerFactory.Setup(m => m.Build(It.Is<IProcess>(v => v.Id == owner.Id))).Returns(register.Object);
 
-            builder.Register(c => registerFactory.Object).As<IRoundBasedRegisterFactory>().SingleInstance();
+            builder.Register(c => register.Object).As<IRoundBasedRegister>().SingleInstance();
 
-            var leaseProvider = builder.Build().Resolve<ILeaseProviderFactory>().Build(owner);
+            var leaseProvider = builder.Build().Resolve<ILeaseProvider>();
 
             leaseProvider.Start();
 
@@ -122,12 +113,10 @@ namespace tests.Unit.FLease
             builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
             var owner = new Process();
             var register = new Mock<IRoundBasedRegister>();
-            var registerFactory = new Mock<IRoundBasedRegisterFactory>();
-            registerFactory.Setup(m => m.Build(It.Is<IProcess>(v => v.Id == owner.Id))).Returns(register.Object);
 
-            builder.Register(c => registerFactory.Object).As<IRoundBasedRegisterFactory>().SingleInstance();
+            builder.Register(c => register.Object).As<IRoundBasedRegister>().SingleInstance();
 
-            var leaseProvider = builder.Build().Resolve<ILeaseProviderFactory>().Build(owner);
+            var leaseProvider = builder.Build().Resolve<ILeaseProvider>();
 
             leaseProvider.Stop();
 

@@ -167,7 +167,7 @@ namespace wacs.Messaging.zmq
 
         public IListener Subscribe()
         {
-            var listener = new Listener(Unsubscribe);
+            var listener = new Listener(Unsubscribe, logger);
             subscriptions.TryAdd(listener, null);
 
             return listener;

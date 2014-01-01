@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using wacs.Diagnostics;
 
 namespace wacs.Messaging
 {
@@ -11,14 +12,16 @@ namespace wacs.Messaging
         private readonly CancellationTokenSource cancellationSource;
         private Action<IMessage> appendMessage;
         private readonly Action<Listener> unsubscribe;
+        private readonly ILogger logger;
 
-        public Listener(Action<Listener> unsubscribe)
+        public Listener(Action<Listener> unsubscribe, ILogger logger)
         {
             observers = new ConcurrentDictionary<IObserver<IMessage>, object>();
             messages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             appendMessage = DropMessage;
             this.unsubscribe = unsubscribe;
             cancellationSource = new CancellationTokenSource();
+            this.logger = logger;
             new Thread(() => ForwardMessages(cancellationSource.Token)).Start();
         }
 
@@ -42,7 +45,14 @@ namespace wacs.Messaging
             {
                 foreach (var observer in observers)
                 {
-                    observer.Key.OnNext(message);
+                    try
+                    {
+                        observer.Key.OnNext(message);
+                    }
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
+                    }
                 }
             }
             messages.Dispose();

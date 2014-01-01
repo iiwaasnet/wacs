@@ -33,5 +33,6 @@ namespace wacs.Messaging
 
         public IEnvelope Envelope { get; protected set; }
 		public IBody Body { get; protected set; }
+
 	}
 }

@@ -5,19 +5,19 @@ namespace wacs.FLease.Messages
 {
     public class LeaseNackWrite : TypedMessage<LeaseNackWrite.Payload>
     {
-        static LeaseNackWrite()
-        {
-            MessageType = "LEASE_NACKWRITE";
-        }
-
         public LeaseNackWrite(IMessage message)
             : base(message)
         {
         }
 
         public LeaseNackWrite(IProcess sender, Payload payload)
-            : base(sender, payload)
+            : base(sender, payload, MessageType)
         {
+        }
+
+        public static string MessageType
+        {
+            get { return "LEASE_NACKWRITE"; }
         }
 
         public class Payload : ILeaseMessagePayload

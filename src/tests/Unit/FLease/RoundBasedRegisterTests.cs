@@ -47,9 +47,10 @@ namespace tests.Unit.FLease
 
 	        var nodeResolver = new Mock<INodeResolver>();
             nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
 	        builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
+			var register = builder.Build().Resolve<IRoundBasedRegister>();
 			register.Start();
 			
 			var ballot  = new Ballot(DateTime.UtcNow, 0, owner);
@@ -70,9 +71,10 @@ namespace tests.Unit.FLease
 
             var nodeResolver = new Mock<INodeResolver>();
             nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
+			var register = builder.Build().Resolve<IRoundBasedRegister>();
 			register.Start();
 			
 			var ballot  = new Ballot(DateTime.UtcNow, 0, owner);
@@ -93,9 +95,10 @@ namespace tests.Unit.FLease
 
             var nodeResolver = new Mock<INodeResolver>();
             nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
+			var register = builder.Build().Resolve<IRoundBasedRegister>();
 			register.Start();
 
 			var ballot = new Ballot(DateTime.UtcNow, 0, owner);
@@ -116,9 +119,10 @@ namespace tests.Unit.FLease
 
             var nodeResolver = new Mock<INodeResolver>();
             nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
+			var register = builder.Build().Resolve<IRoundBasedRegister>();
 			register.Start();
 
 			var ballot = new Ballot(DateTime.UtcNow, 0, owner);
@@ -139,9 +143,10 @@ namespace tests.Unit.FLease
 
             var nodeResolver = new Mock<INodeResolver>();
             nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
+			var register = builder.Build().Resolve<IRoundBasedRegister>();
 			register.Start();
 
 			var ballot = new Ballot(DateTime.UtcNow, 0, owner);
@@ -163,9 +168,10 @@ namespace tests.Unit.FLease
 
             var nodeResolver = new Mock<INodeResolver>();
             nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
+			var register = builder.Build().Resolve<IRoundBasedRegister>();
 			register.Start();
 
 			var ballot = new Ballot(DateTime.UtcNow, 0, owner);
@@ -186,9 +192,10 @@ namespace tests.Unit.FLease
 
             var nodeResolver = new Mock<INodeResolver>();
             nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
+			var register = builder.Build().Resolve<IRoundBasedRegister>();
 			register.Start();
 
 			var ballot = new Ballot(DateTime.UtcNow, 0, owner);
@@ -213,9 +220,10 @@ namespace tests.Unit.FLease
 
             var nodeResolver = new Mock<INodeResolver>();
             nodeResolver.Setup(m => m.ResolveRemoteProcess(It.Is<IProcess>(p => p.Id == owner.Id))).Returns(node);
+            nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-			var register = builder.Build().Resolve<IRoundBasedRegisterFactory>().Build(owner);
+			var register = builder.Build().Resolve<IRoundBasedRegister>();
 			register.Start();
 
 			var ballot = new Ballot(DateTime.UtcNow, 0, owner);

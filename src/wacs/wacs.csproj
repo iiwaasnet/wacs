@@ -176,13 +176,11 @@
     <Compile Include="Configuration\ILeaseConfiguration.cs" />
     <Compile Include="FLease\ILease.cs" />
     <Compile Include="FLease\ILeaseProvider.cs" />
-    <Compile Include="FLease\ILeaseProviderFactory.cs" />
     <Compile Include="FLease\ILeaseReader.cs" />
     <Compile Include="FLease\ILeaseTxResult.cs" />
     <Compile Include="FLease\ILeaseWriter.cs" />
     <Compile Include="FLease\IMessageSerializer.cs" />
     <Compile Include="FLease\IRoundBasedRegister.cs" />
-    <Compile Include="FLease\IRoundBasedRegisterFactory.cs" />
     <Compile Include="FLease\LastWrittenLease.cs" />
     <Compile Include="FLease\Lease.cs" />
     <Compile Include="FLease\LeaseProvider.cs" />

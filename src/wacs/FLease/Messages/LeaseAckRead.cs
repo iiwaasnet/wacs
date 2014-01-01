@@ -5,19 +5,19 @@ namespace wacs.FLease.Messages
 {
     public class LeaseAckRead : TypedMessage<LeaseAckRead.Payload>
     {
-        static LeaseAckRead()
-        {
-            MessageType = "LEASE_ACKREAD";
-        }
-
         public LeaseAckRead(IMessage message)
             : base(message)
         {
         }
 
         public LeaseAckRead(IProcess sender, Payload payload)
-            : base(sender, payload)
+            : base(sender, payload, MessageType)
         {
+        }
+
+        public static string MessageType
+        {
+            get { return "LEASE_ACKREAD"; }
         }
 
         public class Payload : ILeaseMessagePayload

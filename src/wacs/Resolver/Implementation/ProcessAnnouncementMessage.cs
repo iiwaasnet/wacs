@@ -4,19 +4,19 @@ namespace wacs.Resolver.Implementation
 {
     public class ProcessAnnouncementMessage : TypedMessage<ProcessAnnouncementMessage.Payload>
     {
-        static ProcessAnnouncementMessage()
-        {
-            MessageType = "PROC_ANN";
-        }
-
         public ProcessAnnouncementMessage(IMessage message)
             : base(message)
         {
         }
 
         public ProcessAnnouncementMessage(IProcess sender, Payload payload)
-            : base(sender, payload)
+            : base(sender, payload, MessageType)
         {
+        }
+
+        public static string MessageType
+        {
+            get { return "PROC_ANN"; }
         }
 
         public class Payload

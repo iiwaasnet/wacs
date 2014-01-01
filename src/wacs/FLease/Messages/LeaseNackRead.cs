@@ -5,21 +5,20 @@ namespace wacs.FLease.Messages
 {
     public class LeaseNackRead : TypedMessage<LeaseNackRead.Payload>
     {
-        static LeaseNackRead()
-        {
-            MessageType = "LEASE_NACKREAD";
-        }
-
         public LeaseNackRead(IMessage message) 
             : base(message)
         {
         }
 
         public LeaseNackRead(IProcess sender, Payload payload)
-            : base(sender, payload)
+            : base(sender, payload, MessageType)
         {
         }
 
+        public static string MessageType
+        {
+            get { return "LEASE_NACKREAD"; }
+        }
         
         public class Payload : ILeaseMessagePayload
         {

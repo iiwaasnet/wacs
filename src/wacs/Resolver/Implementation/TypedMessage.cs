@@ -13,12 +13,12 @@ namespace wacs.Resolver.Implementation
         {
         }
 
-        protected TypedMessage(IProcess sender, T payload)
+        protected TypedMessage(IProcess sender, T payload, string messageType)
         {
             Envelope = new Envelope {Sender = sender};
             Body = new Body
                    {
-                       MessageType = MessageType,
+                       MessageType = messageType,
                        Content = Serialize(payload)
                    };
         }
@@ -27,7 +27,5 @@ namespace wacs.Resolver.Implementation
         {
             return payload ?? (payload = Deserialize<T>(Body.Content));
         }
-
-        public static string MessageType { get; protected set; }
     }
 }

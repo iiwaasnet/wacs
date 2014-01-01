@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
+using wacs.Diagnostics;
 
 namespace wacs.Messaging.Inproc
 {
@@ -9,12 +9,14 @@ namespace wacs.Messaging.Inproc
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
         private readonly BlockingCollection<ForwardRequest> p2p;
         private readonly BlockingCollection<BroadcastRequest> broadcast;
+        private readonly ILogger logger;
 
-        public InprocMessageHub()
+        public InprocMessageHub(ILogger logger)
         {
             subscriptions = new ConcurrentDictionary<Listener, object>();
             p2p = new BlockingCollection<ForwardRequest>();
             broadcast = new BlockingCollection<BroadcastRequest>();
+            this.logger = logger;
 
             new Thread(ForwardMessages).Start();
             new Thread(BroadcastMessages).Start();
@@ -22,7 +24,7 @@ namespace wacs.Messaging.Inproc
 
         public IListener Subscribe()
         {
-            var listener = new Listener(Unsubscribe);
+            var listener = new Listener(Unsubscribe, logger);
             subscriptions.TryAdd(listener, null);
 
             return listener;
