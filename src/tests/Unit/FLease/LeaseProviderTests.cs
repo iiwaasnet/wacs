@@ -129,7 +129,7 @@ namespace tests.Unit.FLease
             topology.Setup(m => m.Synod).Returns(synod.Object);
 
             var leaseConfig = new Mock<ILeaseConfiguration>();
-            leaseConfig.Setup(m => m.NodeResponseTimeout).Returns(TimeSpan.FromSeconds(1));
+            leaseConfig.Setup(m => m.NodeResponseTimeout).Returns(TimeSpan.FromMilliseconds(200));
             leaseConfig.Setup(m => m.MaxLeaseTimeSpan).Returns(TimeSpan.FromSeconds(2));
             leaseConfig.Setup(m => m.MessageRoundtrip).Returns(TimeSpan.FromMilliseconds(400));
             leaseConfig.Setup(m => m.ClockDrift).Returns(TimeSpan.FromMilliseconds(200));

@@ -9,15 +9,15 @@ namespace wacs.FLease
 {
     public partial class LeaseProvider : ILeaseProvider
     {
-        private DateTime startTime;
-        private readonly IRoundBasedRegister register;
         private readonly IBallotGenerator ballotGenerator;
-        private readonly IProcess owner;
         private readonly ILeaseConfiguration config;
-        private volatile ILease lastKnownLease;
-        private readonly ILogger logger;
         private readonly Timer leaseTimer;
+        private readonly ILogger logger;
+        private readonly IProcess owner;
+        private readonly IRoundBasedRegister register;
         private readonly SemaphoreSlim renewGateway;
+        private volatile ILease lastKnownLease;
+        private DateTime startTime;
 
         public LeaseProvider(IRoundBasedRegister register,
                              IBallotGenerator ballotGenerator,
@@ -25,6 +25,10 @@ namespace wacs.FLease
                              INodeResolver nodeResolver,
                              ILogger logger)
         {
+            ValidateConfiguration(config);
+
+            WaitBeforeNextLeaseIssued(config);
+
             owner = nodeResolver.ResolveLocalNode();
             this.logger = logger;
             this.config = config;
@@ -33,6 +37,49 @@ namespace wacs.FLease
 
             renewGateway = new SemaphoreSlim(1);
             leaseTimer = new Timer(state => ScheduledReadOrRenewLease(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
+        }
+
+        public void Start()
+        {
+            startTime = DateTime.UtcNow;
+            register.Start();
+            //leaseTimer.Change(TimeSpan.FromMilliseconds(0), config.MaxLeaseTimeSpan);
+        }
+
+        public Task<ILease> GetLease()
+        {
+            return Task.Factory.StartNew(() => GetLastKnownLease());
+        }
+
+        public void Stop()
+        {
+            register.Stop();
+            leaseTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
+        }
+
+        public void Dispose()
+        {
+            leaseTimer.Dispose();
+            renewGateway.Dispose();
+        }
+
+        private void ValidateConfiguration(ILeaseConfiguration config)
+        {
+            if (config.NodeResponseTimeout.TotalMilliseconds * 2 > config.MessageRoundtrip.TotalMilliseconds)
+            {
+                throw new Exception(string.Format("NodeResponseTimeout[{0} msec] should be at least 2 times shorter than MessageRoundtrip[{1} msec]!",
+                                                  config.NodeResponseTimeout.TotalMilliseconds,
+                                                  config.MessageRoundtrip.TotalMilliseconds));
+            }
+            if (config.MaxLeaseTimeSpan
+                - TimeSpan.FromTicks(config.MessageRoundtrip.Ticks * 2)
+                - config.ClockDrift <= TimeSpan.FromMilliseconds(0))
+            {
+                throw new Exception(string.Format("MaxLeaseTimeSpan[{0} msec] should be longer than (2 * MessageRoundtrip[{1} msec] + ClockDrift[{2} msec])",
+                                                  config.MaxLeaseTimeSpan.TotalMilliseconds,
+                                                  config.MessageRoundtrip.TotalMilliseconds,
+                                                  config.ClockDrift.TotalMilliseconds));
+            }
         }
 
         private void ScheduledReadOrRenewLease()
@@ -56,8 +103,6 @@ namespace wacs.FLease
 
         private void ReadOrRenewLease()
         {
-            WaitBeforeNextLeaseIssued();
-
             var now = DateTime.UtcNow;
             var lease = AсquireOrLearnLease(ballotGenerator.New(owner), now);
 
@@ -89,18 +134,6 @@ namespace wacs.FLease
                          - TimeSpan.FromTicks(config.MessageRoundtrip.Ticks * 2)
                          - config.ClockDrift
                        : TimeSpan.FromTicks(config.MaxLeaseTimeSpan.Ticks);
-        }
-
-        public void Start()
-        {
-            startTime = DateTime.UtcNow;
-            register.Start();
-            //leaseTimer.Change(TimeSpan.FromMilliseconds(0), config.MaxLeaseTimeSpan);
-        }
-
-        public Task<ILease> GetLease()
-        {
-            return Task.Factory.StartNew(() => GetLastKnownLease());
         }
 
         private ILease GetLastKnownLease()
@@ -173,8 +206,7 @@ namespace wacs.FLease
                    && lease.ExpiresAt + config.ClockDrift > now;
         }
 
-        // TODO: Move to another place, i.e. start of listeners...
-        private void WaitBeforeNextLeaseIssued()
+        private void WaitBeforeNextLeaseIssued(ILeaseConfiguration config)
         {
             var diff = DateTime.UtcNow - startTime;
 
@@ -193,16 +225,5 @@ namespace wacs.FLease
         }
 
         //TODO: add Dispose() method???
-        public void Stop()
-        {
-            register.Stop();
-            leaseTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
-        }
-
-        public void Dispose()
-        {
-            leaseTimer.Dispose();
-            renewGateway.Dispose();
-        }
     }
 }
