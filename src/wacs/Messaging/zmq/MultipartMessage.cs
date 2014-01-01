@@ -19,6 +19,13 @@ namespace wacs.Messaging.zmq
             parts = BuildMessageParts(recipient, message).ToArray();
         }
 
+        public MultipartMessage(IEnumerable<byte[]> message)
+        {
+            AssertMessage(message);
+
+            parts = message.ToArray();
+        }
+
         private IEnumerable<byte[]> BuildMessageParts(IProcess recipient, IMessage message)
         {
             yield return BuildMessageFilter(recipient);
@@ -49,13 +56,6 @@ namespace wacs.Messaging.zmq
                        : MulticastId;
         }
 
-        public MultipartMessage(IEnumerable<byte[]> message)
-        {
-            AssertMessage(message);
-
-            parts = message.ToArray();
-        }
-
         private static void AssertMessage(IEnumerable<byte[]> message)
         {
             if (message.Count() < 4)
@@ -68,7 +68,7 @@ namespace wacs.Messaging.zmq
         {
             return parts.First().GetString();
         }
-        
+
         internal byte[] GetFilterBytes()
         {
             return parts.First();
@@ -78,6 +78,7 @@ namespace wacs.Messaging.zmq
         {
             return parts.Skip(1).First().GetInt();
         }
+
         internal byte[] GetSenderIdBytes()
         {
             return parts.Skip(1).First();
@@ -87,6 +88,7 @@ namespace wacs.Messaging.zmq
         {
             return parts.Skip(2).First().GetString();
         }
+
         internal byte[] GetMessageTypeBytes()
         {
             return parts.Skip(2).First();

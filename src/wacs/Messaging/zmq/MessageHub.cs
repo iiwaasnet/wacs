@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using wacs.Configuration;
-using wacs.core;
 using wacs.Diagnostics;
 using wacs.Paxos.Interface;
 using ZMQ;
@@ -135,15 +134,22 @@ namespace wacs.Messaging.zmq
         {
             foreach (var message in messageQueue.GetConsumingEnumerable(token))
             {
-                var msg = new Message(new Envelope {Sender = new Process(message.GetSenderId())},
-                                      new Body
-                                      {
-                                          MessageType = message.GetMessageType(),
-                                          Content = message.GetMessage()
-                                      });
-                foreach (var subscription in subscriptions.Keys)
+                try
                 {
-                    subscription.Notify(msg);
+                    var msg = new Message(new Envelope {Sender = new Process(message.GetSenderId())},
+                                          new Body
+                                          {
+                                              MessageType = message.GetMessageType(),
+                                              Content = message.GetMessage()
+                                          });
+                    foreach (var subscription in subscriptions.Keys)
+                    {
+                        subscription.Notify(msg);
+                    }
+                }
+                catch (Exception err)
+                {
+                    logger.Error(err);
                 }
             }
 
@@ -231,7 +237,8 @@ namespace wacs.Messaging.zmq
             sender.Send(multipartMessage.GetFilterBytes(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
             sender.Send(multipartMessage.GetSenderIdBytes(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
             sender.Send(multipartMessage.GetMessageTypeBytes(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
-            sender.Send(multipartMessage.GetMessage(), SendRecvOpt.NOBLOCK);
+            sender.Send(multipartMessage.GetMessage(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
+            sender.Send(new byte[0], SendRecvOpt.NOBLOCK);
         }
 
         private class NodeConnection
