@@ -42,6 +42,7 @@ namespace wacs.FLease
 
                     return messagePayload.Ballot.ProcessId == ballot.Process.Id
                            && messagePayload.Ballot.Timestamp == ballot.Timestamp.Ticks
+                           && messagePayload.Ballot.MessageNumber == ballot.MessageNumber
                            && responses.TryAdd(process, null);
                 }
             }

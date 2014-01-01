@@ -68,10 +68,14 @@ namespace wacs.FLease
             IMessage response;
             if (writeBallot > ballot || readBallot > ballot)
             {
+                LogNackWrite(ballot);
+
                 response = new LeaseNackWrite(owner, new LeaseNackWrite.Payload {Ballot = payload.Ballot});
             }
             else
             {
+                LogAckWrite(ballot);
+
                 writeBallot = ballot;
                 lease = new Lease(new Process(payload.Lease.ProcessId),
                                   new DateTime(payload.Lease.ExpiresAt, DateTimeKind.Utc));
@@ -98,6 +102,8 @@ namespace wacs.FLease
             }
             else
             {
+                LogAckRead(ballot);
+
                 readBallot = ballot;
                 response = CreateLeaseAckReadMessage(payload);
             }
