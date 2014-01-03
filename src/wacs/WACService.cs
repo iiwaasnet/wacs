@@ -1,4 +1,5 @@
-﻿using Topshelf;
+﻿using System;
+using Topshelf;
 using wacs.Diagnostics;
 
 namespace wacs
@@ -18,7 +19,7 @@ namespace wacs
         {
             stateMachine.Start();
 
-            logger.InfoFormat("WACS Id:[{0}] started", stateMachine.Id);
+            logger.InfoFormat("WACS Id:[{0}] started at [{1}]", stateMachine.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
 
             return true;
         }
