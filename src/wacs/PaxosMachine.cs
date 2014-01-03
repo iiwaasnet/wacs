@@ -57,10 +57,10 @@ namespace wacs
                                        DateTime.UtcNow.ToString("HH:mm:ss fff"),
                                        timer.ElapsedMilliseconds);
                 }
-                if (lease != null)
-                {
+                //if (lease != null)
+                //{
                     Thread.Sleep(TimeSpan.FromMilliseconds(50));
-                }
+                //}
             }
         }
 

@@ -5,7 +5,7 @@ using System.Threading;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.Paxos.Interface;
-using ZMQ;
+using ZeroMQ;
 using Exception = System.Exception;
 
 namespace wacs.Messaging.zmq
