@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ZeroMQ;
 
 namespace wacs.Messaging.zmq
 {
     internal class MultipartMessage
     {
-        private readonly IEnumerable<byte[]> parts;
+        private readonly IEnumerable<byte[]> frames;
         internal static readonly byte[] MulticastId;
 
         static MultipartMessage()
@@ -16,14 +17,19 @@ namespace wacs.Messaging.zmq
 
         public MultipartMessage(IProcess recipient, IMessage message)
         {
-            parts = BuildMessageParts(recipient, message).ToArray();
+            frames = BuildMessageParts(recipient, message).ToArray();
         }
 
-        public MultipartMessage(IEnumerable<byte[]> message)
+        public MultipartMessage(ZmqMessage message)
         {
             AssertMessage(message);
 
-            parts = message.ToArray();
+            frames = SplitMessageToFrames(message);
+        }
+
+        private IEnumerable<byte[]> SplitMessageToFrames(IEnumerable<Frame> message)
+        {
+            return message.Select(m => m.Buffer).ToArray();
         }
 
         private IEnumerable<byte[]> BuildMessageParts(IProcess recipient, IMessage message)
@@ -56,52 +62,52 @@ namespace wacs.Messaging.zmq
                        : MulticastId;
         }
 
-        private static void AssertMessage(IEnumerable<byte[]> message)
+        private static void AssertMessage(ZmqMessage message)
         {
-            if (message.Count() < 4)
+            if (message.FrameCount < 4)
             {
-                throw new Exception(string.Format("Inconsistent message received: [{0}]", string.Join("|", message)));
+                throw new Exception(string.Format("Inconsistent message received! FrameCount: [{0}] Bytes: [{1}]", message.FrameCount, message.TotalSize));
             }
         }
 
         internal string GetFilter()
         {
-            return parts.First().GetString();
+            return frames.First().GetString();
         }
 
         internal byte[] GetFilterBytes()
         {
-            return parts.First();
+            return frames.First();
         }
 
         internal int GetSenderId()
         {
-            return parts.Skip(1).First().GetInt();
+            return frames.Skip(1).First().GetInt();
         }
 
         internal byte[] GetSenderIdBytes()
         {
-            return parts.Skip(1).First();
+            return frames.Skip(1).First();
         }
 
         internal string GetMessageType()
         {
-            return parts.Skip(2).First().GetString();
+            return frames.Skip(2).First().GetString();
         }
 
         internal byte[] GetMessageTypeBytes()
         {
-            return parts.Skip(2).First();
+            return frames.Skip(2).First();
         }
 
         internal byte[] GetMessage()
         {
-            return parts.Skip(3).Aggregate(new byte[0], (seed, array) => seed.Concat(array).ToArray());
+            return frames.Skip(3).Aggregate(new byte[0], (seed, array) => seed.Concat(array).ToArray());
         }
 
-        internal IEnumerable<byte[]> Parts
+        internal IEnumerable<byte[]> Frames
         {
-            get { return parts; }
+            get { return frames; }
         }
     }
 }

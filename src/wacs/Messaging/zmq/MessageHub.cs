@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -6,7 +7,6 @@ using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.Paxos.Interface;
 using ZeroMQ;
-using Exception = System.Exception;
 
 namespace wacs.Messaging.zmq
 {
@@ -19,115 +19,110 @@ namespace wacs.Messaging.zmq
         private readonly ISynodConfigurationProvider configProvider;
         private readonly ILogger logger;
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
-        private readonly ConcurrentDictionary<ZeroMQ.Interop.PollItem, object> pollItems;
+        private HashSet<INode> currentWorld;
+        private readonly Poller poller;
         private readonly BlockingCollection<MultipartMessage> messageQueue;
         private readonly CancellationTokenSource cancellationSource;
-        private readonly ConcurrentDictionary<string, NodeConnection> listeningConnections;
         private readonly INode localNode;
+        private readonly object locker = new object();
+        // TODO: create a setting for timeout
+        private readonly TimeSpan socketsPollTimeout;
 
         public MessageHub(ISynodConfigurationProvider configProvider, ILogger logger)
         {
+            socketsPollTimeout = TimeSpan.FromSeconds(3);
             this.configProvider = configProvider;
             this.logger = logger;
             localNode = configProvider.LocalNode;
             messageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
-            listeningConnections = new ConcurrentDictionary<string, NodeConnection>();
             cancellationSource = new CancellationTokenSource();
 
             context = ZmqContext.Create();
             subscriptions = new ConcurrentDictionary<Listener, object>();
-            pollItems = new ConcurrentDictionary<PollItem, object>();
 
             multicastListener = CreateMulticastListener();
-            unicastListener = CreateUnicastListener(configProvider);
-            ConnectListeningSockets(configProvider.World.Select(n => n.Address));
+            unicastListener = CreateUnicastListener(configProvider.LocalProcess);
+            currentWorld = new HashSet<INode>(configProvider.World);
+            ConnectListeningSockets(currentWorld);
+
+            poller = new Poller(new[] {multicastListener, unicastListener});
 
             sender = CreateSender();
 
             this.configProvider.WorldChanged += OnWorldChanged;
             new Thread(() => PollReceivers(cancellationSource.Token)).Start();
-            new Thread(() => ForwardMessagesToListeners(cancellationSource.Token)).Start();
+            new Thread(() => ForwardMessagesToListeners(cancellationSource.Token)).Start();          
         }
 
         private void OnWorldChanged()
         {
-            var world = configProvider.World.Select(w => w.Address);
-            var dead = listeningConnections.Where(c => !world.Contains(c.Key));
-            var newNodes = world.Where(w => !listeningConnections.ContainsKey(w));
-
-            ConnectListeningSockets(newNodes);
-            CloseDeadSockets(dead);
-        }
-
-        private void CloseDeadSockets(IEnumerable<KeyValuePair<string, NodeConnection>> deadSockets)
-        {
-            object obj;
-            foreach (var deadSocket in deadSockets)
+            lock (locker)
             {
-                foreach (var pollItem in deadSocket.Value.PollItems)
-                {
-                    pollItem.PollInHandler -= PollInMessageHandler;
-                    pollItems.TryRemove(pollItem, out obj);
-                }
-                foreach (var socket in deadSocket.Value.Sockets)
-                {
-                    socket.Dispose();
-                }
+                var previousWorld = currentWorld;
+                currentWorld = new HashSet<INode>(configProvider.World);
 
-                NodeConnection con;
-                listeningConnections.TryRemove(deadSocket.Key, out con);
+                var dead = previousWorld.Where(pw => !currentWorld.Contains(pw));
+                var newNodes = currentWorld.Where(cw => !previousWorld.Contains(cw));
+
+                ConnectListeningSockets(newNodes);
+                CloseDeadSockets(dead);
             }
         }
 
-        private void ConnectListeningSockets(IEnumerable<string> newNodes)
+        private void CloseDeadSockets(IEnumerable<INode> deadNodes)
         {
-            foreach (var newNode in newNodes)
+            foreach (var deadNode in deadNodes)
             {
-                var nodeConnection = new NodeConnection();
-                if (listeningConnections.TryAdd(newNode, nodeConnection))
-                {
-                    nodeConnection.Sockets = new[]
-                                             {
-                                                 CreateMulticastListener(),
-                                                 CreateUnicastListener(configProvider)
-                                             };
-                    nodeConnection.PollItems = SubscribeListeningSockets(nodeConnection.Sockets).ToArray();
-
-                    foreach (var pollItem in nodeConnection.PollItems)
-                    {
-                        pollItems.TryAdd(pollItem, null);
-                    }
-
-                    foreach (var socket in nodeConnection.Sockets)
-                    {
-                        socket.Connect(newNode);
-                    }
-                }
+                multicastListener.Disconnect(deadNode.Address);
+                unicastListener.Disconnect(deadNode.Address);
             }
         }
 
-        private Socket CreateUnicastListener(ISynodConfigurationProvider configProvider)
+        private void ConnectListeningSockets(IEnumerable<INode> nodes)
         {
-            var socket = context.Socket(SocketType.SUB);
-            socket.Subscribe(configProvider.LocalProcess.Id.GetBytes());
+            foreach (var node in nodes)
+            {
+                multicastListener.Connect(node.Address);
+                unicastListener.Connect(node.Address);
+            }
+        }
+
+        private ZmqSocket CreateUnicastListener(IProcess localProcess)
+        {
+            var socket = context.CreateSocket(SocketType.SUB);
+            socket.Subscribe(localProcess.Id.GetBytes());
+            socket.ReceiveReady += SocketOnReceiveReady;
 
             return socket;
         }
 
-        private Socket CreateMulticastListener()
+        private ZmqSocket CreateMulticastListener()
         {
-            var socket = context.Socket(SocketType.SUB);
+            var socket = context.CreateSocket(SocketType.SUB);
             socket.Subscribe(MultipartMessage.MulticastId);
+            socket.ReceiveReady += SocketOnReceiveReady;
 
             return socket;
         }
 
-        private Socket CreateSender()
+        private ZmqSocket CreateSender()
         {
-            var socket = context.Socket(SocketType.PUB);
+            var socket = context.CreateSocket(SocketType.PUB);
             socket.Bind(localNode.Address);
 
             return socket;
+        }
+
+        private void SocketOnReceiveReady(object sender, SocketEventArgs socketEventArgs)
+        {
+            var message = socketEventArgs.Socket.ReceiveMessage();
+
+            if (message.IsComplete)
+            {
+                var multipartMessage = new MultipartMessage(message);
+                logger.InfoFormat("Msg received: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
+                messageQueue.Add(multipartMessage);
+            }
         }
 
         private void ForwardMessagesToListeners(CancellationToken token)
@@ -162,6 +157,7 @@ namespace wacs.Messaging.zmq
             multicastListener.Dispose();
             unicastListener.Dispose();
             sender.Dispose();
+            poller.Dispose();
             context.Dispose();
         }
 
@@ -179,41 +175,18 @@ namespace wacs.Messaging.zmq
             subscriptions.TryRemove(listener, out obj);
         }
 
-        private IEnumerable<PollItem> SubscribeListeningSockets(IEnumerable<Socket> listeningSockets)
-        {
-            foreach (var listeningSocket in listeningSockets)
-            {
-                var poller = listeningSocket.CreatePollItem(IOMultiPlex.POLLIN);
-                poller.PollInHandler += PollInMessageHandler;
-
-                yield return poller;
-            }
-        }
-
         private void PollReceivers(CancellationToken token)
         {
             try
             {
                 while (!token.IsCancellationRequested)
-                {
-                    context.Poll(pollItems.Keys.ToArray());
+                {             
+                    poller.Poll(socketsPollTimeout);
                 }
             }
             catch (Exception err)
             {
                 logger.Error(err);
-            }
-        }
-
-        private void PollInMessageHandler(Socket socket, IOMultiPlex revents)
-        {
-            var queue = socket.RecvAll();
-
-            if (queue.Any())
-            {
-                var multipartMessage = new MultipartMessage(queue);
-                logger.InfoFormat("Msg received: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
-                messageQueue.Add(multipartMessage);
             }
         }
 
@@ -234,17 +207,8 @@ namespace wacs.Messaging.zmq
         private void SendMessage(MultipartMessage multipartMessage)
         {
             logger.InfoFormat("Msg sent: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
-            sender.Send(multipartMessage.GetFilterBytes(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
-            sender.Send(multipartMessage.GetSenderIdBytes(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
-            sender.Send(multipartMessage.GetMessageTypeBytes(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
-            sender.Send(multipartMessage.GetMessage(), SendRecvOpt.NOBLOCK, SendRecvOpt.SNDMORE);
-            sender.Send(new byte[0], SendRecvOpt.NOBLOCK);
-        }
-
-        private class NodeConnection
-        {
-            internal IEnumerable<Socket> Sockets { get; set; }
-            internal IEnumerable<PollItem> PollItems { get; set; }
+            var message = new ZmqMessage(multipartMessage.Frames);
+            sender.SendMessage(message);
         }
     }
 }
