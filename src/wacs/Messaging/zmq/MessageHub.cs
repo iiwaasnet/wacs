@@ -12,14 +12,14 @@ namespace wacs.Messaging.zmq
 {
     public class MessageHub : IMessageHub
     {
-        private readonly Context context;
-        private readonly Socket multicastListener;
-        private readonly Socket unicastListener;
-        private readonly Socket sender;
+        private readonly ZmqContext context;
+        private readonly ZmqSocket multicastListener;
+        private readonly ZmqSocket unicastListener;
+        private readonly ZmqSocket sender;
         private readonly ISynodConfigurationProvider configProvider;
         private readonly ILogger logger;
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
-        private readonly ConcurrentDictionary<PollItem, object> pollItems;
+        private readonly ConcurrentDictionary<ZeroMQ.Interop.PollItem, object> pollItems;
         private readonly BlockingCollection<MultipartMessage> messageQueue;
         private readonly CancellationTokenSource cancellationSource;
         private readonly ConcurrentDictionary<string, NodeConnection> listeningConnections;
@@ -34,7 +34,7 @@ namespace wacs.Messaging.zmq
             listeningConnections = new ConcurrentDictionary<string, NodeConnection>();
             cancellationSource = new CancellationTokenSource();
 
-            context = new Context();
+            context = ZmqContext.Create();
             subscriptions = new ConcurrentDictionary<Listener, object>();
             pollItems = new ConcurrentDictionary<PollItem, object>();
 
