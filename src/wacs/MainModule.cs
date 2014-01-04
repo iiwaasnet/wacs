@@ -5,10 +5,10 @@ using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.zmq;
-using wacs.Paxos.Implementation;
-using wacs.Paxos.Interface;
 using wacs.Resolver.Implementation;
 using wacs.Resolver.Interface;
+using wacs.Rsm.Implementation;
+using wacs.Rsm.Interface;
 
 namespace wacs
 {

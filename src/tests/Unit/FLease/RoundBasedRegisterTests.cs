@@ -8,8 +8,8 @@ using wacs.Configuration;
 using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.Inproc;
-using wacs.Paxos.Implementation;
 using wacs.Resolver.Interface;
+using wacs.Rsm.Implementation;
 
 namespace tests.Unit.FLease
 {

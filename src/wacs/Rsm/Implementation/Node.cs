@@ -1,7 +1,7 @@
 using System;
 using wacs.Configuration;
 
-namespace wacs.Paxos.Implementation
+namespace wacs.Rsm.Implementation
 {
     public class Node : INode
     {

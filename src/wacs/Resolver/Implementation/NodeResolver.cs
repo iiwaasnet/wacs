@@ -9,24 +9,25 @@ using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging;
-using wacs.Paxos.Implementation;
-using wacs.Paxos.Interface;
 using wacs.Resolver.Interface;
+using wacs.Rsm.Implementation;
+using wacs.Rsm.Interface;
 
 namespace wacs.Resolver.Implementation
 {
     public class NodeResolver : INodeResolver
     {
-        private readonly IMessageHub messageHub;
-        private volatile IProcess localProcess;
-        private readonly ConcurrentDictionary<INode, IProcess> nodeToProcessMap;
-        private readonly ConcurrentDictionary<IProcess, INode> processToNodeMap;
+        private readonly CancellationTokenSource cancellation;
+        private readonly IListener listener;
         private readonly INode localNode;
         private readonly ILogger logger;
-        private readonly IListener listener;
-        private readonly CancellationTokenSource cancellation;
-        private readonly Task worldLearningTask;
+        private readonly IMessageHub messageHub;
+        private readonly ConcurrentDictionary<INode, IProcess> nodeToProcessMap;
+        private readonly ConcurrentDictionary<IProcess, INode> processToNodeMap;
         private readonly ISynodConfigurationProvider synodConfigProvider;
+        private readonly Task worldLearningTask;
+        private volatile IProcess localProcess;
+        private bool disposed;
 
         public NodeResolver(IMessageHub messageHub,
                             ISynodConfigurationProvider synodConfigProvider,
@@ -45,7 +46,47 @@ namespace wacs.Resolver.Implementation
             cancellation = new CancellationTokenSource();
 
             listener = messageHub.Subscribe();
-            worldLearningTask = new Task(() => ResolveWorld(cancellation.Token, config.ProcessIdBroadcastPeriod));
+            worldLearningTask = StartLearningWorld(config);
+        }
+
+        public void Dispose()
+        {
+            if (!disposed)
+            {
+                try
+                {
+                    cancellation.Cancel(false);
+                    cancellation.Dispose();
+                    worldLearningTask.Wait();
+                    worldLearningTask.Dispose();
+
+                    disposed = true;
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        public IProcess ResolveRemoteNode(INode node)
+        {
+            IProcess resolved;
+            nodeToProcessMap.TryGetValue(node, out resolved);
+
+            return resolved;
+        }
+
+        public INode ResolveRemoteProcess(IProcess process)
+        {
+            INode node;
+            processToNodeMap.TryGetValue(process, out node);
+
+            return node;
+        }
+
+        public IProcess ResolveLocalNode()
+        {
+            return localProcess;
         }
 
         private void RemoveDeadNodes()
@@ -67,16 +108,12 @@ namespace wacs.Resolver.Implementation
             }
         }
 
-        public void Start()
+        private Task StartLearningWorld(INodeResolverConfiguration config)
         {
-            worldLearningTask.Start();
-        }
+            var task = new Task(() => ResolveWorld(cancellation.Token, config.ProcessIdBroadcastPeriod));
+            task.Start();
 
-        public void Stop()
-        {
-            cancellation.Cancel(false);
-            worldLearningTask.Wait();
-            worldLearningTask.Dispose();
+            return task;
         }
 
         private void ResolveWorld(CancellationToken token, TimeSpan processIdBroadcastPeriod)
@@ -131,27 +168,6 @@ namespace wacs.Resolver.Implementation
                     }
                 }
             }
-        }
-
-        public IProcess ResolveRemoteNode(INode node)
-        {
-            IProcess resolved;
-            nodeToProcessMap.TryGetValue(node, out resolved);
-
-            return resolved;
-        }
-
-        public INode ResolveRemoteProcess(IProcess process)
-        {
-            INode node;
-            processToNodeMap.TryGetValue(process, out node);
-
-            return node;
-        }
-
-        public IProcess ResolveLocalNode()
-        {
-            return localProcess;
         }
     }
 }

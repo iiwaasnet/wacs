@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using wacs.Configuration;
 
-namespace wacs.Paxos.Interface
+namespace wacs.Rsm.Interface
 {
     public delegate void WorldChangedHandler();
 

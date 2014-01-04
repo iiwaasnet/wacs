@@ -2,8 +2,8 @@
 using System.Collections.Concurrent;
 using wacs.FLease.Messages;
 using wacs.Messaging;
-using wacs.Paxos.Interface;
 using wacs.Resolver.Interface;
+using wacs.Rsm.Interface;
 
 namespace wacs.FLease
 {

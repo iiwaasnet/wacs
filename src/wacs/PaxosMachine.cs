@@ -67,14 +67,13 @@ namespace wacs
 
         public void Start()
         {
-            nodeResolver.Start();
             leaseProvider.Start();
             Task.Factory.StartNew(() => ApplyCommands(token.Token), token.Token);
         }
 
         public void Stop()
         {
-            nodeResolver.Stop();
+            nodeResolver.Dispose();
             token.Cancel();
             leaseProvider.Stop();
             token.Dispose();

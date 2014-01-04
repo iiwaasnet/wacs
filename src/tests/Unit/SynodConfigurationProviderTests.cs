@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using wacs.Configuration;
-using wacs.Paxos.Implementation;
+using wacs.Rsm.Implementation;
 
 namespace tests.Unit
 {

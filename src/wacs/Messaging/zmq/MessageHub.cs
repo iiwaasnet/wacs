@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using wacs.Configuration;
 using wacs.Diagnostics;
-using wacs.Paxos.Interface;
+using wacs.Rsm.Interface;
 using ZeroMQ;
 
 namespace wacs.Messaging.zmq

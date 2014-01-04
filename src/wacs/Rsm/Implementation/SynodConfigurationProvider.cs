@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using wacs.Configuration;
-using wacs.Paxos.Interface;
+using wacs.Rsm.Interface;
 
-namespace wacs.Paxos.Implementation
+namespace wacs.Rsm.Implementation
 {
     public class SynodConfigurationProvider : ISynodConfigurationProvider
     {

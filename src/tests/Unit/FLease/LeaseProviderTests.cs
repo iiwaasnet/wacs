@@ -11,8 +11,8 @@ using wacs.Configuration;
 using wacs.FLease;
 using wacs.Messaging;
 using wacs.Messaging.Inproc;
-using wacs.Paxos.Implementation;
 using wacs.Resolver.Interface;
+using wacs.Rsm.Implementation;
 
 namespace tests.Unit.FLease
 {
@@ -146,7 +146,7 @@ namespace tests.Unit.FLease
 
             var container = builder.Build();
 
-            container.Resolve<INodeResolver>().Start();
+            container.Resolve<INodeResolver>();
 
             return container.Resolve<ILeaseProvider>();
         }

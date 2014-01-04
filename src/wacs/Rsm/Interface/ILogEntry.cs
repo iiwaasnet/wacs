@@ -1,6 +1,6 @@
 ﻿using wacs.FLease;
 
-namespace wacs.Paxos.Interface
+namespace wacs.Rsm.Interface
 {
     public interface ILogEntry
     {
