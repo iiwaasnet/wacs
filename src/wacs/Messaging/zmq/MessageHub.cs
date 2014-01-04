@@ -15,13 +15,14 @@ namespace wacs.Messaging.zmq
     {
         private readonly CancellationTokenSource cancellationSource;
         private readonly ISynodConfigurationProvider configProvider;
+        private readonly BlockingCollection<MultipartMessage> inMessageQueue;
         private readonly INode localNode;
         private readonly object locker = new object();
         private readonly ILogger logger;
-        private readonly BlockingCollection<MultipartMessage> messageQueue;
         private readonly ZmqContext multicastContext;
         private readonly ZmqSocket multicastListener;
         private readonly Poller multicastPoller;
+        private readonly BlockingCollection<MultipartMessage> outMessageQueue;
         private readonly ZmqSocket sender;
         private readonly ZmqContext senderContext;
         private readonly TimeSpan socketsPollTimeout;
@@ -37,7 +38,8 @@ namespace wacs.Messaging.zmq
             this.configProvider = configProvider;
             this.logger = logger;
             localNode = configProvider.LocalNode;
-            messageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
+            inMessageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
+            outMessageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
             cancellationSource = new CancellationTokenSource();
 
             senderContext = ZmqContext.Create();
@@ -59,7 +61,8 @@ namespace wacs.Messaging.zmq
             this.configProvider.WorldChanged += OnWorldChanged;
             new Thread(() => PollReceivers(multicastPoller, cancellationSource.Token)).Start();
             new Thread(() => PollReceivers(unicastPoller, cancellationSource.Token)).Start();
-            new Thread(() => ForwardMessagesToListeners(cancellationSource.Token)).Start();
+            new Thread(() => ForwardIncomingMessages(cancellationSource.Token)).Start();
+            new Thread(() => ForwardOutgoingSenders(cancellationSource.Token)).Start();
         }
 
         public void Dispose()
@@ -90,14 +93,31 @@ namespace wacs.Messaging.zmq
         {
             var multipartMessage = new MultipartMessage(null, message);
 
-            SendMessage(multipartMessage);
+            outMessageQueue.Add(multipartMessage);
         }
 
         public void Send(IProcess recipient, IMessage message)
         {
             var multipartMessage = new MultipartMessage(recipient, message);
 
-            SendMessage(multipartMessage);
+            outMessageQueue.Add(multipartMessage);
+        }
+
+        private void ForwardOutgoingSenders(CancellationToken token)
+        {
+            foreach (var message in outMessageQueue.GetConsumingEnumerable(token))
+            {
+                try
+                {
+                    SendMessage(message);
+                }
+                catch (Exception err)
+                {
+                    logger.Error(err);
+                }
+            }
+
+            outMessageQueue.Dispose();
         }
 
         private void OnWorldChanged()
@@ -175,14 +195,14 @@ namespace wacs.Messaging.zmq
                 {
                     var multipartMessage = new MultipartMessage(message);
                     logger.InfoFormat("Msg received: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
-                    messageQueue.Add(multipartMessage);
+                    inMessageQueue.Add(multipartMessage);
                 }
 
                 timer.Stop();
-                logger.InfoFormat("Msg queued in {0} msec", timer.ElapsedMilliseconds);
-                logger.InfoFormat("Backlog:{0} Receive bfr:{1}",
-                                  socketEventArgs.Socket.Backlog,
-                                  socketEventArgs.Socket.ReceiveBufferSize);
+                //logger.InfoFormat("Msg queued in {0} msec", timer.ElapsedMilliseconds);
+                //logger.InfoFormat("Backlog:{0} Receive bfr:{1}",
+                //                  socketEventArgs.Socket.Backlog,
+                //                  socketEventArgs.Socket.ReceiveBufferSize);
             }
             catch (Exception err)
             {
@@ -190,9 +210,9 @@ namespace wacs.Messaging.zmq
             }
         }
 
-        private void ForwardMessagesToListeners(CancellationToken token)
+        private void ForwardIncomingMessages(CancellationToken token)
         {
-            foreach (var message in messageQueue.GetConsumingEnumerable(token))
+            foreach (var message in inMessageQueue.GetConsumingEnumerable(token))
             {
                 try
                 {
@@ -213,7 +233,7 @@ namespace wacs.Messaging.zmq
                 }
             }
 
-            messageQueue.Dispose();
+            inMessageQueue.Dispose();
         }
 
         private void Unsubscribe(Listener listener)

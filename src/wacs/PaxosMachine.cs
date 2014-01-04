@@ -31,6 +31,7 @@ namespace wacs
         private void ApplyCommands(CancellationToken token)
         {
             var timer = new Stopwatch();
+            var rnd = new Random((int) (0x0000ffff & DateTime.UtcNow.Ticks));
 
             while (!token.IsCancellationRequested)
             {
@@ -59,7 +60,7 @@ namespace wacs
                 }
                 //if (lease != null)
                 //{
-                    Thread.Sleep(TimeSpan.FromMilliseconds(50));
+                    Thread.Sleep(TimeSpan.FromMilliseconds(rnd.Next(20, 100)));
                 //}
             }
         }
