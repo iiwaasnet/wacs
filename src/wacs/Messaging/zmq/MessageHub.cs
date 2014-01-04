@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using wacs.Configuration;
@@ -12,21 +13,23 @@ namespace wacs.Messaging.zmq
 {
     public class MessageHub : IMessageHub
     {
-        private readonly ZmqContext context;
-        private readonly ZmqSocket multicastListener;
-        private readonly ZmqSocket unicastListener;
-        private readonly ZmqSocket sender;
-        private readonly ISynodConfigurationProvider configProvider;
-        private readonly ILogger logger;
-        private readonly ConcurrentDictionary<Listener, object> subscriptions;
-        private HashSet<INode> currentWorld;
-        private readonly Poller poller;
-        private readonly BlockingCollection<MultipartMessage> messageQueue;
         private readonly CancellationTokenSource cancellationSource;
+        private readonly ISynodConfigurationProvider configProvider;
         private readonly INode localNode;
         private readonly object locker = new object();
-        // TODO: create a setting for timeout
+        private readonly ILogger logger;
+        private readonly BlockingCollection<MultipartMessage> messageQueue;
+        private readonly ZmqContext multicastContext;
+        private readonly ZmqSocket multicastListener;
+        private readonly Poller multicastPoller;
+        private readonly ZmqSocket sender;
+        private readonly ZmqContext senderContext;
         private readonly TimeSpan socketsPollTimeout;
+        private readonly ConcurrentDictionary<Listener, object> subscriptions;
+        private readonly ZmqContext unicastContext;
+        private readonly ZmqSocket unicastListener;
+        private readonly Poller unicastPoller;
+        private HashSet<INode> currentWorld;
 
         public MessageHub(ISynodConfigurationProvider configProvider, ILogger logger)
         {
@@ -37,21 +40,64 @@ namespace wacs.Messaging.zmq
             messageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
             cancellationSource = new CancellationTokenSource();
 
-            context = ZmqContext.Create();
+            senderContext = ZmqContext.Create();
+            unicastContext = ZmqContext.Create();
+            multicastContext = ZmqContext.Create();
+
             subscriptions = new ConcurrentDictionary<Listener, object>();
 
-            multicastListener = CreateMulticastListener();
-            unicastListener = CreateUnicastListener(configProvider.LocalProcess);
+            multicastListener = CreateMulticastListener(multicastContext);
+            unicastListener = CreateUnicastListener(unicastContext, configProvider.LocalProcess);
             currentWorld = new HashSet<INode>(configProvider.World);
             ConnectListeningSockets(currentWorld);
 
-            poller = new Poller(new[] {multicastListener, unicastListener});
+            unicastPoller = new Poller(new[] {unicastListener});
+            multicastPoller = new Poller(new[] {multicastListener});
 
-            sender = CreateSender();
+            sender = CreateSender(senderContext);
 
             this.configProvider.WorldChanged += OnWorldChanged;
-            new Thread(() => PollReceivers(cancellationSource.Token)).Start();
-            new Thread(() => ForwardMessagesToListeners(cancellationSource.Token)).Start();          
+            new Thread(() => PollReceivers(multicastPoller, cancellationSource.Token)).Start();
+            new Thread(() => PollReceivers(unicastPoller, cancellationSource.Token)).Start();
+            new Thread(() => ForwardMessagesToListeners(cancellationSource.Token)).Start();
+        }
+
+        public void Dispose()
+        {
+            cancellationSource.Cancel(false);
+
+            multicastListener.Dispose();
+            unicastListener.Dispose();
+            sender.Dispose();
+
+            unicastPoller.Dispose();
+            multicastPoller.Dispose();
+
+            senderContext.Dispose();
+            unicastContext.Dispose();
+            multicastContext.Dispose();
+        }
+
+        public IListener Subscribe()
+        {
+            var listener = new Listener(Unsubscribe, logger);
+            subscriptions.TryAdd(listener, null);
+
+            return listener;
+        }
+
+        public void Broadcast(IMessage message)
+        {
+            var multipartMessage = new MultipartMessage(null, message);
+
+            SendMessage(multipartMessage);
+        }
+
+        public void Send(IProcess recipient, IMessage message)
+        {
+            var multipartMessage = new MultipartMessage(recipient, message);
+
+            SendMessage(multipartMessage);
         }
 
         private void OnWorldChanged()
@@ -87,27 +133,30 @@ namespace wacs.Messaging.zmq
             }
         }
 
-        private ZmqSocket CreateUnicastListener(IProcess localProcess)
+        private ZmqSocket CreateUnicastListener(ZmqContext context, IProcess localProcess)
+        {
+            return CreateListeningSocket(context, localProcess.Id.GetBytes());
+        }
+
+        private ZmqSocket CreateMulticastListener(ZmqContext context)
+        {
+            return CreateListeningSocket(context, MultipartMessage.MulticastId);
+        }
+
+        private ZmqSocket CreateListeningSocket(ZmqContext context, byte[] prefix)
         {
             var socket = context.CreateSocket(SocketType.SUB);
-            socket.Subscribe(localProcess.Id.GetBytes());
+            socket.ReceiveHighWatermark = 200;
+            socket.Subscribe(prefix);
             socket.ReceiveReady += SocketOnReceiveReady;
 
             return socket;
         }
 
-        private ZmqSocket CreateMulticastListener()
-        {
-            var socket = context.CreateSocket(SocketType.SUB);
-            socket.Subscribe(MultipartMessage.MulticastId);
-            socket.ReceiveReady += SocketOnReceiveReady;
-
-            return socket;
-        }
-
-        private ZmqSocket CreateSender()
+        private ZmqSocket CreateSender(ZmqContext context)
         {
             var socket = context.CreateSocket(SocketType.PUB);
+            socket.SendHighWatermark = 100;
             socket.Bind(localNode.Address);
 
             return socket;
@@ -115,13 +164,29 @@ namespace wacs.Messaging.zmq
 
         private void SocketOnReceiveReady(object sender, SocketEventArgs socketEventArgs)
         {
-            var message = socketEventArgs.Socket.ReceiveMessage();
-
-            if (message.IsComplete)
+            try
             {
-                var multipartMessage = new MultipartMessage(message);
-                logger.InfoFormat("Msg received: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
-                messageQueue.Add(multipartMessage);
+                var timer = new Stopwatch();
+                timer.Start();
+
+                var message = socketEventArgs.Socket.ReceiveMessage(TimeSpan.FromMilliseconds(50));
+
+                if (message.IsComplete)
+                {
+                    var multipartMessage = new MultipartMessage(message);
+                    logger.InfoFormat("Msg received: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
+                    messageQueue.Add(multipartMessage);
+                }
+
+                timer.Stop();
+                logger.InfoFormat("Msg queued in {0} msec", timer.ElapsedMilliseconds);
+                logger.InfoFormat("Backlog:{0} Receive bfr:{1}",
+                                  socketEventArgs.Socket.Backlog,
+                                  socketEventArgs.Socket.ReceiveBufferSize);
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
             }
         }
 
@@ -151,57 +216,29 @@ namespace wacs.Messaging.zmq
             messageQueue.Dispose();
         }
 
-        public void Dispose()
-        {
-            cancellationSource.Cancel(false);
-            multicastListener.Dispose();
-            unicastListener.Dispose();
-            sender.Dispose();
-            poller.Dispose();
-            context.Dispose();
-        }
-
-        public IListener Subscribe()
-        {
-            var listener = new Listener(Unsubscribe, logger);
-            subscriptions.TryAdd(listener, null);
-
-            return listener;
-        }
-
         private void Unsubscribe(Listener listener)
         {
             object obj;
             subscriptions.TryRemove(listener, out obj);
         }
 
-        private void PollReceivers(CancellationToken token)
+        private void PollReceivers(Poller poller, CancellationToken token)
         {
             try
             {
                 while (!token.IsCancellationRequested)
-                {             
+                {
                     poller.Poll(socketsPollTimeout);
                 }
             }
             catch (Exception err)
             {
-                logger.Error(err);
+                logger.ErrorFormat("Sender status:[{0}] Multicast status:[{1}] Unicast status:[{2}] Error:[{3}]",
+                                   sender.SendStatus,
+                                   multicastListener.ReceiveStatus,
+                                   unicastListener.ReceiveStatus,
+                                   err);
             }
-        }
-
-        public void Broadcast(IMessage message)
-        {
-            var multipartMessage = new MultipartMessage(null, message);
-
-            SendMessage(multipartMessage);
-        }
-
-        public void Send(IProcess recipient, IMessage message)
-        {
-            var multipartMessage = new MultipartMessage(recipient, message);
-
-            SendMessage(multipartMessage);
         }
 
         private void SendMessage(MultipartMessage multipartMessage)
