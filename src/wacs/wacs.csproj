@@ -137,6 +137,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\IClientMessageHubConfiguration.cs" />
     <Compile Include="Configuration\INodeResolverConfiguration.cs" />
     <Compile Include="Configuration\INode.cs" />
     <Compile Include="Configuration\ISynod.cs" />
@@ -196,6 +197,8 @@
     <Compile Include="FLease\Messages\LeaseAckRead.cs" />
     <Compile Include="FLease\Messages\Lease.cs" />
     <Compile Include="Messaging\ClientMessageHub.cs" />
+    <Compile Include="Messaging\ErrorMessageCodes.cs" />
+    <Compile Include="Messaging\IClientMessageProcessor.cs" />
     <Compile Include="Messaging\IClientMessageRouter.cs" />
     <Compile Include="Messaging\IClientMessageHub.cs" />
     <Compile Include="Messaging\Message.cs" />
@@ -216,7 +219,9 @@
     <Compile Include="Messaging\Listener.cs" />
     <Compile Include="Messaging\Inproc\InprocIntercomMessageHub.cs" />
     <Compile Include="IProcess.cs" />
+    <Compile Include="Messaging\ErrorMessage.cs" />
     <Compile Include="Messaging\zmq\IntercomMessageHub.cs" />
+    <Compile Include="Messaging\zmq\ClientMultipartMessage.cs" />
     <Compile Include="Messaging\zmq\MultipartMessage.cs" />
     <Compile Include="Messaging\zmq\DataEncoder.cs" />
     <Compile Include="PaxosMachine.cs" />

@@ -56,6 +56,9 @@ namespace wacs
             builder.Register(c => c.Resolve<IWacsConfiguration>().NodeResolver)
                    .As<INodeResolverConfiguration>()
                    .SingleInstance();
+            builder.Register(c => c.Resolve<IWacsConfiguration>().ClientMessageHub)
+                   .As<IClientMessageHubConfiguration>()
+                   .SingleInstance();
         }
     }
 }

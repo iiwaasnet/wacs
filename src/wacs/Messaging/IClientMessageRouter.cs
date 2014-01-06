@@ -2,6 +2,6 @@
 {
     public interface IClientMessageRouter
     {
-         
+        IMessage ForwardClientRequestToLeader(IMessage message);
     }
 }
