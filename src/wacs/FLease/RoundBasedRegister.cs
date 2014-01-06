@@ -14,7 +14,7 @@ namespace wacs.FLease
     public partial class RoundBasedRegister : IRoundBasedRegister
     {
         private readonly IProcess owner;
-        private readonly IMessageHub messageHub;
+        private readonly IIntercomMessageHub intercomMessageHub;
         private Ballot readBallot;
         private Ballot writeBallot;
         private ILease lease;
@@ -29,7 +29,7 @@ namespace wacs.FLease
         private readonly IObservable<IMessage> nackWriteStream;
         private readonly INodeResolver nodeResolver;
 
-        public RoundBasedRegister(IMessageHub messageHub,
+        public RoundBasedRegister(IIntercomMessageHub intercomMessageHub,
                                   IBallotGenerator ballotGenerator,
                                   ISynodConfigurationProvider synodConfigurationProvider,
                                   ILeaseConfiguration leaseConfig,
@@ -39,13 +39,13 @@ namespace wacs.FLease
             this.logger = logger;
             this.synodConfigurationProvider = synodConfigurationProvider;
             this.leaseConfig = leaseConfig;
-            this.messageHub = messageHub;
+            this.intercomMessageHub = intercomMessageHub;
             readBallot = (Ballot) ballotGenerator.Null();
             writeBallot = (Ballot) ballotGenerator.Null();
             owner = nodeResolver.ResolveLocalNode();
             this.nodeResolver = nodeResolver;
 
-            listener = messageHub.Subscribe();
+            listener = intercomMessageHub.Subscribe();
 
             listener.Where(m => m.Body.MessageType == LeaseRead.MessageType)
                     .Subscribe(new MessageStreamListener(OnReadReceived));
@@ -82,7 +82,7 @@ namespace wacs.FLease
 
                 response = new LeaseAckWrite(owner, new LeaseAckWrite.Payload {Ballot = payload.Ballot});
             }
-            messageHub.Send(message.Envelope.Sender, response);
+            intercomMessageHub.Send(message.Envelope.Sender, response);
         }
 
         private void OnReadReceived(IMessage message)
@@ -108,7 +108,7 @@ namespace wacs.FLease
                 response = CreateLeaseAckReadMessage(payload);
             }
 
-            messageHub.Send(message.Envelope.Sender, response);
+            intercomMessageHub.Send(message.Envelope.Sender, response);
         }
 
         public ILeaseTxResult Read(IBallot ballot)
@@ -124,7 +124,7 @@ namespace wacs.FLease
                 using (nackReadStream.Subscribe(nackReadFilter))
                 {
                     var message = CreateReadMessage(ballot);
-                    messageHub.Broadcast(message);
+                    intercomMessageHub.Broadcast(message);
 
                     var index = WaitHandle.WaitAny(new[] {ackReadFilter.Filtered, nackReadFilter.Filtered},
                                                    leaseConfig.NodeResponseTimeout);
@@ -162,7 +162,7 @@ namespace wacs.FLease
                 using (nackWriteStream.Subscribe(nackWriteFilter))
                 {
                     var message = CreateWriteMessage(ballot, lease);
-                    messageHub.Broadcast(message);
+                    intercomMessageHub.Broadcast(message);
 
                     var index = WaitHandle.WaitAny(new[] {ackWriteFilter.Filtered, nackWriteFilter.Filtered},
                                                    leaseConfig.NodeResponseTimeout);

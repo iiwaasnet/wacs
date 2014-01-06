@@ -34,7 +34,7 @@ namespace wacs
         {
             builder.Register(c => new Logger("fileLogger")).As<ILogger>().SingleInstance();
             builder.RegisterType<WACService>().As<ServiceControl>().SingleInstance();
-            builder.RegisterType<MessageHub>().As<IMessageHub>().SingleInstance();
+            builder.RegisterType<IntercomMessageHub>().As<IIntercomMessageHub>().SingleInstance();
             builder.RegisterType<MessageSerializer>().As<IMessageSerializer>().SingleInstance();
             builder.RegisterType<NodeResolver>().As<INodeResolver>().SingleInstance();
             builder.RegisterType<SynodConfigurationProvider>().As<ISynodConfigurationProvider>().SingleInstance();

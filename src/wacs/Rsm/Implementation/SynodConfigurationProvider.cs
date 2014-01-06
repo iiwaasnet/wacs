@@ -41,9 +41,9 @@ namespace wacs.Rsm.Implementation
 
         private void AssertNotEmptySynodIncludesLocalNode(IEnumerable<INode> synod)
         {
-            if (synod != null && synod.Any() && !synod.Any(ep => ep.Address == localNode.Address))
+            if (synod != null && synod.Any() && !synod.Any(ep => ep.BaseAddress == localNode.BaseAddress))
             {
-                throw new Exception(string.Format("Synod should be empty or include local process {0}!", localNode.Address));
+                throw new Exception(string.Format("Synod should be empty or include local process {0}!", localNode.BaseAddress));
             }
         }
 
@@ -116,7 +116,7 @@ namespace wacs.Rsm.Implementation
         {
             if (synod.ContainsKey(detachedNode))
             {
-                throw new Exception(string.Format("Unable to detach process from world! process {0} is part of the synod.", detachedNode.Address));
+                throw new Exception(string.Format("Unable to detach process from world! process {0} is part of the synod.", detachedNode.BaseAddress));
             }
         }
 

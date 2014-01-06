@@ -39,15 +39,15 @@ namespace tests.Unit.FLease
         public void TestLeaseIsIssuedByQuorum(int numberOfNodes)
         {
             var builder = DIHelper.CreateBuilder();
-            builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
-            var messageHub = builder.Build().Resolve<IMessageHub>();
+            builder.RegisterType<InprocIntercomMessageHub>().As<IIntercomMessageHub>().SingleInstance();
+            var messageHub = builder.Build().Resolve<IIntercomMessageHub>();
 
             var nodes = new List<INode>();
             var processes = new List<IProcess>();
 
             for (var i = 0; i < numberOfNodes; i++)
             {
-                var node = new Node(string.Format("tcp://127.0.0.1:303{0}", i));
+                var node = new Node("tcp://127.0.0.1", 3030 + i, 4030 + i);
                 nodes.Add(node);
 
                 var process = new Process();
@@ -85,7 +85,7 @@ namespace tests.Unit.FLease
         {
             var builder = DIHelper.CreateBuilder();
 
-            builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
+            builder.RegisterType<InprocIntercomMessageHub>().As<IIntercomMessageHub>().SingleInstance();
             var register = new Mock<IRoundBasedRegister>();
 
             builder.Register(c => register.Object).As<IRoundBasedRegister>().SingleInstance();
@@ -102,7 +102,7 @@ namespace tests.Unit.FLease
         {
             var builder = DIHelper.CreateBuilder();
 
-            builder.RegisterType<InprocMessageHub>().As<IMessageHub>().SingleInstance();
+            builder.RegisterType<InprocIntercomMessageHub>().As<IIntercomMessageHub>().SingleInstance();
             var owner = new Process();
             var register = new Mock<IRoundBasedRegister>();
 
@@ -115,11 +115,11 @@ namespace tests.Unit.FLease
             register.Verify(m => m.Stop(), Times.Once());
         }
 
-        private ILeaseProvider BuildLeaseProvider(SetupData setupData, IMessageHub messageHub)
+        private ILeaseProvider BuildLeaseProvider(SetupData setupData, IIntercomMessageHub intercomMessageHub)
         {
             var builder = DIHelper.CreateBuilder();
 
-            builder.Register(c => messageHub).As<IMessageHub>().SingleInstance();
+            builder.Register(c => intercomMessageHub).As<IIntercomMessageHub>().SingleInstance();
 
             var topology = new Mock<ITopologyConfiguration>();
             topology.Setup(m => m.LocalNode).Returns(setupData.LocalNode);

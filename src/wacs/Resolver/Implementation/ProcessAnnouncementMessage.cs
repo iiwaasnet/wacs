@@ -21,7 +21,9 @@ namespace wacs.Resolver.Implementation
 
         public class Payload
         {
-            public string Endpoint { get; set; }
+            public string BaseAddress { get; set; }
+            public int IntercomPort { get; set; }
+            public int ServicePort { get; set; }
             public int ProcessId { get; set; }
         }
     }

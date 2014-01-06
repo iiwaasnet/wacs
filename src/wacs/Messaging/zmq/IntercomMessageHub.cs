@@ -11,7 +11,7 @@ using ZeroMQ;
 
 namespace wacs.Messaging.zmq
 {
-    public class MessageHub : IMessageHub
+    public class IntercomMessageHub : IIntercomMessageHub
     {
         private readonly CancellationTokenSource cancellationSource;
         private readonly ISynodConfigurationProvider configProvider;
@@ -32,7 +32,7 @@ namespace wacs.Messaging.zmq
         private readonly Poller unicastPoller;
         private HashSet<INode> currentWorld;
 
-        public MessageHub(ISynodConfigurationProvider configProvider, ILogger logger)
+        public IntercomMessageHub(ISynodConfigurationProvider configProvider, ILogger logger)
         {
             socketsPollTimeout = TimeSpan.FromSeconds(3);
             this.configProvider = configProvider;
@@ -139,8 +139,8 @@ namespace wacs.Messaging.zmq
         {
             foreach (var deadNode in deadNodes)
             {
-                multicastListener.Disconnect(deadNode.Address);
-                unicastListener.Disconnect(deadNode.Address);
+                multicastListener.Disconnect(deadNode.BaseAddress);
+                unicastListener.Disconnect(deadNode.BaseAddress);
             }
         }
 
@@ -148,8 +148,8 @@ namespace wacs.Messaging.zmq
         {
             foreach (var node in nodes)
             {
-                multicastListener.Connect(node.Address);
-                unicastListener.Connect(node.Address);
+                multicastListener.Connect(node.BaseAddress);
+                unicastListener.Connect(node.BaseAddress);
             }
         }
 
@@ -177,7 +177,7 @@ namespace wacs.Messaging.zmq
         {
             var socket = context.CreateSocket(SocketType.PUB);
             socket.SendHighWatermark = 100;
-            socket.Bind(localNode.Address);
+            socket.Bind(localNode.BaseAddress);
 
             return socket;
         }

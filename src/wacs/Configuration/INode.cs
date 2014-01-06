@@ -2,6 +2,12 @@
 {
     public interface INode
     {
-        string Address { get; }
+        string GetServiceAddress();
+
+        string GetIntercomAddress();
+
+        string BaseAddress { get; }
+        int IntercomPort { get; }
+        int ServicePort { get; }
     }
 }

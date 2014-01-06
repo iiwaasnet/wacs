@@ -4,14 +4,14 @@ using wacs.Diagnostics;
 
 namespace wacs.Messaging.Inproc
 {
-    public class InprocMessageHub : IMessageHub
+    public class InprocIntercomMessageHub : IIntercomMessageHub
     {
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
         private readonly BlockingCollection<ForwardRequest> p2p;
         private readonly BlockingCollection<BroadcastRequest> broadcast;
         private readonly ILogger logger;
 
-        public InprocMessageHub(ILogger logger)
+        public InprocIntercomMessageHub(ILogger logger)
         {
             subscriptions = new ConcurrentDictionary<Listener, object>();
             p2p = new BlockingCollection<ForwardRequest>();

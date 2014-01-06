@@ -2,7 +2,7 @@
 
 namespace wacs.Messaging
 {
-	public interface IMessageHub : IDisposable
+	public interface IIntercomMessageHub : IDisposable
 	{
 		IListener Subscribe();
 

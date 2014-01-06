@@ -21,7 +21,7 @@ namespace wacs.Resolver.Implementation
         private readonly IListener listener;
         private readonly INode localNode;
         private readonly ILogger logger;
-        private readonly IMessageHub messageHub;
+        private readonly IIntercomMessageHub intercomMessageHub;
         private readonly ConcurrentDictionary<INode, IProcess> nodeToProcessMap;
         private readonly ConcurrentDictionary<IProcess, INode> processToNodeMap;
         private readonly ISynodConfigurationProvider synodConfigProvider;
@@ -29,12 +29,12 @@ namespace wacs.Resolver.Implementation
         private volatile IProcess localProcess;
         private bool disposed;
 
-        public NodeResolver(IMessageHub messageHub,
+        public NodeResolver(IIntercomMessageHub intercomMessageHub,
                             ISynodConfigurationProvider synodConfigProvider,
                             INodeResolverConfiguration config,
                             ILogger logger)
         {
-            this.messageHub = messageHub;
+            this.intercomMessageHub = intercomMessageHub;
             this.logger = logger;
             localNode = synodConfigProvider.LocalNode;
             localProcess = synodConfigProvider.LocalProcess;
@@ -45,7 +45,7 @@ namespace wacs.Resolver.Implementation
 
             cancellation = new CancellationTokenSource();
 
-            listener = messageHub.Subscribe();
+            listener = intercomMessageHub.Subscribe();
             worldLearningTask = StartLearningWorld(config);
         }
 
@@ -125,10 +125,12 @@ namespace wacs.Resolver.Implementation
                 {
                     while (!token.IsCancellationRequested)
                     {
-                        messageHub.Broadcast(new ProcessAnnouncementMessage(localProcess,
+                        intercomMessageHub.Broadcast(new ProcessAnnouncementMessage(localProcess,
                                                                             new ProcessAnnouncementMessage.Payload
                                                                             {
-                                                                                Endpoint = localNode.Address,
+                                                                                BaseAddress = localNode.BaseAddress,
+                                                                                IntercomPort = localNode.IntercomPort,
+                                                                                ServicePort = localNode.ServicePort,
                                                                                 ProcessId = localProcess.Id
                                                                             }));
                         Thread.Sleep(processIdBroadcastPeriod);
@@ -146,25 +148,25 @@ namespace wacs.Resolver.Implementation
         {
             if (message.Body.MessageType == ProcessAnnouncementMessage.MessageType)
             {
-                var announcement = new ProcessAnnouncementMessage(message).GetPayload();
-                var announcedEndpoint = new Node(announcement.Endpoint);
-                var joiningProcess = new Process(announcement.ProcessId);
+                var ann = new ProcessAnnouncementMessage(message).GetPayload();
+                var announcedNode = new Node(ann.BaseAddress, ann.IntercomPort, ann.ServicePort);
+                var joiningProcess = new Process(ann.ProcessId);
 
                 INode registeredNode;
-                if (processToNodeMap.TryGetValue(joiningProcess, out registeredNode) && !announcedEndpoint.Equals(registeredNode))
+                if (processToNodeMap.TryGetValue(joiningProcess, out registeredNode) && !announcedNode.Equals(registeredNode))
                 {
                     //TODO: Add to conflict list to be displayed on management console
                     logger.WarnFormat("Conflicting processes! Existing {0}@{1}, joining {2}@{3}",
-                                      announcement.ProcessId,
-                                      registeredNode,
-                                      announcement.ProcessId,
-                                      announcement.Endpoint);
+                                      ann.ProcessId,
+                                      registeredNode.BaseAddress,
+                                      ann.ProcessId,
+                                      ann.BaseAddress);
                 }
                 else
                 {
-                    if (processToNodeMap.TryAdd(joiningProcess, announcedEndpoint))
+                    if (processToNodeMap.TryAdd(joiningProcess, announcedNode))
                     {
-                        nodeToProcessMap[announcedEndpoint] = joiningProcess;
+                        nodeToProcessMap[announcedNode] = joiningProcess;
                     }
                 }
             }

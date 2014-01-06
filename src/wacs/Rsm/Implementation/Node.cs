@@ -1,28 +1,45 @@
-using System;
 using wacs.Configuration;
 
 namespace wacs.Rsm.Implementation
 {
     public class Node : INode
     {
+        private readonly string intercomAddress;
+        private readonly string serviceAddress;
+
         public Node(INode node)
+            : this(node.BaseAddress, node.IntercomPort, node.ServicePort)
         {
-            Address = NormalizeEndpointAddress(node.Address);
         }
 
-        public Node(string uri)
+        public Node(string baseAddress, int intercomPort, int servicePort)
         {
-            Address = NormalizeEndpointAddress(uri);
+            BaseAddress = baseAddress.TrimEnd('/');
+            IntercomPort = intercomPort;
+            ServicePort = servicePort;
+
+            intercomAddress = CreateEndpointAddress(BaseAddress, IntercomPort);
+            serviceAddress = CreateEndpointAddress(BaseAddress, IntercomPort);
         }
 
-        private static string NormalizeEndpointAddress(string uri)
+        private string CreateEndpointAddress(string baseAddress, int port)
         {
-            return new Uri(uri).AbsoluteUri.TrimEnd('/');
+            return string.Format("{0}:{1}", baseAddress, port);
+        }
+
+        public string GetServiceAddress()
+        {
+            return serviceAddress;
+        }
+
+        public string GetIntercomAddress()
+        {
+            return intercomAddress;
         }
 
         protected bool Equals(Node other)
         {
-            return string.Equals(Address, other.Address);
+            return string.Equals(GetIntercomAddress(), other.GetIntercomAddress());
         }
 
         public override bool Equals(object obj)
@@ -44,9 +61,14 @@ namespace wacs.Rsm.Implementation
 
         public override int GetHashCode()
         {
-            return (Address != null ? Address.GetHashCode() : 0);
+            unchecked
+            {
+                return (!string.IsNullOrWhiteSpace(GetIntercomAddress()) ? GetIntercomAddress().GetHashCode() : 0);
+            }
         }
 
-        public string Address { get; private set; }
+        public string BaseAddress { get; private set; }
+        public int IntercomPort { get; private set; }
+        public int ServicePort { get; private set; }
     }
 }
