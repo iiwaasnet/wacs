@@ -70,6 +70,18 @@
     <Compile Include="Unit\WacsConfigurationTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\wacs.Configuration\wacs.Configuration.csproj">
+      <Project>{780a8e1d-892a-4537-ad0f-28b785586397}</Project>
+      <Name>wacs.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\wacs.Diagnostics\wacs.Diagnostics.csproj">
+      <Project>{896767f2-713f-4490-98ea-eff8ff72e2f0}</Project>
+      <Name>wacs.Diagnostics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\wacs.Messaging\wacs.Messaging.csproj">
+      <Project>{9df356b9-2357-427b-b8fb-4d27eef84c6c}</Project>
+      <Name>wacs.Messaging</Name>
+    </ProjectReference>
     <ProjectReference Include="..\wacs\wacs.csproj">
       <Project>{14013f1f-7579-49d4-8832-81f97494cba3}</Project>
       <Name>wacs</Name>

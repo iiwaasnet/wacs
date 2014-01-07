@@ -3,7 +3,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using wacs.Configuration;
 using wacs.Diagnostics;
-using wacs.Resolver.Interface;
+using wacs.Messaging;
+using wacs.Messaging.Messages;
+using wacs.Resolver;
 
 namespace wacs.FLease
 {

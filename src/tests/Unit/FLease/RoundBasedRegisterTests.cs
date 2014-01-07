@@ -7,8 +7,9 @@ using wacs;
 using wacs.Configuration;
 using wacs.FLease;
 using wacs.Messaging;
-using wacs.Messaging.Inproc;
-using wacs.Resolver.Interface;
+using wacs.Messaging.Hubs.Intercom;
+using wacs.Messaging.Messages;
+using wacs.Resolver;
 using wacs.Rsm.Implementation;
 
 namespace tests.Unit.FLease

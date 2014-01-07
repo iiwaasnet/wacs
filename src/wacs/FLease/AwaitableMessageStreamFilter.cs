@@ -1,63 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using wacs.Messaging;
+using wacs.Messaging.Messages;
 
 namespace wacs.FLease
 {
-	public class AwaitableMessageStreamFilter : IObserver<IMessage>, IDisposable
-	{
-		private readonly Func<IMessage, bool> predicate;
-		private readonly int maxCount;
-		private int currentCount;
-		private readonly ManualResetEventSlim waitable;
-		private readonly IList<IMessage> messages;
+    public class AwaitableMessageStreamFilter : IObserver<IMessage>, IDisposable
+    {
+        private readonly Func<IMessage, bool> predicate;
+        private readonly int maxCount;
+        private int currentCount;
+        private readonly ManualResetEventSlim waitable;
+        private readonly IList<IMessage> messages;
 
-		public AwaitableMessageStreamFilter(Func<IMessage, bool> predicate, int maxCount)
-		{
-			this.predicate = predicate;
-			this.maxCount = maxCount;
-			currentCount = 0;
-			messages = new List<IMessage>(maxCount);
-			waitable = new ManualResetEventSlim(false);
-		}
+        public AwaitableMessageStreamFilter(Func<IMessage, bool> predicate, int maxCount)
+        {
+            this.predicate = predicate;
+            this.maxCount = maxCount;
+            currentCount = 0;
+            messages = new List<IMessage>(maxCount);
+            waitable = new ManualResetEventSlim(false);
+        }
 
-		public void OnNext(IMessage value)
-		{
-			if (predicate(value))
-			{
-				if (!waitable.IsSet)
-				{
-					messages.Add(value);
-				}
+        public void OnNext(IMessage value)
+        {
+            if (predicate(value))
+            {
+                if (!waitable.IsSet)
+                {
+                    messages.Add(value);
+                }
                 if (Interlocked.Increment(ref currentCount) == maxCount && !waitable.IsSet)
-				{
-					waitable.Set();
-				}
-			}
-		}
+                {
+                    waitable.Set();
+                }
+            }
+        }
 
-		public void OnError(Exception error)
-		{
-		}
+        public void OnError(Exception error)
+        {
+        }
 
-		public void OnCompleted()
-		{
-		}
+        public void OnCompleted()
+        {
+        }
 
-		public void Dispose()
-		{
-			waitable.Dispose();
-		}
+        public void Dispose()
+        {
+            waitable.Dispose();
+        }
 
-		public WaitHandle Filtered
-		{
-			get { return waitable.WaitHandle; }
-		}
+        public WaitHandle Filtered
+        {
+            get { return waitable.WaitHandle; }
+        }
 
-		public IEnumerable<IMessage> MessageStream
-		{
-			get { return messages; }
-		}
-	}
+        public IEnumerable<IMessage> MessageStream
+        {
+            get { return messages; }
+        }
+    }
 }

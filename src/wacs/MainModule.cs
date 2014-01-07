@@ -3,12 +3,9 @@ using Topshelf;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.FLease;
-using wacs.Messaging;
-using wacs.Messaging.zmq;
-using wacs.Resolver.Implementation;
-using wacs.Resolver.Interface;
-using wacs.Rsm.Implementation;
-using wacs.Rsm.Interface;
+using wacs.Messaging.Hubs.Intercom;
+using wacs.Messaging.Messages;
+using wacs.Resolver;
 
 namespace wacs
 {

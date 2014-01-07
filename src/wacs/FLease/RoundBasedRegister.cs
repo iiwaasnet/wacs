@@ -4,9 +4,11 @@ using System.Reactive.Linq;
 using System.Threading;
 using wacs.Configuration;
 using wacs.Diagnostics;
-using wacs.FLease.Messages;
 using wacs.Messaging;
-using wacs.Resolver.Interface;
+using wacs.Messaging.Hubs.Intercom;
+using wacs.Messaging.Messages;
+using wacs.Messaging.Messages.Intercom.Lease;
+using wacs.Resolver;
 using wacs.Rsm.Interface;
 
 namespace wacs.FLease
@@ -207,13 +209,13 @@ namespace wacs.FLease
             return new LeaseWrite(owner,
                                   new LeaseWrite.Payload
                                   {
-                                      Ballot = new Messages.Ballot
+                                      Ballot = new Messaging.Messages.Intercom.Lease.Ballot
                                                {
                                                    ProcessId = ballot.Process.Id,
                                                    Timestamp = ballot.Timestamp.Ticks,
                                                    MessageNumber = ballot.MessageNumber
                                                },
-                                      Lease = new Messages.Lease
+                                      Lease = new Messaging.Messages.Intercom.Lease.Lease
                                               {
                                                   ProcessId = lease.Owner.Id,
                                                   ExpiresAt = lease.ExpiresAt.Ticks
@@ -226,7 +228,7 @@ namespace wacs.FLease
             return new LeaseRead(owner,
                                  new LeaseRead.Payload
                                  {
-                                     Ballot = new Messages.Ballot
+                                     Ballot = new Messaging.Messages.Intercom.Lease.Ballot
                                               {
                                                   ProcessId = ballot.Process.Id,
                                                   Timestamp = ballot.Timestamp.Ticks,
@@ -241,14 +243,14 @@ namespace wacs.FLease
                                     new LeaseAckRead.Payload
                                     {
                                         Ballot = payload.Ballot,
-                                        KnownWriteBallot = new Messages.Ballot
+                                        KnownWriteBallot = new Messaging.Messages.Intercom.Lease.Ballot
                                                            {
                                                                ProcessId = writeBallot.Process.Id,
                                                                Timestamp = writeBallot.Timestamp.Ticks,
                                                                MessageNumber = writeBallot.MessageNumber
                                                            },
                                         Lease = (lease != null)
-                                                    ? new Messages.Lease
+                                                    ? new Messaging.Messages.Intercom.Lease.Lease
                                                       {
                                                           ProcessId = lease.Owner.Id,
                                                           ExpiresAt = lease.ExpiresAt.Ticks

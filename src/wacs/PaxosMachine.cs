@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using wacs.Diagnostics;
 using wacs.FLease;
-using wacs.Resolver.Interface;
+using wacs.Resolver;
 
 namespace wacs
 {

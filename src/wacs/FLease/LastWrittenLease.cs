@@ -1,4 +1,5 @@
 ﻿using System;
+using wacs.Configuration;
 
 namespace wacs.FLease
 {
@@ -7,7 +8,7 @@ namespace wacs.FLease
 		private readonly Ballot writeBallot;
 		private readonly Lease lease;
 
-		public LastWrittenLease(Messages.Ballot writeBallot, Messages.Lease lease)
+		public LastWrittenLease(Messaging.Messages.Intercom.Lease.Ballot writeBallot, Messaging.Messages.Intercom.Lease.Lease lease)
 		{
 			this.writeBallot = new Ballot(new DateTime(writeBallot.Timestamp, DateTimeKind.Utc),
 			                              writeBallot.MessageNumber,
