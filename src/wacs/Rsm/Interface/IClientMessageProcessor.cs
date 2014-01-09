@@ -1,6 +1,6 @@
 ﻿using wacs.Messaging.Messages;
 
-namespace wacs.Messaging.Hubs.Client
+namespace wacs.Rsm.Interface
 {
     public interface IClientMessageProcessor
     {

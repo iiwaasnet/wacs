@@ -3,5 +3,6 @@
     public class ErrorMessageCodes
     {
         public const string NodeIsPassive = "NODE_IS_PASSIVE";
+        public const string MessageNotProcessed = "MSG_NOT_PROCESSED";
     }
 }

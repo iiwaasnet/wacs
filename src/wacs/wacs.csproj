@@ -155,6 +155,7 @@
     <Compile Include="MainModule.cs" />
     <Compile Include="PaxosMachine.cs" />
     <Compile Include="Rsm\Implementation\CommandQueue.cs" />
+    <Compile Include="Rsm\Interface\IClientMessageProcessor.cs" />
     <Compile Include="Rsm\Interface\ICommand.cs" />
     <Compile Include="Rsm\Interface\ICommandQueue.cs" />
     <Compile Include="Rsm\Interface\ILogEntry.cs" />

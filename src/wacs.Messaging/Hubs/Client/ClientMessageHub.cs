@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-using Castle.Core.Internal;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.Messaging.Hubs.Intercom;
@@ -15,6 +15,8 @@ namespace wacs.Messaging.Hubs.Client
 {
     public class ClientMessageHub : IClientMessageHub
     {
+        private const string InprocWorkersAddress = "inproc://processors";
+        private Func<IMessage, IMessage> messageHandler;
         private readonly IClientMessageRouter messageRouter;
         private readonly IClientMessageProcessor messageProcessor;
         private readonly ISynodConfigurationProvider synodConfigProvider;
@@ -25,7 +27,6 @@ namespace wacs.Messaging.Hubs.Client
         private readonly IClientMessageHubConfiguration config;
         private readonly IEnumerable<Thread> processingThreads;
         private readonly ILogger logger;
-        private const string InprocWorkersAddress = "inproc://processors";
 
         public ClientMessageHub(ISynodConfigurationProvider synodConfigProvider,
                                 IClientMessageRouter messageRouter,
@@ -94,20 +95,9 @@ namespace wacs.Messaging.Hubs.Client
                                           Content = multipartMessage.GetMessage()
                                       });
 
-            IMessage reply;
-            if (MessageRequiresConsensus(message.Body.MessageType))
-            {
-                reply = messageRouter.ForwardClientRequestToLeader(message);
-            }
-
-            reply = messageProcessor.ProcessClientMessage(message);
+            var reply = PassClientRequestForProcessing(message);
 
             return new ClientMultipartMessage(reply);
-        }
-
-        private bool MessageRequiresConsensus(string messageType)
-        {
-            throw new NotImplementedException();
         }
 
         private ClientMultipartMessage CreatePassiveNodeErrorMessage()
@@ -171,6 +161,34 @@ namespace wacs.Messaging.Hubs.Client
             {
                 logger.Error(err);
             }
+        }
+
+        public void RegisterMessageProcessor(Func<IMessage, IMessage> handler)
+        {
+            messageHandler = handler;
+        }
+
+        private IMessage PassClientRequestForProcessing(IMessage request)
+        {
+            if (messageHandler != null)
+            {
+                return messageHandler(request);
+            }
+
+            return CreateNotProcessedErrorMessage();
+        }
+
+        private IMessage CreateNotProcessedErrorMessage()
+        {
+            var localProcess = synodConfigProvider.LocalProcess;
+
+            return new ErrorMessage(localProcess,
+                                    new ErrorMessage.Payload
+                                    {
+                                        ErrorCode = ErrorMessageCodes.MessageNotProcessed,
+                                        NodeAddress = synodConfigProvider.LocalNode.GetServiceAddress(),
+                                        ProcessId = localProcess.Id
+                                    });
         }
     }
 }
