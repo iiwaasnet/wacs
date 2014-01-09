@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using wacs.Messaging.Hubs.Intercom;
 using wacs.Messaging.Messages;
 using ZeroMQ;
 
-namespace wacs.Messaging.Hubs.Intercom
+namespace wacs.Messaging.Hubs.Client
 {
     internal class ClientMultipartMessage
     {

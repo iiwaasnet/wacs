@@ -7,22 +7,22 @@ using ZeroMQ;
 
 namespace wacs.Messaging.Hubs.Intercom
 {
-    internal class MultipartMessage
+    internal class IntercomMultipartMessage
     {
         private readonly IEnumerable<byte[]> frames;
         internal static readonly byte[] MulticastId;
 
-        static MultipartMessage()
+        static IntercomMultipartMessage()
         {
             MulticastId = "*".GetBytes();
         }
 
-        public MultipartMessage(IProcess recipient, IMessage message)
+        public IntercomMultipartMessage(IProcess recipient, IMessage message)
         {
             frames = BuildMessageParts(recipient, message).ToArray();
         }
 
-        public MultipartMessage(ZmqMessage message)
+        public IntercomMultipartMessage(ZmqMessage message)
         {
             AssertMessage(message);
 

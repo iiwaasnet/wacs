@@ -16,14 +16,14 @@ namespace wacs.Messaging.Hubs.Intercom
     {
         private readonly CancellationTokenSource cancellationSource;
         private readonly ISynodConfigurationProvider configProvider;
-        private readonly BlockingCollection<MultipartMessage> inMessageQueue;
+        private readonly BlockingCollection<IntercomMultipartMessage> inMessageQueue;
         private readonly INode localNode;
         private readonly object locker = new object();
         private readonly ILogger logger;
         private readonly ZmqContext multicastContext;
         private readonly ZmqSocket multicastListener;
         private readonly Poller multicastPoller;
-        private readonly BlockingCollection<MultipartMessage> outMessageQueue;
+        private readonly BlockingCollection<IntercomMultipartMessage> outMessageQueue;
         private readonly ZmqSocket sender;
         private readonly ZmqContext senderContext;
         private readonly TimeSpan socketsPollTimeout;
@@ -39,8 +39,8 @@ namespace wacs.Messaging.Hubs.Intercom
             this.configProvider = configProvider;
             this.logger = logger;
             localNode = configProvider.LocalNode;
-            inMessageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
-            outMessageQueue = new BlockingCollection<MultipartMessage>(new ConcurrentQueue<MultipartMessage>());
+            inMessageQueue = new BlockingCollection<IntercomMultipartMessage>(new ConcurrentQueue<IntercomMultipartMessage>());
+            outMessageQueue = new BlockingCollection<IntercomMultipartMessage>(new ConcurrentQueue<IntercomMultipartMessage>());
             cancellationSource = new CancellationTokenSource();
 
             senderContext = ZmqContext.Create();
@@ -92,14 +92,14 @@ namespace wacs.Messaging.Hubs.Intercom
 
         public void Broadcast(IMessage message)
         {
-            var multipartMessage = new MultipartMessage(null, message);
+            var multipartMessage = new IntercomMultipartMessage(null, message);
 
             outMessageQueue.Add(multipartMessage);
         }
 
         public void Send(IProcess recipient, IMessage message)
         {
-            var multipartMessage = new MultipartMessage(recipient, message);
+            var multipartMessage = new IntercomMultipartMessage(recipient, message);
 
             outMessageQueue.Add(multipartMessage);
         }
@@ -161,7 +161,7 @@ namespace wacs.Messaging.Hubs.Intercom
 
         private ZmqSocket CreateMulticastListener(ZmqContext context)
         {
-            return CreateListeningSocket(context, MultipartMessage.MulticastId);
+            return CreateListeningSocket(context, IntercomMultipartMessage.MulticastId);
         }
 
         private ZmqSocket CreateListeningSocket(ZmqContext context, byte[] prefix)
@@ -194,7 +194,7 @@ namespace wacs.Messaging.Hubs.Intercom
 
                 if (message.IsComplete)
                 {
-                    var multipartMessage = new MultipartMessage(message);
+                    var multipartMessage = new IntercomMultipartMessage(message);
                     logger.InfoFormat("Msg received: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
                     inMessageQueue.Add(multipartMessage);
                 }
@@ -262,7 +262,7 @@ namespace wacs.Messaging.Hubs.Intercom
             }
         }
 
-        private void SendMessage(MultipartMessage multipartMessage)
+        private void SendMessage(IntercomMultipartMessage multipartMessage)
         {
             logger.InfoFormat("Msg sent: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
             var message = new ZmqMessage(multipartMessage.Frames);

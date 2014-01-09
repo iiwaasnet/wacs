@@ -60,11 +60,11 @@
     <Compile Include="Hubs\Intercom\IIntercomMessageHub.cs" />
     <Compile Include="Hubs\Intercom\IListener.cs" />
     <Compile Include="Hubs\Intercom\InprocIntercomMessageHub.cs" />
-    <Compile Include="Hubs\Intercom\ClientMultipartMessage.cs" />
+    <Compile Include="Hubs\Client\ClientMultipartMessage.cs" />
     <Compile Include="Hubs\Intercom\DataEncoder.cs" />
     <Compile Include="Hubs\Intercom\IntercomMessageHub.cs" />
     <Compile Include="Hubs\Intercom\Listener.cs" />
-    <Compile Include="Hubs\Intercom\MultipartMessage.cs" />
+    <Compile Include="Hubs\Intercom\IntercomMultipartMessage.cs" />
     <Compile Include="Messages\Body.cs" />
     <Compile Include="Messages\ClientMessagesRepository.cs" />
     <Compile Include="Messages\Client\Error\ErrorMessage.cs" />

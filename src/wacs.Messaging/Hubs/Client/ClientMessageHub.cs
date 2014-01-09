@@ -18,7 +18,6 @@ namespace wacs.Messaging.Hubs.Client
     {
         private const string InprocWorkersAddress = "inproc://processors";
         private Func<IMessage, IMessage> messageHandler;
-        private readonly IClientMessageRouter messageRouter;
         private readonly ISynodConfigurationProvider synodConfigProvider;
         private bool disposed;
         private readonly QueueDevice device;
@@ -29,7 +28,6 @@ namespace wacs.Messaging.Hubs.Client
         private readonly ILogger logger;
 
         public ClientMessageHub(ISynodConfigurationProvider synodConfigProvider,
-                                IClientMessageRouter messageRouter,
                                 IClientMessageHubConfiguration config,
                                 ILogger logger)
         {
@@ -37,8 +35,6 @@ namespace wacs.Messaging.Hubs.Client
             tokenSource = new CancellationTokenSource();
             this.synodConfigProvider = synodConfigProvider;
             this.config = config;
-            this.synodConfigProvider.SynodChanged += OnSynodChanged;
-            this.messageRouter = messageRouter;
             context = ZmqContext.Create();
             device = CreateProcessingDevice();
             processingThreads = CreateRequestProcessingThreads().ToArray();
@@ -85,7 +81,7 @@ namespace wacs.Messaging.Hubs.Client
 
         private ClientMultipartMessage ProcessClientRequest(ZmqMessage request)
         {
-            var multipartMessage = new MultipartMessage(request);
+            var multipartMessage = new ClientMultipartMessage(request);
             var message = new Message(new Envelope {Sender = new Process(multipartMessage.GetSenderId())},
                                       new Body
                                       {
@@ -121,18 +117,6 @@ namespace wacs.Messaging.Hubs.Client
             queue.Initialize();
 
             return queue;
-        }
-
-        private void OnSynodChanged()
-        {
-            //if (LocalNodeIsActive(synodConfigProvider))
-            //{
-            //    socket.Bind(synodConfigProvider.LocalNode.GetServiceAddress());
-            //}
-            //else
-            //{
-            //    socket.Unbind(synodConfigProvider.LocalNode.GetServiceAddress());
-            //}
         }
 
         private bool LocalNodeIsActive()

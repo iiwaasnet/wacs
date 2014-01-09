@@ -4,10 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Castle.Core.Internal;
-using Castle.Core.Logging;
 using wacs.Configuration;
+using wacs.Diagnostics;
 using wacs.Framework.State;
-using wacs.Messaging.Hubs.Intercom;
 using wacs.Messaging.Messages;
 using ZeroMQ;
 
@@ -24,7 +23,6 @@ namespace wacs.Messaging.Hubs.Client
         private readonly ZmqContext context;
 
         public ClientMessageRouter(IClientMessagesRepository messagesRepository,
-                                   ISynodConfigurationProvider configurationProvider,
                                    IClientMessageHubConfiguration config,
                                    ILogger logger)
         {
@@ -50,22 +48,30 @@ namespace wacs.Messaging.Hubs.Client
 
         private void ForwardMessages(CancellationToken token)
         {
-            using (var socket = context.CreateSocket(SocketType.REQ))
+            try
             {
-                while (!token.IsCancellationRequested)
+                using (var socket = context.CreateSocket(SocketType.REQ))
                 {
-                    try
+                    while (!token.IsCancellationRequested)
                     {
-                        var queuedRequest = forwardQueue.Take();
+                        try
+                        {
+                            var queuedRequest = forwardQueue.Take();
 
-                        ForwardMessagesToLeader(socket, queuedRequest);
-                    }
-                    catch (Exception err)
-                    {
-                        logger.Error(err.ToString);
+                            ForwardMessagesToLeader(socket, queuedRequest);
+                        }
+                        catch (Exception err)
+                        {
+                            logger.Error(err);
+                        }
                     }
                 }
             }
+            catch (Exception err)
+            {
+                logger.Error(err.ToString());
+            }
+
             logger.WarnFormat("Forwarding thread {0} terminated", Thread.CurrentThread.ManagedThreadId);
         }
 
@@ -75,7 +81,19 @@ namespace wacs.Messaging.Hubs.Client
 
             ConnectToLeaderIfChanged(socket, forwardRequest);
 
-            socket.Send(new MultipartMessage(??? have Intercom and client messages))
+            var requestMessage = new ClientMultipartMessage(forwardRequest.Request);
+            socket.SendMessage(new ZmqMessage(requestMessage.Frames));
+
+            //TODO: receive timeout
+            var response = socket.ReceiveMessage();
+            var responseMessage = new ClientMultipartMessage(response);
+
+            forwardRequest.SetResponse(new Message(new Envelope {Sender = new Process(responseMessage.GetSenderId())},
+                                                   new Body
+                                                   {
+                                                       MessageType = responseMessage.GetMessageType(),
+                                                       Content = responseMessage.GetMessage()
+                                                   }));
         }
 
         private static void ConnectToLeaderIfChanged(ZmqSocket socket, ClientRequestAwaitable forwardRequest)
@@ -105,9 +123,18 @@ namespace wacs.Messaging.Hubs.Client
 
         public void Dispose()
         {
-            cancellationSource.Cancel(false);
-            forwardingThreads.ForEach(t => t.Join());
-            context.Dispose();
+            try
+            {
+                cancellationSource.Cancel(false);
+                forwardingThreads.ForEach(t => t.Join());
+                context.Dispose();
+                cancellationSource.Dispose();
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
+            
         }
     }
 }
