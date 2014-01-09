@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace wacs.core.State
+namespace wacs.Framework.State
 {
     public interface IObservableCondition
     {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using Castle.Core.Internal;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.Messaging.Hubs.Intercom;
@@ -18,7 +19,6 @@ namespace wacs.Messaging.Hubs.Client
         private const string InprocWorkersAddress = "inproc://processors";
         private Func<IMessage, IMessage> messageHandler;
         private readonly IClientMessageRouter messageRouter;
-        private readonly IClientMessageProcessor messageProcessor;
         private readonly ISynodConfigurationProvider synodConfigProvider;
         private bool disposed;
         private readonly QueueDevice device;
@@ -30,12 +30,10 @@ namespace wacs.Messaging.Hubs.Client
 
         public ClientMessageHub(ISynodConfigurationProvider synodConfigProvider,
                                 IClientMessageRouter messageRouter,
-                                IClientMessageProcessor messageProcessor,
                                 IClientMessageHubConfiguration config,
                                 ILogger logger)
         {
             this.logger = logger;
-            this.messageProcessor = messageProcessor;
             tokenSource = new CancellationTokenSource();
             this.synodConfigProvider = synodConfigProvider;
             this.config = config;
@@ -77,15 +75,15 @@ namespace wacs.Messaging.Hubs.Client
 
         private ClientMultipartMessage ProcessRequest(ZmqMessage request)
         {
-            if (!NodeParticipatesInSynod())
+            if (!LocalNodeIsActive())
             {
                 return CreatePassiveNodeErrorMessage();
             }
 
-            return ProcessClientInSynod(request);
+            return ProcessClientRequest(request);
         }
 
-        private ClientMultipartMessage ProcessClientInSynod(ZmqMessage request)
+        private ClientMultipartMessage ProcessClientRequest(ZmqMessage request)
         {
             var multipartMessage = new MultipartMessage(request);
             var message = new Message(new Envelope {Sender = new Process(multipartMessage.GetSenderId())},
@@ -127,7 +125,7 @@ namespace wacs.Messaging.Hubs.Client
 
         private void OnSynodChanged()
         {
-            //if (NodeParticipatesInSynod(synodConfigProvider))
+            //if (LocalNodeIsActive(synodConfigProvider))
             //{
             //    socket.Bind(synodConfigProvider.LocalNode.GetServiceAddress());
             //}
@@ -137,7 +135,7 @@ namespace wacs.Messaging.Hubs.Client
             //}
         }
 
-        private bool NodeParticipatesInSynod()
+        private bool LocalNodeIsActive()
         {
             return synodConfigProvider.IsMemberOfSynod(synodConfigProvider.LocalNode);
         }

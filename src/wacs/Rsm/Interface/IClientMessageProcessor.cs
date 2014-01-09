@@ -4,6 +4,5 @@ namespace wacs.Rsm.Interface
 {
     public interface IClientMessageProcessor
     {
-        IMessage ProcessClientMessage(IMessage message);
     }
 }

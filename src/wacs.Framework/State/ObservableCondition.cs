@@ -4,7 +4,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
 
-namespace wacs.core.State
+namespace wacs.Framework.State
 {
     public class ObservableCondition : IObservableCondition
     {

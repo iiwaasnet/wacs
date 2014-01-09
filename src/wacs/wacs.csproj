@@ -123,13 +123,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="core\State\IChangeNotifiable.cs" />
-    <Compile Include="core\State\IObservableAtomicValue.cs" />
-    <Compile Include="core\State\IObservableConcurrentDictionary.cs" />
-    <Compile Include="core\State\IObservableCondition.cs" />
-    <Compile Include="core\State\ObservableAtomicValue.cs" />
-    <Compile Include="core\State\ObservableConcurrentDictionary.cs" />
-    <Compile Include="core\State\ObservableCondition.cs" />
     <Compile Include="FLease\Ballot.cs" />
     <Compile Include="FLease\BallotGenerator.cs" />
     <Compile Include="FLease\IBallot.cs" />
@@ -155,6 +148,7 @@
     <Compile Include="MainModule.cs" />
     <Compile Include="PaxosMachine.cs" />
     <Compile Include="Rsm\Implementation\CommandQueue.cs" />
+    <Compile Include="Rsm\Implementation\ClientMessageProcessor.cs" />
     <Compile Include="Rsm\Interface\IClientMessageProcessor.cs" />
     <Compile Include="Rsm\Interface\ICommand.cs" />
     <Compile Include="Rsm\Interface\ICommandQueue.cs" />
@@ -191,6 +185,10 @@
     <ProjectReference Include="..\wacs.Diagnostics\wacs.Diagnostics.csproj">
       <Project>{896767f2-713f-4490-98ea-eff8ff72e2f0}</Project>
       <Name>wacs.Diagnostics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\wacs.Framework\wacs.Framework.csproj">
+      <Project>{b60b64f2-46fd-4591-b501-acb66b10a117}</Project>
+      <Name>wacs.Framework</Name>
     </ProjectReference>
     <ProjectReference Include="..\wacs.Messaging\wacs.Messaging.csproj">
       <Project>{9df356b9-2357-427b-b8fb-4d27eef84c6c}</Project>

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace wacs.core.State
+namespace wacs.Framework.State
 {
     public interface IObservableConcurrentDictionary<K, V> : IChangeNotifiable, IEnumerable<KeyValuePair<K, V>>
     {

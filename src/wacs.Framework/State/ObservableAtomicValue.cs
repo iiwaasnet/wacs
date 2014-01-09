@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Threading;
 
-namespace wacs.core.State
+namespace wacs.Framework.State
 {
     public class ObservableAtomicValue<T> : IObservableAtomicValue<T>
     {

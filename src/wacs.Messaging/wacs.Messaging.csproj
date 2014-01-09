@@ -53,6 +53,7 @@
     <Compile Include="Hubs\BroadcastRequest.cs" />
     <Compile Include="Hubs\Client\ClientMessageHub.cs" />
     <Compile Include="Hubs\Client\ClientMessageRouter.cs" />
+    <Compile Include="Hubs\Client\ClientRequestAwaitable.cs" />
     <Compile Include="Hubs\Client\IClientMessageHub.cs" />
     <Compile Include="Hubs\Client\IClientMessageRouter.cs" />
     <Compile Include="Hubs\Intercom\ForwardRequest.cs" />
@@ -65,10 +66,12 @@
     <Compile Include="Hubs\Intercom\Listener.cs" />
     <Compile Include="Hubs\Intercom\MultipartMessage.cs" />
     <Compile Include="Messages\Body.cs" />
+    <Compile Include="Messages\ClientMessagesRepository.cs" />
     <Compile Include="Messages\Client\Error\ErrorMessage.cs" />
     <Compile Include="Messages\Client\Error\ErrorMessageCodes.cs" />
     <Compile Include="Messages\Envelope.cs" />
     <Compile Include="Messages\IBody.cs" />
+    <Compile Include="Messages\IClientMessagesRepository.cs" />
     <Compile Include="Messages\IEnvelope.cs" />
     <Compile Include="Messages\IMessage.cs" />
     <Compile Include="Messages\IMessageSerializer.cs" />
@@ -96,6 +99,10 @@
     <ProjectReference Include="..\wacs.Diagnostics\wacs.Diagnostics.csproj">
       <Project>{896767f2-713f-4490-98ea-eff8ff72e2f0}</Project>
       <Name>wacs.Diagnostics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\wacs.Framework\wacs.Framework.csproj">
+      <Project>{b60b64f2-46fd-4591-b501-acb66b10a117}</Project>
+      <Name>wacs.Framework</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -1,4 +1,4 @@
-﻿namespace wacs.core.State
+﻿namespace wacs.Framework.State
 {
     public interface IObservableAtomicValue<T> : IChangeNotifiable
     {

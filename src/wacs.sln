@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wacs.Diagnostics", "wacs.Di
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wacs.Configuration", "wacs.Configuration\wacs.Configuration.csproj", "{780A8E1D-892A-4537-AD0F-28B785586397}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wacs.Framework", "wacs.Framework\wacs.Framework.csproj", "{B60B64F2-46FD-4591-B501-ACB66B10A117}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{780A8E1D-892A-4537-AD0F-28B785586397}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{780A8E1D-892A-4537-AD0F-28B785586397}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{780A8E1D-892A-4537-AD0F-28B785586397}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B60B64F2-46FD-4591-B501-ACB66B10A117}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B60B64F2-46FD-4591-B501-ACB66B10A117}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B60B64F2-46FD-4591-B501-ACB66B10A117}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B60B64F2-46FD-4591-B501-ACB66B10A117}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

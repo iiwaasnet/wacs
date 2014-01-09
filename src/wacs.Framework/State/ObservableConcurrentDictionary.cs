@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 
-namespace wacs.core.State
+namespace wacs.Framework.State
 {
     public class ObservableConcurrentDictionary<K, V> : IObservableConcurrentDictionary<K, V>
     {
