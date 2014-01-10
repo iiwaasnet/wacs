@@ -19,11 +19,21 @@ namespace wacs.Messaging.Messages.Intercom.NodeResolver
             get { return "PROC_ANN"; }
         }
 
-        public class Payload
+        public class Node
         {
             public string BaseAddress { get; set; }
             public int IntercomPort { get; set; }
             public int ServicePort { get; set; }
+        }
+
+        public class Payload
+        {
+            public Node Node { get; set; }
+            public Process Process { get; set; }
+        }
+
+        public class Process
+        {
             public int ProcessId { get; set; }
         }
     }

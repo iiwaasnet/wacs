@@ -1,5 +1,4 @@
 ﻿using System;
-using wacs.Messaging;
 using wacs.Messaging.Messages;
 
 namespace wacs.FLease

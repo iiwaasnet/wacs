@@ -85,6 +85,7 @@
     <Compile Include="Messages\Intercom\Lease\LeaseRead.cs" />
     <Compile Include="Messages\Intercom\Lease\LeaseWrite.cs" />
     <Compile Include="Messages\Intercom\NodeResolver\ProcessAnnouncementMessage.cs" />
+    <Compile Include="Messages\Intercom\Rsm\PrepareMessage.cs" />
     <Compile Include="Messages\ITypedMessage.cs" />
     <Compile Include="Messages\Message.cs" />
     <Compile Include="Messages\MessageSerializer.cs" />

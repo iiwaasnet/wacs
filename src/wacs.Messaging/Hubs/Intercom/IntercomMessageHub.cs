@@ -140,8 +140,8 @@ namespace wacs.Messaging.Hubs.Intercom
         {
             foreach (var deadNode in deadNodes)
             {
-                multicastListener.Disconnect(deadNode.BaseAddress);
-                unicastListener.Disconnect(deadNode.BaseAddress);
+                multicastListener.Disconnect(deadNode.GetServiceAddress());
+                unicastListener.Disconnect(deadNode.GetServiceAddress());
             }
         }
 
@@ -149,8 +149,8 @@ namespace wacs.Messaging.Hubs.Intercom
         {
             foreach (var node in nodes)
             {
-                multicastListener.Connect(node.BaseAddress);
-                unicastListener.Connect(node.BaseAddress);
+                multicastListener.Connect(node.GetServiceAddress());
+                unicastListener.Connect(node.GetServiceAddress());
             }
         }
 
@@ -178,7 +178,7 @@ namespace wacs.Messaging.Hubs.Intercom
         {
             var socket = context.CreateSocket(SocketType.PUB);
             socket.SendHighWatermark = 100;
-            socket.Bind(localNode.BaseAddress);
+            socket.Bind(localNode.GetServiceAddress());
 
             return socket;
         }

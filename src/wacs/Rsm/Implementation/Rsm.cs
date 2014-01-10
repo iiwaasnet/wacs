@@ -14,6 +14,7 @@ namespace wacs.Rsm.Implementation
         private readonly Thread processingThread;
         private readonly CancellationTokenSource cancellationSource;
         private readonly IConsensusFactory consensusFactory;
+        private IDecision previousDecision;
 
         public Rsm(IReplicatedLog replicatedLog, IConsensusFactory consensusFactory)
         {
@@ -38,8 +39,13 @@ namespace wacs.Rsm.Implementation
         {
             var firstUnchosenLogEntry = replicatedLog.GetFirstUnchosenLogEntry();
             var awaitable = (AwaitableRsmResponse) awaitableResult;
-            var consensus = consensusFactory.CreateInstance(firstUnchosenLogEntry, awaitable.Command, false);
-            consensus.Decide();
+            var consensus = consensusFactory.CreateInstance(firstUnchosenLogEntry, awaitable.Command, RoundCouldBeFast());
+            previousDecision = consensus.Decide();
+        }
+
+        private bool RoundCouldBeFast()
+        {
+            return previousDecision != null && previousDecision.NextRoundCouldBeFast;
         }
 
         public IAwaitableResult<IMessage> EnqueueForExecution(IMessage command)

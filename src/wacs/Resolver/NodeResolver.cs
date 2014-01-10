@@ -127,10 +127,16 @@ namespace wacs.Resolver
                         intercomMessageHub.Broadcast(new ProcessAnnouncementMessage(localProcess,
                                                                                     new ProcessAnnouncementMessage.Payload
                                                                                     {
-                                                                                        BaseAddress = localNode.BaseAddress,
-                                                                                        IntercomPort = localNode.IntercomPort,
-                                                                                        ServicePort = localNode.ServicePort,
-                                                                                        ProcessId = localProcess.Id
+                                                                                        Node = new ProcessAnnouncementMessage.Node
+                                                                                               {
+                                                                                                   BaseAddress = localNode.BaseAddress,
+                                                                                                   IntercomPort = localNode.IntercomPort,
+                                                                                                   ServicePort = localNode.ServicePort
+                                                                                               },
+                                                                                        Process = new ProcessAnnouncementMessage.Process
+                                                                                                  {
+                                                                                                      ProcessId = localProcess.Id
+                                                                                                  }
                                                                                     }));
                         Thread.Sleep(processIdBroadcastPeriod);
                     }
@@ -148,18 +154,18 @@ namespace wacs.Resolver
             if (message.Body.MessageType == ProcessAnnouncementMessage.MessageType)
             {
                 var ann = new ProcessAnnouncementMessage(message).GetPayload();
-                var announcedNode = new Node(ann.BaseAddress, ann.IntercomPort, ann.ServicePort);
-                var joiningProcess = new Process(ann.ProcessId);
+                var announcedNode = new Node(ann.Node.BaseAddress, ann.Node.IntercomPort, ann.Node.ServicePort);
+                var joiningProcess = new Process(ann.Process.ProcessId);
 
                 INode registeredNode;
                 if (processToNodeMap.TryGetValue(joiningProcess, out registeredNode) && !announcedNode.Equals(registeredNode))
                 {
                     //TODO: Add to conflict list to be displayed on management console
                     logger.WarnFormat("Conflicting processes! Existing {0}@{1}, joining {2}@{3}",
-                                      ann.ProcessId,
+                                      ann.Process.ProcessId,
                                       registeredNode.BaseAddress,
-                                      ann.ProcessId,
-                                      ann.BaseAddress);
+                                      ann.Process.ProcessId,
+                                      ann.Node.BaseAddress);
                 }
                 else
                 {

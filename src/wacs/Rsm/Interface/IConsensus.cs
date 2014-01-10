@@ -2,6 +2,6 @@
 {
     public interface IConsensus
     {
-        void Decide();
+        IDecision Decide();
     }
 }
