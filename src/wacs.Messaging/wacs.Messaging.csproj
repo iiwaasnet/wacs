@@ -53,7 +53,7 @@
     <Compile Include="Hubs\BroadcastRequest.cs" />
     <Compile Include="Hubs\Client\ClientMessageHub.cs" />
     <Compile Include="Hubs\Client\ClientMessageRouter.cs" />
-    <Compile Include="Hubs\Client\ClientRequestAwaitable.cs" />
+    <Compile Include="Hubs\Client\AwaitableResponse.cs" />
     <Compile Include="Hubs\Client\IClientMessageHub.cs" />
     <Compile Include="Hubs\Client\IClientMessageRouter.cs" />
     <Compile Include="Hubs\Intercom\ForwardRequest.cs" />

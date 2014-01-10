@@ -7,6 +7,5 @@ namespace wacs.Messaging.Hubs.Client
     public interface IClientMessageRouter : IDisposable
     {
         IMessage ForwardClientRequestToLeader(INode leader, IMessage message);
-        bool MessageRequiresLidership(IMessage message);
     }
 }

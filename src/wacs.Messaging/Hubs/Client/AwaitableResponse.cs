@@ -6,12 +6,12 @@ using wacs.Messaging.Messages;
 
 namespace wacs.Messaging.Hubs.Client
 {
-    internal class ClientRequestAwaitable : IAwaitableResult<IMessage>
+    internal class AwaitableResponse : IAwaitableResult<IMessage>
     {
         private readonly ManualResetEventSlim waitHandle;
         private IMessage response;
 
-        public ClientRequestAwaitable(INode leader, IMessage request)
+        public AwaitableResponse(INode leader, IMessage request)
         {
             Request = request;
             Leader = leader;
@@ -20,7 +20,7 @@ namespace wacs.Messaging.Hubs.Client
 
         internal void SetResponse(IMessage response)
         {
-            Interlocked.Exchange(ref response, response);
+            Interlocked.Exchange(ref this.response, response);
             waitHandle.Set();
         }
 
@@ -41,7 +41,7 @@ namespace wacs.Messaging.Hubs.Client
             throw new TimeoutException();
         }
 
-        public void Dispose()
+        void IDisposable.Dispose()
         {
             waitHandle.Dispose();
         }

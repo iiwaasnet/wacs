@@ -6,29 +6,29 @@ namespace wacs
 {
     public class WACService : ServiceControl
     {
-        private readonly IStateMachine stateMachine;
+        private readonly ITestService testService;
         private readonly ILogger logger;
 
-        public WACService(IStateMachine stateMachine, ILogger logger)
+        public WACService(ITestService testService, ILogger logger)
         {
-            this.stateMachine = stateMachine;
+            this.testService = testService;
             this.logger = logger;
         }
 
         public bool Start(HostControl hostControl)
         {
-            stateMachine.Start();
+            testService.Start();
 
-            logger.InfoFormat("WACS Id:[{0}] started at [{1}]", stateMachine.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+            logger.InfoFormat("WACS Id:[{0}] started at [{1}]", testService.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
 
             return true;
         }
 
         public bool Stop(HostControl hostControl)
         {
-            stateMachine.Stop();
+            testService.Stop();
 
-            logger.InfoFormat("WACS Id:[{0}] stopped", stateMachine.Id);
+            logger.InfoFormat("WACS Id:[{0}] stopped", testService.Id);
 
             return true;
         }

@@ -12,15 +12,21 @@ namespace wacs.Rsm.Implementation
         private readonly IClientMessageRouter messageRouter;
         private readonly ILeaseProvider leaseProvider;
         private readonly INodeResolver nodeResolver;
+        private readonly IRsm rsm;
+        private readonly IClientMessagesRepository messagesRepository;
 
         public ClientMessageProcessor(IClientMessageHub clientMessageHub,
                                       IClientMessageRouter messageRouter,
                                       INodeResolver nodeResolver,
+                                      IClientMessagesRepository messagesRepository,
+                                      IRsm rsm,
                                       ILeaseProvider leaseProvider)
         {
             this.messageRouter = messageRouter;
             this.leaseProvider = leaseProvider;
             this.nodeResolver = nodeResolver;
+            this.rsm = rsm;
+            this.messagesRepository = messagesRepository;
             clientMessageHub.RegisterMessageProcessor(ProcessClientMessage);
         }
 
@@ -28,7 +34,7 @@ namespace wacs.Rsm.Implementation
         {
             var lease = GetCurrentLease();
 
-            if (MessageRequiresLeadership(request) && !LocalNodeIsLeader(lease))
+            if (MessageRequiresQuorum(request) && !LocalNodeIsLeader(lease))
             {
                 return messageRouter.ForwardClientRequestToLeader(nodeResolver.ResolveRemoteProcess(lease.Owner), request);
             }
@@ -38,12 +44,19 @@ namespace wacs.Rsm.Implementation
 
         private IMessage HandleClientMessageAtLocalNode(IMessage request)
         {
-            throw new NotImplementedException();
+            if (MessageRequiresQuorum(request))
+            {
+                var awaitable = rsm.EnqueueForExecution(request);
+
+                return awaitable.GetResult();
+            }
+            // TODO: Add to a lsmCommandQueue (Local State Machine queue)
+            return null;
         }
 
-        private bool MessageRequiresLeadership(IMessage message)
+        private bool MessageRequiresQuorum(IMessage message)
         {
-            return messageRouter.MessageRequiresLidership(message);
+            return messagesRepository.RequiresQuorum(message);
         }
 
         private bool LocalNodeIsLeader(ILease lease)

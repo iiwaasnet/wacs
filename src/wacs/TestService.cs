@@ -8,7 +8,7 @@ using wacs.Resolver;
 
 namespace wacs
 {
-    public class PaxosMachine : IStateMachine
+    public class TestService : ITestService
     {
         private readonly ILeaseProvider leaseProvider;
         private readonly CancellationTokenSource token;
@@ -16,7 +16,7 @@ namespace wacs
         private readonly ILogger logger;
         private readonly INodeResolver nodeResolver;
 
-        public PaxosMachine(ILeaseProvider leaseProvider,
+        public TestService(ILeaseProvider leaseProvider,
                             IBallotGenerator ballotGenerator,
                             INodeResolver nodeResolver,
                             ILogger logger)

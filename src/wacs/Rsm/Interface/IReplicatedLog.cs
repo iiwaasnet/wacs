@@ -3,5 +3,6 @@
     public interface IReplicatedLog
     {
         ILogEntry GetLogEntry(ILogIndex iid);
+        ILogIndex GetFirstUnchosenLogEntry();
     }
 }

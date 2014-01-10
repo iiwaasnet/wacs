@@ -1,6 +1,6 @@
 ﻿namespace wacs
 {
-    public interface IStateMachine
+    public interface ITestService
     {
         void Start();
 

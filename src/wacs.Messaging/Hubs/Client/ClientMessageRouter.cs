@@ -16,19 +16,16 @@ namespace wacs.Messaging.Hubs.Client
     {
         private readonly IClientMessageHubConfiguration config;
         private readonly ILogger logger;
-        private readonly IClientMessagesRepository messagesRepository;
         private readonly BlockingCollection<IAwaitableResult<IMessage>> forwardQueue;
         private readonly IEnumerable<Thread> forwardingThreads;
         private readonly CancellationTokenSource cancellationSource;
         private readonly ZmqContext context;
 
-        public ClientMessageRouter(IClientMessagesRepository messagesRepository,
-                                   IClientMessageHubConfiguration config,
+        public ClientMessageRouter(IClientMessageHubConfiguration config,
                                    ILogger logger)
         {
             this.logger = logger;
             this.config = config;
-            this.messagesRepository = messagesRepository;
             cancellationSource = new CancellationTokenSource();
             forwardQueue = new BlockingCollection<IAwaitableResult<IMessage>>(new ConcurrentQueue<IAwaitableResult<IMessage>>());
             context = ZmqContext.Create();
@@ -77,7 +74,7 @@ namespace wacs.Messaging.Hubs.Client
 
         private void ForwardMessagesToLeader(ZmqSocket socket, IAwaitableResult<IMessage> queuedRequest)
         {
-            var forwardRequest = (ClientRequestAwaitable) queuedRequest;
+            var forwardRequest = (AwaitableResponse) queuedRequest;
 
             ConnectToLeaderIfChanged(socket, forwardRequest);
 
@@ -96,7 +93,7 @@ namespace wacs.Messaging.Hubs.Client
                                                    }));
         }
 
-        private static void ConnectToLeaderIfChanged(ZmqSocket socket, ClientRequestAwaitable forwardRequest)
+        private static void ConnectToLeaderIfChanged(ZmqSocket socket, AwaitableResponse forwardRequest)
         {
             if (socket.LastEndpoint != forwardRequest.Leader.GetServiceAddress())
             {
@@ -110,15 +107,10 @@ namespace wacs.Messaging.Hubs.Client
 
         public IMessage ForwardClientRequestToLeader(INode leader, IMessage message)
         {
-            IAwaitableResult<IMessage> response = new ClientRequestAwaitable(leader, message);
+            IAwaitableResult<IMessage> response = new AwaitableResponse(leader, message);
             forwardQueue.Add(response);
 
             return response.GetResult();
-        }
-
-        public bool MessageRequiresLidership(IMessage message)
-        {
-            return messagesRepository.RequiresQuorum(message);
         }
 
         public void Dispose()
@@ -134,7 +126,6 @@ namespace wacs.Messaging.Hubs.Client
             {
                 logger.Error(err);
             }
-            
         }
     }
 }

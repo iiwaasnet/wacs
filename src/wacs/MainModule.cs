@@ -19,7 +19,7 @@ namespace wacs
 
         private void RegisterPerInstance(ContainerBuilder builder)
         {
-            builder.RegisterType<PaxosMachine>().As<IStateMachine>().SingleInstance();
+            builder.RegisterType<TestService>().As<ITestService>().SingleInstance();
 
             builder.RegisterType<LeaseProvider>().As<ILeaseProvider>();
             builder.RegisterType<RoundBasedRegister>().As<IRoundBasedRegister>();
