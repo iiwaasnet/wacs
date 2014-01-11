@@ -2,14 +2,14 @@
 
 namespace wacs.Messaging.Messages.Intercom.Rsm
 {
-    public class PrepareMessage : TypedMessage<PrepareMessage.Payload>
+    public class RsmPrepare : TypedMessage<RsmPrepare.Payload>
     {
-        public PrepareMessage(IMessage message)
+        public RsmPrepare(IMessage message)
             : base(message)
         {
         }
 
-        public PrepareMessage(IProcess sender, Payload payload)
+        public RsmPrepare(IProcess sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }
@@ -21,7 +21,9 @@ namespace wacs.Messaging.Messages.Intercom.Rsm
 
         public class Payload
         {
-            public int LeaderProcessId { get; set; }
+            public Process Leader { get; set; }
+            public Ballot Ballot { get; set; }
+            public LogIndex LogIndex { get; set; }
         }
     }
 }

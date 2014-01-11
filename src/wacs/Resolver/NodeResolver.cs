@@ -11,6 +11,8 @@ using wacs.FLease;
 using wacs.Messaging.Hubs.Intercom;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.NodeResolver;
+using Node = wacs.Messaging.Messages.Intercom.NodeResolver.Node;
+using Process = wacs.Messaging.Messages.Intercom.Process;
 
 namespace wacs.Resolver
 {
@@ -124,20 +126,21 @@ namespace wacs.Resolver
                 {
                     while (!token.IsCancellationRequested)
                     {
-                        intercomMessageHub.Broadcast(new ProcessAnnouncementMessage(localProcess,
-                                                                                    new ProcessAnnouncementMessage.Payload
+                        intercomMessageHub
+                            .Broadcast(new ProcessAnnouncementMessage(localProcess,
+                                                                      new ProcessAnnouncementMessage.Payload
+                                                                      {
+                                                                          Node = new Node
+                                                                                 {
+                                                                                     BaseAddress = localNode.BaseAddress,
+                                                                                     IntercomPort = localNode.IntercomPort,
+                                                                                     ServicePort = localNode.ServicePort
+                                                                                 },
+                                                                          Process = new Process
                                                                                     {
-                                                                                        Node = new ProcessAnnouncementMessage.Node
-                                                                                               {
-                                                                                                   BaseAddress = localNode.BaseAddress,
-                                                                                                   IntercomPort = localNode.IntercomPort,
-                                                                                                   ServicePort = localNode.ServicePort
-                                                                                               },
-                                                                                        Process = new ProcessAnnouncementMessage.Process
-                                                                                                  {
-                                                                                                      ProcessId = localProcess.Id
-                                                                                                  }
-                                                                                    }));
+                                                                                        Id = localProcess.Id
+                                                                                    }
+                                                                      }));
                         Thread.Sleep(processIdBroadcastPeriod);
                     }
                 }
@@ -154,17 +157,17 @@ namespace wacs.Resolver
             if (message.Body.MessageType == ProcessAnnouncementMessage.MessageType)
             {
                 var ann = new ProcessAnnouncementMessage(message).GetPayload();
-                var announcedNode = new Node(ann.Node.BaseAddress, ann.Node.IntercomPort, ann.Node.ServicePort);
-                var joiningProcess = new Process(ann.Process.ProcessId);
+                var announcedNode = new Configuration.Node(ann.Node.BaseAddress, ann.Node.IntercomPort, ann.Node.ServicePort);
+                var joiningProcess = new Configuration.Process(ann.Process.Id);
 
                 INode registeredNode;
                 if (processToNodeMap.TryGetValue(joiningProcess, out registeredNode) && !announcedNode.Equals(registeredNode))
                 {
                     //TODO: Add to conflict list to be displayed on management console
                     logger.WarnFormat("Conflicting processes! Existing {0}@{1}, joining {2}@{3}",
-                                      ann.Process.ProcessId,
+                                      ann.Process.Id,
                                       registeredNode.BaseAddress,
-                                      ann.Process.ProcessId,
+                                      ann.Process.Id,
                                       ann.Node.BaseAddress);
                 }
                 else

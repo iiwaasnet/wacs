@@ -39,8 +39,8 @@ namespace wacs.Rsm.Implementation
         {
             var firstUnchosenLogEntry = replicatedLog.GetFirstUnchosenLogEntry();
             var awaitable = (AwaitableRsmResponse) awaitableResult;
-            var consensus = consensusFactory.CreateInstance(firstUnchosenLogEntry, awaitable.Command, RoundCouldBeFast());
-            previousDecision = consensus.Decide();
+            var consensus = consensusFactory.CreateInstance();
+            previousDecision = consensus.Decide(firstUnchosenLogEntry, awaitable.Command, RoundCouldBeFast());
         }
 
         private bool RoundCouldBeFast()

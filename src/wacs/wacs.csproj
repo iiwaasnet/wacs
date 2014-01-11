@@ -147,12 +147,17 @@
     <Compile Include="ITestService.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="Rsm\Implementation\AwaitableRsmResponse.cs" />
+    <Compile Include="Rsm\Implementation\Ballot.cs" />
     <Compile Include="Rsm\Implementation\Consensus.cs" />
     <Compile Include="Rsm\Implementation\ConsensusFactory.cs" />
     <Compile Include="Rsm\Implementation\Acceptor.cs" />
+    <Compile Include="Rsm\Implementation\ConsensusRoundManager.cs" />
+    <Compile Include="Rsm\Implementation\RsmPrepareAckMessageFilter.cs" />
+    <Compile Include="Rsm\Interface\IBallot.cs" />
     <Compile Include="Rsm\Interface\IAcceptor.cs" />
     <Compile Include="Rsm\Interface\IConsensus.cs" />
     <Compile Include="Rsm\Interface\IConsensusFactory.cs" />
+    <Compile Include="Rsm\Interface\IConsensusRoundManager.cs" />
     <Compile Include="Rsm\Interface\IDecision.cs" />
     <Compile Include="Rsm\Interface\IRsm.cs" />
     <Compile Include="Rsm\Implementation\Rsm.cs" />

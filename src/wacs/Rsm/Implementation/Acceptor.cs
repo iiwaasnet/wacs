@@ -19,11 +19,11 @@ namespace wacs.Rsm.Implementation
 
             listener = intercomMessageHub.Subscribe();
 
-            listener.Where(m => m.Body.MessageType == PrepareMessage.MessageType)
+            listener.Where(m => m.Body.MessageType == RsmPrepare.MessageType)
                     .Subscribe(new MessageStreamListener(OnPrepareReceived));
         }
 
-        private void OnPrepareReceived(IMessage obj)
+        private void OnPrepareReceived(IMessage message)
         {
             throw new System.NotImplementedException();
         }

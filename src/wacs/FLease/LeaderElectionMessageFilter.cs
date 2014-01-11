@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using wacs.Configuration;
-using wacs.Messaging;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Lease;
 using wacs.Resolver;
-using wacs.Rsm.Interface;
 
 namespace wacs.FLease
 {

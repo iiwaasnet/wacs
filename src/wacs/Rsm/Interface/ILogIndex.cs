@@ -2,5 +2,6 @@
 {
     public interface ILogIndex
     {
+        ulong Index { get; }
     }
 }

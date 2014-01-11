@@ -84,8 +84,13 @@
     <Compile Include="Messages\Intercom\Lease\LeaseNackWrite.cs" />
     <Compile Include="Messages\Intercom\Lease\LeaseRead.cs" />
     <Compile Include="Messages\Intercom\Lease\LeaseWrite.cs" />
+    <Compile Include="Messages\Intercom\NodeResolver\Node.cs" />
+    <Compile Include="Messages\Intercom\Process.cs" />
     <Compile Include="Messages\Intercom\NodeResolver\ProcessAnnouncementMessage.cs" />
-    <Compile Include="Messages\Intercom\Rsm\PrepareMessage.cs" />
+    <Compile Include="Messages\Intercom\Rsm\Ballot.cs" />
+    <Compile Include="Messages\Intercom\Rsm\LogIndex.cs" />
+    <Compile Include="Messages\Intercom\Rsm\RsmAckPrepare.cs" />
+    <Compile Include="Messages\Intercom\Rsm\RsmPrepare.cs" />
     <Compile Include="Messages\ITypedMessage.cs" />
     <Compile Include="Messages\Message.cs" />
     <Compile Include="Messages\MessageSerializer.cs" />

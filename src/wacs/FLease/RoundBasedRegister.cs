@@ -118,17 +118,17 @@ namespace wacs.FLease
             var ackFilter = new LeaderElectionMessageFilter(ballot, LeaseAckRead.MessageType, (m) => new LeaseAckRead(m).GetPayload(), nodeResolver, synodConfigurationProvider);
             var nackFilter = new LeaderElectionMessageFilter(ballot, LeaseNackRead.MessageType, (m) => new LeaseNackRead(m).GetPayload(), nodeResolver, synodConfigurationProvider);
 
-            var ackReadFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
-            var nackReadFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());
+            var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
+            var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());
 
-            using (ackReadStream.Subscribe(ackReadFilter))
+            using (ackReadStream.Subscribe(awaitableAckFilter))
             {
-                using (nackReadStream.Subscribe(nackReadFilter))
+                using (nackReadStream.Subscribe(awaitableNackFilter))
                 {
                     var message = CreateReadMessage(ballot);
                     intercomMessageHub.Broadcast(message);
 
-                    var index = WaitHandle.WaitAny(new[] {ackReadFilter.Filtered, nackReadFilter.Filtered},
+                    var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered},
                                                    leaseConfig.NodeResponseTimeout);
 
                     if (ReadNotAcknowledged(index))
@@ -136,7 +136,7 @@ namespace wacs.FLease
                         return new LeaseTxResult {TxOutcome = TxOutcome.Abort};
                     }
 
-                    var lease = ackReadFilter
+                    var lease = awaitableAckFilter
                         .MessageStream
                         .Select(m => new LeaseAckRead(m).GetPayload())
                         .Max(m => new LastWrittenLease(m.KnownWriteBallot, m.Lease))
@@ -156,17 +156,17 @@ namespace wacs.FLease
             var ackFilter = new LeaderElectionMessageFilter(ballot, LeaseAckWrite.MessageType, (m) => new LeaseAckWrite(m).GetPayload(), nodeResolver, synodConfigurationProvider);
             var nackFilter = new LeaderElectionMessageFilter(ballot, LeaseNackWrite.MessageType, (m) => new LeaseNackWrite(m).GetPayload(), nodeResolver, synodConfigurationProvider);
 
-            var ackWriteFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
-            var nackWriteFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());
+            var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
+            var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());
 
-            using (ackWriteStream.Subscribe(ackWriteFilter))
+            using (ackWriteStream.Subscribe(awaitableAckFilter))
             {
-                using (nackWriteStream.Subscribe(nackWriteFilter))
+                using (nackWriteStream.Subscribe(awaitableNackFilter))
                 {
                     var message = CreateWriteMessage(ballot, lease);
                     intercomMessageHub.Broadcast(message);
 
-                    var index = WaitHandle.WaitAny(new[] {ackWriteFilter.Filtered, nackWriteFilter.Filtered},
+                    var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered},
                                                    leaseConfig.NodeResponseTimeout);
 
                     if (ReadNotAcknowledged(index))

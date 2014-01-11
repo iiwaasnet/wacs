@@ -1,7 +1,9 @@
-﻿namespace wacs.Rsm.Interface
+﻿using wacs.Messaging.Messages;
+
+namespace wacs.Rsm.Interface
 {
     public interface IConsensus
     {
-        IDecision Decide();
+        IDecision Decide(ILogIndex index, IMessage command, bool fast);
     }
 }
