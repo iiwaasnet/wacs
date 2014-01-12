@@ -152,6 +152,7 @@
     <Compile Include="Rsm\Implementation\ConsensusFactory.cs" />
     <Compile Include="Rsm\Implementation\Acceptor.cs" />
     <Compile Include="Rsm\Implementation\ConsensusRoundManager.cs" />
+    <Compile Include="Rsm\Implementation\PreparePhaseResult.cs" />
     <Compile Include="Rsm\Implementation\RsmPrepareNackMessageFilter.cs" />
     <Compile Include="Rsm\Implementation\RsmPrepareAckMessageFilter.cs" />
     <Compile Include="Rsm\Interface\IBallot.cs" />

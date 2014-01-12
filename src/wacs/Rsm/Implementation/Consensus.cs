@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
@@ -46,12 +47,12 @@ namespace wacs.Rsm.Implementation
         public IDecision Decide(ILogIndex index, IMessage command, bool fast)
         {
             var ballot = consensusRoundManager.GetNextBallot();
-            SendPrepare(index, ballot, command);
+            SendPrepare(index, ballot);
 
             return null;
         }
 
-        private void SendPrepare(ILogIndex logIndex, IBallot ballot, IMessage command)
+        private PreparePhaseResult SendPrepare(ILogIndex logIndex, IBallot ballot)
         {
             var ackFilter = new RsmPrepareAckMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
             var nackFilter = new RsmPrepareNackMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
@@ -66,8 +67,50 @@ namespace wacs.Rsm.Implementation
                     var message = CreatePrepareMessage(logIndex, ballot);
                     intercomMessageHub.Broadcast(message);
 
-                    var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered}, rsmConfig.CommandExecutionTimeout);
+                    var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered}, 
+                        rsmConfig.CommandExecutionTimeout);
+
+                    AssertPrepareTimeout(index);
+
+                    if (PrepareAcknowledged(index))
+                    {
+                        return CreatePrepareSucceededResult(awaitableAckFilter.MessageStream);
+                    }
+                    if (PrepareRejected(index))
+                    {
+                        return CreatePrepareRejectedResult(awaitableNackFilter.MessageStream);
+                    }
+
+                    throw new Exception("Invalid state handling detected!");
                 }
+            }
+        }
+
+        private PreparePhaseResult CreatePrepareRejectedResult(IEnumerable<IMessage> prepareResponses)
+        {
+            throw new NotImplementedException();
+        }
+
+        private PreparePhaseResult CreatePrepareSucceededResult(IEnumerable<IMessage> prepareResponses)
+        {
+            var 
+        }
+
+        private bool PrepareRejected(int index)
+        {
+            return index == 1;
+        }
+
+        private bool PrepareAcknowledged(int index)
+        {
+            return index == 0;
+        }
+
+        private void AssertPrepareTimeout(int index)
+        {
+            if (index == WaitHandle.WaitTimeout)
+            {
+                throw new TimeoutException();
             }
         }
 
