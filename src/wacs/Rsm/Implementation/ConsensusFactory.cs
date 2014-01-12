@@ -11,21 +11,28 @@ namespace wacs.Rsm.Implementation
         private readonly IIntercomMessageHub intercomMessageHub;
         private readonly ISynodConfigurationProvider synodConfigurationProvider;
         private readonly INodeResolver nodeResolver;
+        private readonly IRsmConfiguration rsmConfig;
 
         public ConsensusFactory(IConsensusRoundManager consensusRoundManager,
                                 IIntercomMessageHub intercomMessageHub,
                                 ISynodConfigurationProvider synodConfigurationProvider,
-                                INodeResolver nodeResolver)
+                                INodeResolver nodeResolver,
+                                IRsmConfiguration rsmConfig)
         {
             this.consensusRoundManager = consensusRoundManager;
             this.intercomMessageHub = intercomMessageHub;
             this.synodConfigurationProvider = synodConfigurationProvider;
             this.nodeResolver = nodeResolver;
+            this.rsmConfig = rsmConfig;
         }
 
         public IConsensus CreateInstance()
         {
-            return new Consensus(consensusRoundManager, intercomMessageHub, synodConfigurationProvider, nodeResolver);
+            return new Consensus(consensusRoundManager,
+                                 intercomMessageHub,
+                                 synodConfigurationProvider,
+                                 nodeResolver,
+                                 rsmConfig);
         }
     }
 }

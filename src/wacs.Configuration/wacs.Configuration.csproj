@@ -53,6 +53,7 @@
     <Compile Include="INode.cs" />
     <Compile Include="INodeResolverConfiguration.cs" />
     <Compile Include="IProcess.cs" />
+    <Compile Include="IRsmConfiguration.cs" />
     <Compile Include="ISynod.cs" />
     <Compile Include="ISynodConfigurationProvider.cs" />
     <Compile Include="ITopologyConfiguration.cs" />

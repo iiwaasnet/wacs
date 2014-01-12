@@ -6,5 +6,6 @@
         ITopologyConfiguration Topology { get; }
         ILeaseConfiguration Lease { get; }
         IClientMessageHubConfiguration ClientMessageHub { get; }
+        IRsmConfiguration Rsm { get; }
     }
 }

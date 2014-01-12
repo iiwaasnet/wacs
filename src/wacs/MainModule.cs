@@ -56,6 +56,9 @@ namespace wacs
             builder.Register(c => c.Resolve<IWacsConfiguration>().ClientMessageHub)
                    .As<IClientMessageHubConfiguration>()
                    .SingleInstance();
+            builder.Register(c => c.Resolve<IWacsConfiguration>().Rsm)
+                   .As<IRsmConfiguration>()
+                   .SingleInstance();
         }
     }
 }

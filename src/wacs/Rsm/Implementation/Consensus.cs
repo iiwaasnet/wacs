@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using wacs.Configuration;
 using wacs.FLease;
 using wacs.Messaging.Hubs.Intercom;
@@ -9,6 +10,7 @@ using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
 using IBallot = wacs.Rsm.Interface.IBallot;
+using Process = wacs.Messaging.Messages.Intercom.Process;
 
 namespace wacs.Rsm.Implementation
 {
@@ -20,16 +22,19 @@ namespace wacs.Rsm.Implementation
         private readonly IObservable<IMessage> ackPrepareStream;
         private readonly ISynodConfigurationProvider synodConfigurationProvider;
         private readonly INodeResolver nodeResolver;
+        private readonly IRsmConfiguration rsmConfig;
 
         public Consensus(IConsensusRoundManager consensusRoundManager,
                          IIntercomMessageHub intercomMessageHub,
                          ISynodConfigurationProvider synodConfigurationProvider,
-                         INodeResolver nodeResolver)
+                         INodeResolver nodeResolver,
+                         IRsmConfiguration rsmConfig)
         {
             this.consensusRoundManager = consensusRoundManager;
             this.intercomMessageHub = intercomMessageHub;
             this.synodConfigurationProvider = synodConfigurationProvider;
             this.nodeResolver = nodeResolver;
+            this.rsmConfig = rsmConfig;
             listener = intercomMessageHub.Subscribe();
 
             ackPrepareStream = listener.Where(m => m.Body.MessageType == RsmAckPrepare.MessageType);
@@ -43,10 +48,29 @@ namespace wacs.Rsm.Implementation
             return null;
         }
 
-        private void SendPrepare(ILogIndex index, IBallot ballot, IMessage command)
+        private void SendPrepare(ILogIndex logIndex, IBallot ballot, IMessage command)
         {
-            var ackFilter = new RsmPrepareAckMessageFilter(ballot, index, nodeResolver, synodConfigurationProvider);
+            var ackFilter = new RsmPrepareAckMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
             var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
+
+            using (ackPrepareStream.Subscribe(awaitableAckFilter))
+            {
+                var message = CreatePrepareMessage(logIndex, ballot);
+                intercomMessageHub.Broadcast(message);
+
+                var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered}, rsmConfig.CommandExecutionTimeout);
+            }
+        }
+
+        private IMessage CreatePrepareMessage(ILogIndex index, IBallot ballot)
+        {
+            return new RsmPrepare(synodConfigurationProvider.LocalProcess,
+                                  new RsmPrepare.Payload
+                                  {
+                                      Ballot = new Messaging.Messages.Intercom.Rsm.Ballot {ProposalNumber = ballot.ProposalNumber},
+                                      LogIndex = new LogIndex {Index = index.Index},
+                                      Leader = new Process {Id = synodConfigurationProvider.LocalProcess.Id}
+                                  });
         }
 
         private int GetQuorum()
