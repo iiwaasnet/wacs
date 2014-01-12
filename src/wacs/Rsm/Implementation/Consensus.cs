@@ -44,10 +44,15 @@ namespace wacs.Rsm.Implementation
                                                     || m.Body.MessageType == RsmNackPrepareChosen.MessageType);
         }
 
-        public IDecision Decide(ILogIndex index, IMessage command, bool fast)
+        public IConsensusDecision Decide(ILogIndex index, IMessage command, bool fast)
         {
             var ballot = consensusRoundManager.GetNextBallot();
             var prepareOutcome = SendPrepare(index, ballot);
+
+            if (prepareOutcome.Outcome == PreparePhaseOutcome.FailedDueToChosenLogEntry)
+            {
+                return new ConsensusDecision {Outcome = ConsensusOutcome.RejectedDueToChosenLogEntry};
+            }
 
             return null;
         }

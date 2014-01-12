@@ -14,7 +14,7 @@ namespace wacs.Rsm.Implementation
         private readonly Thread processingThread;
         private readonly CancellationTokenSource cancellationSource;
         private readonly IConsensusFactory consensusFactory;
-        private IDecision previousDecision;
+        private IConsensusDecision previousDecision;
 
         public Rsm(IReplicatedLog replicatedLog, IConsensusFactory consensusFactory)
         {
