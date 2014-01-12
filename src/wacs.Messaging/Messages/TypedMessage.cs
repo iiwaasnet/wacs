@@ -2,7 +2,6 @@
 
 namespace wacs.Messaging.Messages
 {
-    //TODO: Move to more generic namespace, hence it's a base class for all messages
     public class TypedMessage<T> : Message, ITypedMessage<T>
         where T : class
     {

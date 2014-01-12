@@ -88,8 +88,10 @@
     <Compile Include="Messages\Intercom\Process.cs" />
     <Compile Include="Messages\Intercom\NodeResolver\ProcessAnnouncementMessage.cs" />
     <Compile Include="Messages\Intercom\Rsm\Ballot.cs" />
+    <Compile Include="Messages\Intercom\Rsm\IPreparePayload.cs" />
     <Compile Include="Messages\Intercom\Rsm\LogIndex.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmNackPrepare.cs" />
+    <Compile Include="Messages\Intercom\Rsm\RsmNackPrepareChosen.cs" />
+    <Compile Include="Messages\Intercom\Rsm\RsmNackPrepareBlocked.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmAckPrepare.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmPrepare.cs" />
     <Compile Include="Messages\ITypedMessage.cs" />

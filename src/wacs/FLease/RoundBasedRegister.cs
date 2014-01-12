@@ -115,8 +115,8 @@ namespace wacs.FLease
 
         public ILeaseTxResult Read(IBallot ballot)
         {
-            var ackFilter = new LeaderElectionMessageFilter(ballot, LeaseAckRead.MessageType, (m) => new LeaseAckRead(m).GetPayload(), nodeResolver, synodConfigurationProvider);
-            var nackFilter = new LeaderElectionMessageFilter(ballot, LeaseNackRead.MessageType, (m) => new LeaseNackRead(m).GetPayload(), nodeResolver, synodConfigurationProvider);
+            var ackFilter = new LeaderElectionMessageFilter(ballot, (m) => new LeaseAckRead(m).GetPayload(), nodeResolver, synodConfigurationProvider);
+            var nackFilter = new LeaderElectionMessageFilter(ballot, (m) => new LeaseNackRead(m).GetPayload(), nodeResolver, synodConfigurationProvider);
 
             var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
             var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());
@@ -153,8 +153,8 @@ namespace wacs.FLease
 
         public ILeaseTxResult Write(IBallot ballot, ILease lease)
         {
-            var ackFilter = new LeaderElectionMessageFilter(ballot, LeaseAckWrite.MessageType, (m) => new LeaseAckWrite(m).GetPayload(), nodeResolver, synodConfigurationProvider);
-            var nackFilter = new LeaderElectionMessageFilter(ballot, LeaseNackWrite.MessageType, (m) => new LeaseNackWrite(m).GetPayload(), nodeResolver, synodConfigurationProvider);
+            var ackFilter = new LeaderElectionMessageFilter(ballot, (m) => new LeaseAckWrite(m).GetPayload(), nodeResolver, synodConfigurationProvider);
+            var nackFilter = new LeaderElectionMessageFilter(ballot,(m) => new LeaseNackWrite(m).GetPayload(), nodeResolver, synodConfigurationProvider);
 
             var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
             var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());

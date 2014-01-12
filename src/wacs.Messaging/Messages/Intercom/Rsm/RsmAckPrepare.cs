@@ -19,7 +19,7 @@ namespace wacs.Messaging.Messages.Intercom.Rsm
             get { return "RSM_ACK_PREPARE"; }
         }
 
-        public class Payload
+        public class Payload : IPreparePayload
         {
             public LogIndex LogIndex { get; set; }
             public Ballot PrepareBallot { get; set; }

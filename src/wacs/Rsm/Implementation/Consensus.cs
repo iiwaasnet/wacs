@@ -20,6 +20,7 @@ namespace wacs.Rsm.Implementation
         private readonly IIntercomMessageHub intercomMessageHub;
         private readonly IListener listener;
         private readonly IObservable<IMessage> ackPrepareStream;
+        private readonly IObservable<IMessage> nackPrepareStream;
         private readonly ISynodConfigurationProvider synodConfigurationProvider;
         private readonly INodeResolver nodeResolver;
         private readonly IRsmConfiguration rsmConfig;
@@ -38,6 +39,8 @@ namespace wacs.Rsm.Implementation
             listener = intercomMessageHub.Subscribe();
 
             ackPrepareStream = listener.Where(m => m.Body.MessageType == RsmAckPrepare.MessageType);
+            nackPrepareStream = listener.Where(m => m.Body.MessageType == RsmNackPrepareBlocked.MessageType
+                                                    || m.Body.MessageType == RsmNackPrepareChosen.MessageType);
         }
 
         public IDecision Decide(ILogIndex index, IMessage command, bool fast)
@@ -51,14 +54,20 @@ namespace wacs.Rsm.Implementation
         private void SendPrepare(ILogIndex logIndex, IBallot ballot, IMessage command)
         {
             var ackFilter = new RsmPrepareAckMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
+            var nackFilter = new RsmPrepareNackMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
+
             var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
+            var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());
 
             using (ackPrepareStream.Subscribe(awaitableAckFilter))
             {
-                var message = CreatePrepareMessage(logIndex, ballot);
-                intercomMessageHub.Broadcast(message);
+                using (nackPrepareStream.Subscribe(awaitableNackFilter))
+                {
+                    var message = CreatePrepareMessage(logIndex, ballot);
+                    intercomMessageHub.Broadcast(message);
 
-                var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered}, rsmConfig.CommandExecutionTimeout);
+                    var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered}, rsmConfig.CommandExecutionTimeout);
+                }
             }
         }
 

@@ -2,24 +2,24 @@
 
 namespace wacs.Messaging.Messages.Intercom.Rsm
 {
-    public class RsmNackPrepare : TypedMessage<RsmNackPrepare.Payload>
+    public class RsmNackPrepareBlocked : TypedMessage<RsmNackPrepareBlocked.Payload>
     {
-        public RsmNackPrepare(IMessage message)
+        public RsmNackPrepareBlocked(IMessage message)
             : base(message)
         {
         }
 
-        public RsmNackPrepare(IProcess sender, Payload payload)
+        public RsmNackPrepareBlocked(IProcess sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }
 
         public static string MessageType
         {
-            get { return "RSM_NACK_PREPARE"; }
+            get { return "RSM_NACK_PREPARE_BLOCKED"; }
         }
 
-        public class Payload
+        public class Payload : IPreparePayload
         {
             public LogIndex LogIndex { get; set; }
             public Ballot PrepareBallot { get; set; }
