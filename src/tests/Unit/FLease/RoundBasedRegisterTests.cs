@@ -11,6 +11,7 @@ using wacs.Messaging.Hubs.Intercom;
 using wacs.Messaging.Messages;
 using wacs.Resolver;
 using wacs.Rsm.Implementation;
+using Ballot = wacs.FLease.Ballot;
 
 namespace tests.Unit.FLease
 {
@@ -54,8 +55,8 @@ namespace tests.Unit.FLease
             var register = builder.Build().Resolve<IRoundBasedRegister>();
             register.Start();
 
-            var ballot = new wacs.FLease.Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new wacs.FLease.Ballot(DateTime.UtcNow, 1, owner);
+            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
             Assert.IsTrue(ballot1 > ballot);
 
@@ -78,8 +79,8 @@ namespace tests.Unit.FLease
             var register = builder.Build().Resolve<IRoundBasedRegister>();
             register.Start();
 
-            var ballot = new wacs.FLease.Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new wacs.FLease.Ballot(DateTime.UtcNow, 1, owner);
+            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
             Assert.IsTrue(ballot1 > ballot);
 
@@ -102,8 +103,8 @@ namespace tests.Unit.FLease
             var register = builder.Build().Resolve<IRoundBasedRegister>();
             register.Start();
 
-            var ballot = new wacs.FLease.Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new wacs.FLease.Ballot(DateTime.UtcNow, 1, owner);
+            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
             Assert.IsTrue(ballot1 > ballot);
 
@@ -126,8 +127,8 @@ namespace tests.Unit.FLease
             var register = builder.Build().Resolve<IRoundBasedRegister>();
             register.Start();
 
-            var ballot = new wacs.FLease.Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new wacs.FLease.Ballot(DateTime.UtcNow, 1, owner);
+            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
             Assert.IsTrue(ballot1 > ballot);
 
@@ -150,8 +151,8 @@ namespace tests.Unit.FLease
             var register = builder.Build().Resolve<IRoundBasedRegister>();
             register.Start();
 
-            var ballot = new wacs.FLease.Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new wacs.FLease.Ballot(DateTime.UtcNow, 1, owner);
+            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
             Assert.IsTrue(ballot1 > ballot);
 
@@ -175,8 +176,8 @@ namespace tests.Unit.FLease
             var register = builder.Build().Resolve<IRoundBasedRegister>();
             register.Start();
 
-            var ballot = new wacs.FLease.Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new wacs.FLease.Ballot(DateTime.UtcNow, 1, owner);
+            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
             Assert.IsTrue(ballot1 > ballot);
 
@@ -199,8 +200,8 @@ namespace tests.Unit.FLease
             var register = builder.Build().Resolve<IRoundBasedRegister>();
             register.Start();
 
-            var ballot = new wacs.FLease.Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new wacs.FLease.Ballot(DateTime.UtcNow, 1, owner);
+            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
             Assert.IsTrue(ballot1 > ballot);
 
@@ -227,9 +228,9 @@ namespace tests.Unit.FLease
             var register = builder.Build().Resolve<IRoundBasedRegister>();
             register.Start();
 
-            var ballot = new wacs.FLease.Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new wacs.FLease.Ballot(DateTime.UtcNow, 1, owner);
-            var ballot3 = new wacs.FLease.Ballot(DateTime.UtcNow, 3, owner);
+            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
+            var ballot3 = new Ballot(DateTime.UtcNow, 3, owner);
 
             Assert.IsTrue(ballot1 > ballot);
 

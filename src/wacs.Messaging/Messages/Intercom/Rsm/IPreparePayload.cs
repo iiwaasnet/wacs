@@ -3,6 +3,6 @@
     public interface IPreparePayload
     {
         LogIndex LogIndex { get; }
-        Ballot PrepareBallot { get; } 
+        Ballot Ballot { get; } 
     }
 }

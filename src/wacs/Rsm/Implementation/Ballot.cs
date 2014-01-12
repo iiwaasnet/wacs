@@ -8,26 +8,32 @@ namespace wacs.Rsm.Implementation
         private const int ProcessWeight = 1000;
         private readonly int processId;
         private readonly ulong proposalId;
-        public Ballot(ulong proposalNumber, IProcess process)
-            :this(proposalNumber, process.Id)
+
+        public Ballot(ulong proposalId, IProcess process)
+            : this(proposalId, process.Id)
         {
         }
 
-        private Ballot(ulong proposalNumber, int processId)
+        public Ballot(ulong proposalNumber)
+            : this(proposalNumber / ProcessWeight, (int) (proposalNumber % ProcessWeight))
+        {
+        }
+
+        private Ballot(ulong proposalId, int processId)
         {
             this.processId = processId;
-            proposalId = proposalNumber;
+            this.proposalId = proposalId;
             ProposalNumber = CreateProposalNumber();
         }
 
         public Ballot NewByIncrementing()
         {
-            return new Ballot(proposalId +1, processId);
+            return new Ballot(proposalId + 1, processId);
         }
 
         private ulong CreateProposalNumber()
         {
-            return proposalId * ProcessWeight + (ulong)processId;
+            return proposalId * ProcessWeight + (ulong) processId;
         }
 
         public ulong ProposalNumber { get; private set; }

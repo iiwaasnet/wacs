@@ -22,7 +22,7 @@ namespace wacs.Messaging.Messages.Intercom.Rsm
         public class Payload : IPreparePayload
         {
             public LogIndex LogIndex { get; set; }
-            public Ballot PrepareBallot { get; set; }
+            public Ballot Ballot { get; set; }
         }
     }
 }

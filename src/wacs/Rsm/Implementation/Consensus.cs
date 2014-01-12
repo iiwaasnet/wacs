@@ -5,12 +5,12 @@ using System.Reactive.Linq;
 using System.Threading;
 using wacs.Configuration;
 using wacs.FLease;
+using wacs.Framework;
 using wacs.Messaging.Hubs.Intercom;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
-using IBallot = wacs.Rsm.Interface.IBallot;
 using Process = wacs.Messaging.Messages.Intercom.Process;
 
 namespace wacs.Rsm.Implementation
@@ -47,12 +47,12 @@ namespace wacs.Rsm.Implementation
         public IDecision Decide(ILogIndex index, IMessage command, bool fast)
         {
             var ballot = consensusRoundManager.GetNextBallot();
-            SendPrepare(index, ballot);
+            var prepareOutcome = SendPrepare(index, ballot);
 
             return null;
         }
 
-        private PreparePhaseResult SendPrepare(ILogIndex logIndex, IBallot ballot)
+        private PreparePhaseResult SendPrepare(ILogIndex logIndex, Interface.IBallot ballot)
         {
             var ackFilter = new RsmPrepareAckMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
             var nackFilter = new RsmPrepareNackMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
@@ -67,8 +67,8 @@ namespace wacs.Rsm.Implementation
                     var message = CreatePrepareMessage(logIndex, ballot);
                     intercomMessageHub.Broadcast(message);
 
-                    var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered}, 
-                        rsmConfig.CommandExecutionTimeout);
+                    var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered},
+                                                   rsmConfig.CommandExecutionTimeout);
 
                     AssertPrepareTimeout(index);
 
@@ -81,19 +81,54 @@ namespace wacs.Rsm.Implementation
                         return CreatePrepareRejectedResult(awaitableNackFilter.MessageStream);
                     }
 
-                    throw new Exception("Invalid state handling detected!");
+                    throw new InvalidStateException();
                 }
             }
         }
 
         private PreparePhaseResult CreatePrepareRejectedResult(IEnumerable<IMessage> prepareResponses)
         {
-            throw new NotImplementedException();
+            var alreadyChosen = prepareResponses.Where(m => m.Body.MessageType == RsmNackPrepareChosen.MessageType)
+                                                .Select(m => new RsmNackPrepareChosen(m).GetPayload())
+                                                .FirstOrDefault();
+            if (alreadyChosen != null)
+            {
+                return new PreparePhaseResult
+                       {
+                           Outcome = PreparePhaseOutcome.FailedDueToChosenLogEntry
+                       };
+            }
+
+            var acceptedBallot = prepareResponses.Where(m => m.Body.MessageType == RsmNackPrepareBlocked.MessageType)
+                                                 .Select(m => new RsmNackPrepareBlocked(m).GetPayload())
+                                                 .Max(p => p.AcceptedBallot);
+            if (acceptedBallot != null)
+            {
+                return new PreparePhaseResult
+                       {
+                           Outcome = PreparePhaseOutcome.FailedDueToLowBallot,
+                           AcceptedBallot = new Ballot(acceptedBallot.ProposalNumber)
+                       };
+            }
+
+            throw new InvalidStateException();
         }
 
         private PreparePhaseResult CreatePrepareSucceededResult(IEnumerable<IMessage> prepareResponses)
         {
-            var 
+            var payloads = prepareResponses.Select(m => new RsmAckPrepare(m).GetPayload());
+            var maxAcceptedBallot = payloads.Where(a => a.AcceptedValue != null)
+                                            .Max(p => p.AcceptedBallot);
+            if (maxAcceptedBallot != null)
+            {
+                return new PreparePhaseResult
+                       {
+                           AcceptedValue = payloads.First(p => p.AcceptedBallot.Equals(maxAcceptedBallot)).AcceptedValue,
+                           Outcome = PreparePhaseOutcome.SucceededWithOtherValue
+                       };
+            }
+
+            return new PreparePhaseResult {Outcome = PreparePhaseOutcome.SucceededWithProposedValue};
         }
 
         private bool PrepareRejected(int index)
@@ -114,7 +149,7 @@ namespace wacs.Rsm.Implementation
             }
         }
 
-        private IMessage CreatePrepareMessage(ILogIndex index, IBallot ballot)
+        private IMessage CreatePrepareMessage(ILogIndex index, Interface.IBallot ballot)
         {
             return new RsmPrepare(synodConfigurationProvider.LocalProcess,
                                   new RsmPrepare.Payload

@@ -1,7 +1,40 @@
-﻿namespace wacs.Messaging.Messages.Intercom.Rsm
+﻿using System;
+
+namespace wacs.Messaging.Messages.Intercom.Rsm
 {
-    public class Ballot
+    public class Ballot : IComparable
     {
+        public static bool operator <=(Ballot x, Ballot y)
+        {
+            var res = x.CompareTo(y);
+
+            return res < 0 || res == 0;
+        }
+
+        public static bool operator >=(Ballot x, Ballot y)
+        {
+            var res = x.CompareTo(y);
+
+            return res > 0 || res == 0;
+        }
+
+        public static bool operator <(Ballot x, Ballot y)
+        {
+            return x.CompareTo(y) < 0;
+        }
+
+        public static bool operator >(Ballot x, Ballot y)
+        {
+            return x.CompareTo(y) > 0;
+        }
+
+        public int CompareTo(object obj)
+        {
+            var ballot = obj as Ballot;
+
+            return ProposalNumber.CompareTo(ballot.ProposalNumber);
+        }
+
         protected bool Equals(Ballot other)
         {
             return ProposalNumber == other.ProposalNumber;

@@ -1,5 +1,5 @@
-﻿using System.Runtime.Remoting.Messaging;
-using wacs.FLease;
+﻿using wacs.Messaging.Messages;
+using wacs.Rsm.Interface;
 
 namespace wacs.Rsm.Implementation
 {

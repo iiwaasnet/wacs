@@ -33,7 +33,7 @@ namespace wacs.Rsm.Implementation
             var process = new Process(message.Envelope.Sender.Id);
 
             return ProcessIsInSynod(process)
-                   && payload.PrepareBallot.Equals(ballot)
+                   && payload.Ballot.Equals(ballot)
                    && payload.LogIndex.Equals(index);
         }
 
