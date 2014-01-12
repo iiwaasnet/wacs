@@ -11,7 +11,7 @@ namespace wacs.FLease
         private readonly Func<IMessage, bool> predicate;
         private readonly int maxCount;
         private int currentCount;
-        private readonly ManualResetEventSlim waitable;
+        private readonly ManualResetEventSlim awaitable;
         private readonly IDictionary<IProcess, IMessage> messages;
         private readonly object locker = new object();
 
@@ -21,7 +21,7 @@ namespace wacs.FLease
             this.maxCount = maxCount;
             currentCount = 0;
             messages = new Dictionary<IProcess, IMessage>();
-            waitable = new ManualResetEventSlim(false);
+            awaitable = new ManualResetEventSlim(false);
         }
 
         public void OnNext(IMessage value)
@@ -32,7 +32,7 @@ namespace wacs.FLease
                 {
                     var process = new Process(value.Envelope.Sender.Id);
 
-                    if (!waitable.IsSet)
+                    if (!awaitable.IsSet)
                     {
                         if (!messages.ContainsKey(process))
                         {
@@ -40,9 +40,9 @@ namespace wacs.FLease
                             currentCount++;
                         }
                     }
-                    if (currentCount == maxCount && !waitable.IsSet)
+                    if (currentCount == maxCount && !awaitable.IsSet)
                     {
-                        waitable.Set();
+                        awaitable.Set();
                     }
                 }
             }
@@ -58,19 +58,19 @@ namespace wacs.FLease
 
         public void Dispose()
         {
-            waitable.Dispose();
+            awaitable.Dispose();
         }
 
         public WaitHandle Filtered
         {
-            get { return waitable.WaitHandle; }
+            get { return awaitable.WaitHandle; }
         }
 
         public IEnumerable<IMessage> MessageStream
         {
             get
             {
-                waitable.Wait();
+                awaitable.Wait();
 
                 return messages.Values;
             }
