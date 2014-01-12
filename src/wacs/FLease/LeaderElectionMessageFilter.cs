@@ -13,7 +13,6 @@ namespace wacs.FLease
         private readonly string messageType;
         private readonly INodeResolver nodeResolver;
         private readonly Func<IMessage, ILeaseMessagePayload> payload;
-        private readonly ConcurrentDictionary<IProcess, object> responses;
         private readonly ISynodConfigurationProvider synodConfigurationProvider;
 
         public LeaderElectionMessageFilter(IBallot ballot,
@@ -22,7 +21,6 @@ namespace wacs.FLease
                                            INodeResolver nodeResolver,
                                            ISynodConfigurationProvider synodConfigurationProvider)
         {
-            responses = new ConcurrentDictionary<IProcess, object>();
             this.messageType = messageType;
             this.ballot = ballot;
             this.synodConfigurationProvider = synodConfigurationProvider;
@@ -42,8 +40,7 @@ namespace wacs.FLease
 
                     return messagePayload.Ballot.ProcessId == ballot.Process.Id
                            && messagePayload.Ballot.Timestamp == ballot.Timestamp.Ticks
-                           && messagePayload.Ballot.MessageNumber == ballot.MessageNumber
-                           && responses.TryAdd(process, null);
+                           && messagePayload.Ballot.MessageNumber == ballot.MessageNumber;
                 }
             }
 

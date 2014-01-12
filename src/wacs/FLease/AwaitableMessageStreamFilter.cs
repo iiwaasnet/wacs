@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using wacs.Configuration;
 using wacs.Messaging.Messages;
 
 namespace wacs.FLease
@@ -11,14 +12,15 @@ namespace wacs.FLease
         private readonly int maxCount;
         private int currentCount;
         private readonly ManualResetEventSlim waitable;
-        private readonly IList<IMessage> messages;
+        private readonly IDictionary<IProcess, IMessage> messages;
+        private readonly object locker = new object();
 
         public AwaitableMessageStreamFilter(Func<IMessage, bool> predicate, int maxCount)
         {
             this.predicate = predicate;
             this.maxCount = maxCount;
             currentCount = 0;
-            messages = new List<IMessage>(maxCount);
+            messages = new Dictionary<IProcess, IMessage>();
             waitable = new ManualResetEventSlim(false);
         }
 
@@ -26,13 +28,22 @@ namespace wacs.FLease
         {
             if (predicate(value))
             {
-                if (!waitable.IsSet)
+                lock (locker)
                 {
-                    messages.Add(value);
-                }
-                if (Interlocked.Increment(ref currentCount) == maxCount && !waitable.IsSet)
-                {
-                    waitable.Set();
+                    var process = new Process(value.Envelope.Sender.Id);
+
+                    if (!waitable.IsSet)
+                    {
+                        if (!messages.ContainsKey(process))
+                        {
+                            messages[process] = value;
+                            currentCount++;
+                        }
+                    }
+                    if (currentCount == maxCount && !waitable.IsSet)
+                    {
+                        waitable.Set();
+                    }
                 }
             }
         }
@@ -57,7 +68,12 @@ namespace wacs.FLease
 
         public IEnumerable<IMessage> MessageStream
         {
-            get { return messages; }
+            get
+            {
+                waitable.Wait();
+
+                return messages.Values;
+            }
         }
     }
 }
