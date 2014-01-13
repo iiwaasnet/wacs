@@ -1,8 +1,9 @@
-﻿using wacs.Rsm.Implementation;
+﻿using System;
+using wacs.Rsm.Implementation;
 
 namespace wacs.Rsm.Interface
 {
-    public interface IBallot
+    public interface IBallot : IComparable
     {
         Ballot NewByIncrementing();
 

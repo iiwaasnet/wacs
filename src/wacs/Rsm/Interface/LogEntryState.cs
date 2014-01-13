@@ -2,7 +2,7 @@
 {
     public enum LogEntryState
     {
-        Proposed,
+        Unknown,
         Accepted,
         Chosen
     }

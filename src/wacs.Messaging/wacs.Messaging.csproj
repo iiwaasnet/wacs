@@ -90,6 +90,7 @@
     <Compile Include="Messages\Intercom\Rsm\Ballot.cs" />
     <Compile Include="Messages\Intercom\Rsm\IPreparePayload.cs" />
     <Compile Include="Messages\Intercom\Rsm\LogIndex.cs" />
+    <Compile Include="Messages\Intercom\Rsm\RsmNackPrepareNotLeader.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmNackPrepareChosen.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmNackPrepareBlocked.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmAckPrepare.cs" />

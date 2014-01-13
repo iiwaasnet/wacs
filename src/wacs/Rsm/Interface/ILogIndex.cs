@@ -2,6 +2,7 @@
 {
     public interface ILogIndex
     {
+        ILogIndex Increment();
         ulong Index { get; }
     }
 }

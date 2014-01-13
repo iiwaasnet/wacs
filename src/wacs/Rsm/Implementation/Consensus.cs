@@ -11,6 +11,7 @@ using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
+using IBallot = wacs.Rsm.Interface.IBallot;
 using Process = wacs.Messaging.Messages.Intercom.Process;
 
 namespace wacs.Rsm.Implementation
@@ -41,7 +42,8 @@ namespace wacs.Rsm.Implementation
 
             ackPrepareStream = listener.Where(m => m.Body.MessageType == RsmAckPrepare.MessageType);
             nackPrepareStream = listener.Where(m => m.Body.MessageType == RsmNackPrepareBlocked.MessageType
-                                                    || m.Body.MessageType == RsmNackPrepareChosen.MessageType);
+                                                    || m.Body.MessageType == RsmNackPrepareChosen.MessageType
+                                                    || m.Body.MessageType == RsmNackPrepareNotLeader.MessageType);
         }
 
         public IConsensusDecision Decide(ILogIndex index, IMessage command, bool fast)
@@ -57,7 +59,7 @@ namespace wacs.Rsm.Implementation
             return null;
         }
 
-        private PreparePhaseResult SendPrepare(ILogIndex logIndex, Interface.IBallot ballot)
+        private PreparePhaseResult SendPrepare(ILogIndex logIndex, IBallot ballot)
         {
             var ackFilter = new RsmPrepareAckMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
             var nackFilter = new RsmPrepareNackMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
@@ -116,6 +118,14 @@ namespace wacs.Rsm.Implementation
                        };
             }
 
+            if (prepareResponses.Any(m => m.Body.MessageType == RsmNackPrepareNotLeader.MessageType))
+            {
+                return new PreparePhaseResult
+                       {
+                           Outcome = PreparePhaseOutcome.FailedDueToNotBeingLeader
+                       };
+            }
+
             throw new InvalidStateException();
         }
 
@@ -154,7 +164,7 @@ namespace wacs.Rsm.Implementation
             }
         }
 
-        private IMessage CreatePrepareMessage(ILogIndex index, Interface.IBallot ballot)
+        private IMessage CreatePrepareMessage(ILogIndex index, IBallot ballot)
         {
             return new RsmPrepare(synodConfigurationProvider.LocalProcess,
                                   new RsmPrepare.Payload

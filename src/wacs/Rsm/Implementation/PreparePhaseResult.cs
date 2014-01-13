@@ -15,6 +15,7 @@ namespace wacs.Rsm.Implementation
         SucceededWithProposedValue,
         SucceededWithOtherValue,
         FailedDueToLowBallot,
-        FailedDueToChosenLogEntry
+        FailedDueToChosenLogEntry,
+        FailedDueToNotBeingLeader
     }
 }

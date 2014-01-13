@@ -1,4 +1,5 @@
-﻿using wacs.Configuration;
+﻿using System;
+using wacs.Configuration;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Resolver;
@@ -26,15 +27,31 @@ namespace wacs.Rsm.Implementation
 
         internal bool Match(IMessage message)
         {
-            var payload = (RsmNackPrepareBlocked.MessageType == message.Body.MessageType)
-                                          ? (IPreparePayload) new RsmNackPrepareBlocked(message).GetPayload()
-                                          : (IPreparePayload) new RsmNackPrepareChosen(message).GetPayload();
+            var payload = GetPayload(message);
 
             var process = new Process(message.Envelope.Sender.Id);
 
             return ProcessIsInSynod(process)
                    && payload.Ballot.Equals(ballot)
                    && payload.LogIndex.Equals(index);
+        }
+
+        private static IPreparePayload GetPayload(IMessage message)
+        {
+            if (RsmNackPrepareBlocked.MessageType == message.Body.MessageType)
+            {
+                return new RsmNackPrepareBlocked(message).GetPayload();
+            }
+            if (RsmNackPrepareChosen.MessageType == message.Body.MessageType)
+            {
+                return new RsmNackPrepareChosen(message).GetPayload();
+            }
+            if (RsmNackPrepareNotLeader.MessageType == message.Body.MessageType)
+            {
+                return new RsmNackPrepareNotLeader(message).GetPayload();
+            }
+
+            throw new Exception(string.Format("Message type {0} is unknown!", message.Body.MessageType));
         }
 
         private bool ProcessIsInSynod(IProcess process)
