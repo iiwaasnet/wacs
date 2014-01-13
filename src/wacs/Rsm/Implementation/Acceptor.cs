@@ -11,7 +11,7 @@ using wacs.Rsm.Interface;
 
 namespace wacs.Rsm.Implementation
 {
-    public class Acceptor : IAcceptor
+    public partial class Acceptor : IAcceptor
     {
         private readonly ILogger logger;
         private readonly IListener listener;
@@ -68,95 +68,6 @@ namespace wacs.Rsm.Implementation
             {
                 logger.Error(err);
             }
-        }
-
-        private IMessage RespondOnPrepareRequestFromLeader(RsmPrepare.Payload payload, Ballot proposal)
-        {
-            IMessage response;
-
-            var logEntry = replicatedLog.GetLogEntry(new LogIndex(payload.LogIndex.Index));
-
-            if (logEntry.State == LogEntryState.Chosen)
-            {
-                response = CreateNackChosenMessage(payload);
-            }
-            else
-            {
-                response = RespondOnUnchosenLogEntry(payload, proposal, logEntry);
-            }
-            return response;
-        }
-
-        private IMessage RespondOnUnchosenLogEntry(RsmPrepare.Payload payload, Ballot proposal, ILogEntry logEntry)
-        {
-            IMessage response;
-
-            if (proposal > minProposal)
-            {
-                minProposal = proposal;
-                response = CreateAckPrepareMessage(payload, logEntry);
-            }
-            else
-            {
-                response = CreateNackPrepareMessage(payload);
-            }
-
-            return response;
-        }
-
-        private IMessage CreateNackChosenMessage(RsmPrepare.Payload payload)
-        {
-            return new RsmNackPrepareChosen(nodeResolver.ResolveLocalNode(),
-                                            new RsmNackPrepareChosen.Payload
-                                            {
-                                                Proposal = payload.Proposal,
-                                                LogIndex = payload.LogIndex
-                                            });
-        }
-
-        private IMessage CreateNackPrepareMessage(RsmPrepare.Payload payload)
-        {
-            return new RsmNackPrepareBlocked(nodeResolver.ResolveLocalNode(),
-                                             new RsmNackPrepareBlocked.Payload
-                                             {
-                                                 Proposal = payload.Proposal,
-                                                 LogIndex = payload.LogIndex,
-                                                 AcceptedProposal = new Messaging.Messages.Intercom.Rsm.Ballot
-                                                                    {
-                                                                        ProposalNumber = acceptedProposal.ProposalNumber
-                                                                    }
-                                             });
-        }
-
-        private IMessage CreateNackNotLeaderMessage(RsmPrepare.Payload payload)
-        {
-            return new RsmNackPrepareNotLeader(nodeResolver.ResolveLocalNode(),
-                                               new RsmNackPrepareNotLeader.Payload
-                                               {
-                                                   Proposal = payload.Proposal,
-                                                   LogIndex = payload.LogIndex
-                                               });
-        }
-
-        private bool PrepareCameNotFromLeader(IProcess sender)
-        {
-            return !sender.Equals(leaseProvider.GetLease().Result.Owner);
-        }
-
-        private IMessage CreateAckPrepareMessage(RsmPrepare.Payload payload, ILogEntry logEntry)
-        {
-            return new RsmAckPrepare(nodeResolver.ResolveLocalNode(),
-                                     new RsmAckPrepare.Payload
-                                     {
-                                         Proposal = payload.Proposal,
-                                         LogIndex = payload.LogIndex,
-                                         AcceptedValue = (logEntry != null && logEntry.State == LogEntryState.Accepted)
-                                                             ? new Message(logEntry.Value.Command.Envelope, logEntry.Value.Command.Body)
-                                                             : null,
-                                         AcceptedProposal = (acceptedProposal != null)
-                                                                ? new Messaging.Messages.Intercom.Rsm.Ballot {ProposalNumber = acceptedProposal.ProposalNumber}
-                                                                : null
-                                     });
         }
     }
 }
