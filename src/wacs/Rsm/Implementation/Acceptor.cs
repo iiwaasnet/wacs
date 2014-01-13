@@ -55,27 +55,45 @@ namespace wacs.Rsm.Implementation
                 }
                 else
                 {
-                    var logEntry = replicatedLog.GetLogEntry(new LogIndex(payload.LogIndex.Index));
-                    if (logEntry.State == LogEntryState.Chosen)
-                    {
-                        response = CreateNackChosenMessage(payload);
-                    }
-                    else
-                    {
-                        if (proposal > minProposal)
-                        {
-                            minProposal = proposal;
-                            response = CreateAckPrepareMessage(payload, logEntry);
-                        }
-                        else
-                        {
-                            response = CreateNackPrepareMessage(payload);
-                        }
-                    }
+                    response = RespondOnPrepareRequestFromLeader(payload, proposal);
                 }
             }
 
             intercomMessageHub.Send(new Process(message.Envelope.Sender.Id), response);
+        }
+
+        private IMessage RespondOnPrepareRequestFromLeader(RsmPrepare.Payload payload, Ballot proposal)
+        {
+            IMessage response;
+
+            var logEntry = replicatedLog.GetLogEntry(new LogIndex(payload.LogIndex.Index));
+
+            if (logEntry.State == LogEntryState.Chosen)
+            {
+                response = CreateNackChosenMessage(payload);
+            }
+            else
+            {
+                response = RespondOnUnchosenLogEntry(payload, proposal, logEntry);
+            }
+            return response;
+        }
+
+        private IMessage RespondOnUnchosenLogEntry(RsmPrepare.Payload payload, Ballot proposal, ILogEntry logEntry)
+        {
+            IMessage response;
+
+            if (proposal > minProposal)
+            {
+                minProposal = proposal;
+                response = CreateAckPrepareMessage(payload, logEntry);
+            }
+            else
+            {
+                response = CreateNackPrepareMessage(payload);
+            }
+
+            return response;
         }
 
         private IMessage CreateNackChosenMessage(RsmPrepare.Payload payload)
