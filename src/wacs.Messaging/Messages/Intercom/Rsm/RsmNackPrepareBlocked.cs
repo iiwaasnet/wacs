@@ -23,7 +23,7 @@ namespace wacs.Messaging.Messages.Intercom.Rsm
         {
             public LogIndex LogIndex { get; set; }
             public Ballot Proposal { get; set; }
-            public Ballot AcceptedProposal { get; set; }
+            public Ballot MinProposal { get; set; }
         }
     }
 }

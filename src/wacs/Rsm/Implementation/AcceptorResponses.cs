@@ -33,7 +33,7 @@ namespace wacs.Rsm.Implementation
                                              {
                                                  Proposal = payload.Proposal,
                                                  LogIndex = payload.LogIndex,
-                                                 AcceptedProposal = new Messaging.Messages.Intercom.Rsm.Ballot
+                                                 MinProposal = new Messaging.Messages.Intercom.Rsm.Ballot
                                                                     {
                                                                         ProposalNumber = acceptedProposal.ProposalNumber
                                                                     }

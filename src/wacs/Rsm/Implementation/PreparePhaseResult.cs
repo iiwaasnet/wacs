@@ -7,7 +7,7 @@ namespace wacs.Rsm.Implementation
     {
         internal IMessage AcceptedValue { get; set; }
         internal PreparePhaseOutcome Outcome { get; set; }
-        internal IBallot AcceptedProposal { get; set; }
+        internal IBallot MinProposal { get; set; }
     }
 
     internal enum PreparePhaseOutcome

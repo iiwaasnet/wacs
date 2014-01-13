@@ -13,6 +13,8 @@ namespace wacs.Rsm.Interface
     {
         DecidedWithProposedValue,
         DecidedWithOtherValue,
-        RejectedDueToChosenLogEntry
+        RejectedDueToChosenLogEntry,
+        FailedDueToNotBeingLeader,
+        FailedDueToLowBallot
     }
 }

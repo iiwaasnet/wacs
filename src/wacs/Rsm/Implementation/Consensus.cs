@@ -49,14 +49,46 @@ namespace wacs.Rsm.Implementation
         public IConsensusDecision Decide(ILogIndex index, IMessage command, bool fast)
         {
             var ballot = consensusRoundManager.GetNextBallot();
-            var prepareOutcome = SendPrepare(index, ballot);
 
-            if (prepareOutcome.Outcome == PreparePhaseOutcome.FailedDueToChosenLogEntry)
-            {
-                return new ConsensusDecision {Outcome = ConsensusOutcome.RejectedDueToChosenLogEntry};
-            }
+            var prepareOutcome = RunPreparePhase(ballot, index);
 
             return null;
+        }
+
+        private IConsensusDecision RunPreparePhase(IBallot ballot, ILogIndex index)
+        {
+            var prepareOutcome = SendPrepare(index, ballot);
+
+            if (PrepareNotCommitted(prepareOutcome))
+            {
+                if(prepareOutcome.Outcome == PreparePhaseOutcome.FailedDueToLowBallot)
+                {
+                    consensusRoundManager.SetMinBallot(prepareOutcome.MinProposal);
+                }
+
+                return CreateFailedConsensusDecision(prepareOutcome);
+            }
+        }
+
+        private IConsensusDecision CreateFailedConsensusDecision(PreparePhaseResult prepareOutcome)
+        {
+            switch (prepareOutcome.Outcome)
+            {
+                case PreparePhaseOutcome.FailedDueToChosenLogEntry:
+                    return new ConsensusDecision {Outcome = ConsensusOutcome.RejectedDueToChosenLogEntry};
+                case PreparePhaseOutcome.FailedDueToNotBeingLeader:
+                    return new ConsensusDecision {Outcome = ConsensusOutcome.FailedDueToNotBeingLeader};
+                case PreparePhaseOutcome.FailedDueToLowBallot:
+                    return new ConsensusDecision {Outcome = ConsensusOutcome.FailedDueToLowBallot};
+                default:
+                    throw new Exception(string.Format("PreparePhaseOutcome {0} is not known!", prepareOutcome.Outcome));
+            }
+        }
+
+        private bool PrepareNotCommitted(PreparePhaseResult prepareOutcome)
+        {
+            return prepareOutcome.Outcome != PreparePhaseOutcome.SucceededWithOtherValue
+                   && prepareOutcome.Outcome != PreparePhaseOutcome.SucceededWithProposedValue;
         }
 
         private PreparePhaseResult SendPrepare(ILogIndex logIndex, IBallot ballot)
@@ -106,15 +138,15 @@ namespace wacs.Rsm.Implementation
                        };
             }
 
-            var acceptedProposal = prepareResponses.Where(m => m.Body.MessageType == RsmNackPrepareBlocked.MessageType)
+            var minProposal = prepareResponses.Where(m => m.Body.MessageType == RsmNackPrepareBlocked.MessageType)
                                                    .Select(m => new RsmNackPrepareBlocked(m).GetPayload())
-                                                   .Max(p => p.AcceptedProposal);
-            if (acceptedProposal != null)
+                                                   .Max(p => p.MinProposal);
+            if (minProposal != null)
             {
                 return new PreparePhaseResult
                        {
                            Outcome = PreparePhaseOutcome.FailedDueToLowBallot,
-                           AcceptedProposal = new Ballot(acceptedProposal.ProposalNumber)
+                           MinProposal = new Ballot(minProposal.ProposalNumber)
                        };
             }
 
