@@ -165,6 +165,7 @@
     <Compile Include="Rsm\Interface\IRsm.cs" />
     <Compile Include="Rsm\Implementation\Rsm.cs" />
     <Compile Include="Rsm\Implementation\Proposer.cs" />
+    <Compile Include="Rsm\Implementation\LogIndex.cs" />
     <Compile Include="TestService.cs" />
     <Compile Include="Rsm\Implementation\ClientMessageProcessor.cs" />
     <Compile Include="Rsm\Interface\IClientMessageProcessor.cs" />

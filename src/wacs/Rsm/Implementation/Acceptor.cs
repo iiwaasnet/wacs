@@ -43,7 +43,7 @@ namespace wacs.Rsm.Implementation
         private void OnPrepareReceived(IMessage message)
         {
             var payload = new RsmPrepare(message).GetPayload();
-            var proposal = new Ballot(payload.Ballot.ProposalNumber);
+            var proposal = new Ballot(payload.Proposal.ProposalNumber);
 
             IMessage response;
 
@@ -55,10 +55,22 @@ namespace wacs.Rsm.Implementation
                 }
                 else
                 {
-                    if (proposal > minProposal)
+                    var logEntry = replicatedLog.GetLogEntry(new LogIndex(payload.LogIndex.Index));
+                    if (logEntry.State == LogEntryState.Chosen)
                     {
-                        minProposal = proposal;
-                        response = CreateAckPrepareMessage(payload);
+                        response = CreateNackChosenMessage(payload);
+                    }
+                    else
+                    {
+                        if (proposal > minProposal)
+                        {
+                            minProposal = proposal;
+                            response = CreateAckPrepareMessage(payload, logEntry);
+                        }
+                        else
+                        {
+                            response = CreateNackPrepareMessage(payload);
+                        }
                     }
                 }
             }
@@ -66,12 +78,36 @@ namespace wacs.Rsm.Implementation
             intercomMessageHub.Send(new Process(message.Envelope.Sender.Id), response);
         }
 
+        private IMessage CreateNackChosenMessage(RsmPrepare.Payload payload)
+        {
+            return new RsmNackPrepareChosen(nodeResolver.ResolveLocalNode(),
+                                            new RsmNackPrepareChosen.Payload
+                                            {
+                                                Proposal = payload.Proposal,
+                                                LogIndex = payload.LogIndex
+                                            });
+        }
+
+        private IMessage CreateNackPrepareMessage(RsmPrepare.Payload payload)
+        {
+            return new RsmNackPrepareBlocked(nodeResolver.ResolveLocalNode(),
+                                             new RsmNackPrepareBlocked.Payload
+                                             {
+                                                 Proposal = payload.Proposal,
+                                                 LogIndex = payload.LogIndex,
+                                                 AcceptedProposal = new Messaging.Messages.Intercom.Rsm.Ballot
+                                                                    {
+                                                                        ProposalNumber = acceptedProposal.ProposalNumber
+                                                                    }
+                                             });
+        }
+
         private IMessage CreateNackNotLeaderMessage(RsmPrepare.Payload payload)
         {
             return new RsmNackPrepareNotLeader(nodeResolver.ResolveLocalNode(),
                                                new RsmNackPrepareNotLeader.Payload
                                                {
-                                                   Ballot = payload.Ballot,
+                                                   Proposal = payload.Proposal,
                                                    LogIndex = payload.LogIndex
                                                });
         }
@@ -81,9 +117,20 @@ namespace wacs.Rsm.Implementation
             return !sender.Equals(leaseProvider.GetLease().Result.Owner);
         }
 
-        private IMessage CreateAckPrepareMessage(RsmPrepare.Payload payload)
+        private IMessage CreateAckPrepareMessage(RsmPrepare.Payload payload, ILogEntry logEntry)
         {
-            return new RsmAckPrepare();
+            return new RsmAckPrepare(nodeResolver.ResolveLocalNode(),
+                                     new RsmAckPrepare.Payload
+                                     {
+                                         Proposal = payload.Proposal,
+                                         LogIndex = payload.LogIndex,
+                                         AcceptedValue = (logEntry != null && logEntry.State == LogEntryState.Accepted)
+                                                             ? new Message(logEntry.Value.Command.Envelope, logEntry.Value.Command.Body)
+                                                             : null,
+                                         AcceptedProposal = (acceptedProposal != null)
+                                                                ? new Messaging.Messages.Intercom.Rsm.Ballot {ProposalNumber = acceptedProposal.ProposalNumber}
+                                                                : null
+                                     });
         }
     }
 }

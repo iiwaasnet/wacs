@@ -42,7 +42,7 @@ namespace wacs
                 timer.Stop();
                 if (lease != null)
                 {
-                    logger.DebugFormat("[{4}] Requested Ballot: Timestamp {0}, process {1} === Received Lease: Leader {2} ExpiresAt {3} [{5}]",
+                    logger.DebugFormat("[{4}] Requested Proposal: Timestamp {0}, process {1} === Received Lease: Leader {2} ExpiresAt {3} [{5}]",
                                        ballot.Timestamp.ToString("HH:mm:ss fff"),
                                        ballot.Process.Id,
                                        lease.Owner.Id,
@@ -52,7 +52,7 @@ namespace wacs
                 }
                 else
                 {
-                    logger.DebugFormat("[{2}] Requested Ballot: Timestamp {0}, process {1} === Received Lease: NULL [{3}]",
+                    logger.DebugFormat("[{2}] Requested Proposal: Timestamp {0}, process {1} === Received Lease: NULL [{3}]",
                                        ballot.Timestamp.ToString("HH:mm:ss fff"),
                                        ballot.Process.Id,
                                        DateTime.UtcNow.ToString("HH:mm:ss fff"),

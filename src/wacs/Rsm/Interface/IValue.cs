@@ -1,7 +1,9 @@
-﻿namespace wacs.Rsm.Interface
+﻿using wacs.Messaging.Messages;
+
+namespace wacs.Rsm.Interface
 {
     public interface IValue
     {
-        ICommand Command { get; }
+        IMessage Command { get; }
     }
 }

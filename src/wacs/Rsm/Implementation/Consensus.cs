@@ -106,15 +106,15 @@ namespace wacs.Rsm.Implementation
                        };
             }
 
-            var acceptedBallot = prepareResponses.Where(m => m.Body.MessageType == RsmNackPrepareBlocked.MessageType)
-                                                 .Select(m => new RsmNackPrepareBlocked(m).GetPayload())
-                                                 .Max(p => p.AcceptedBallot);
-            if (acceptedBallot != null)
+            var acceptedProposal = prepareResponses.Where(m => m.Body.MessageType == RsmNackPrepareBlocked.MessageType)
+                                                   .Select(m => new RsmNackPrepareBlocked(m).GetPayload())
+                                                   .Max(p => p.AcceptedProposal);
+            if (acceptedProposal != null)
             {
                 return new PreparePhaseResult
                        {
                            Outcome = PreparePhaseOutcome.FailedDueToLowBallot,
-                           AcceptedBallot = new Ballot(acceptedBallot.ProposalNumber)
+                           AcceptedProposal = new Ballot(acceptedProposal.ProposalNumber)
                        };
             }
 
@@ -132,13 +132,13 @@ namespace wacs.Rsm.Implementation
         private PreparePhaseResult CreatePrepareSucceededResult(IEnumerable<IMessage> prepareResponses)
         {
             var payloads = prepareResponses.Select(m => new RsmAckPrepare(m).GetPayload());
-            var maxAcceptedBallot = payloads.Where(a => a.AcceptedValue != null)
-                                            .Max(p => p.AcceptedBallot);
-            if (maxAcceptedBallot != null)
+            var maxAcceptedProposal = payloads.Where(a => a.AcceptedValue != null && a.AcceptedProposal != null)
+                                              .Max(p => p.AcceptedProposal);
+            if (maxAcceptedProposal != null)
             {
                 return new PreparePhaseResult
                        {
-                           AcceptedValue = payloads.First(p => p.AcceptedBallot.Equals(maxAcceptedBallot)).AcceptedValue,
+                           AcceptedValue = payloads.First(p => p.AcceptedProposal.Equals(maxAcceptedProposal)).AcceptedValue,
                            Outcome = PreparePhaseOutcome.SucceededWithOtherValue
                        };
             }
@@ -169,8 +169,8 @@ namespace wacs.Rsm.Implementation
             return new RsmPrepare(synodConfigurationProvider.LocalProcess,
                                   new RsmPrepare.Payload
                                   {
-                                      Ballot = new Messaging.Messages.Intercom.Rsm.Ballot {ProposalNumber = ballot.ProposalNumber},
-                                      LogIndex = new LogIndex {Index = index.Index},
+                                      Proposal = new Messaging.Messages.Intercom.Rsm.Ballot {ProposalNumber = ballot.ProposalNumber},
+                                      LogIndex = new Messaging.Messages.Intercom.Rsm.LogIndex {Index = index.Index},
                                       Leader = new Process {Id = synodConfigurationProvider.LocalProcess.Id}
                                   });
         }
