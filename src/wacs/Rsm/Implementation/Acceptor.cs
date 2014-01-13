@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System;
+using System.Reactive.Linq;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.FLease;
@@ -42,24 +43,31 @@ namespace wacs.Rsm.Implementation
 
         private void OnPrepareReceived(IMessage message)
         {
-            var payload = new RsmPrepare(message).GetPayload();
-            var proposal = new Ballot(payload.Proposal.ProposalNumber);
-
-            IMessage response;
-
-            lock (locker)
+            try
             {
+                var payload = new RsmPrepare(message).GetPayload();
+                var proposal = new Ballot(payload.Proposal.ProposalNumber);
+
+                IMessage response;
+
                 if (PrepareCameNotFromLeader(message.Envelope.Sender))
                 {
                     response = CreateNackNotLeaderMessage(payload);
                 }
                 else
                 {
-                    response = RespondOnPrepareRequestFromLeader(payload, proposal);
+                    lock (locker)
+                    {
+                        response = RespondOnPrepareRequestFromLeader(payload, proposal);
+                    }
                 }
-            }
 
-            intercomMessageHub.Send(new Process(message.Envelope.Sender.Id), response);
+                intercomMessageHub.Send(new Process(message.Envelope.Sender.Id), response);
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
         }
 
         private IMessage RespondOnPrepareRequestFromLeader(RsmPrepare.Payload payload, Ballot proposal)
