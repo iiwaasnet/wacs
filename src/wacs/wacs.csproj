@@ -148,6 +148,7 @@
     <Compile Include="MainModule.cs" />
     <Compile Include="Rsm\Implementation\AcceptorPreparePhase.cs" />
     <Compile Include="Rsm\Implementation\AcceptorResponses.cs" />
+    <Compile Include="Rsm\Implementation\AcceptPhaseResult.cs" />
     <Compile Include="Rsm\Implementation\AwaitableRsmResponse.cs" />
     <Compile Include="Rsm\Implementation\Ballot.cs" />
     <Compile Include="Rsm\Implementation\Consensus.cs" />
@@ -156,7 +157,7 @@
     <Compile Include="Rsm\Implementation\ConsensusRoundManager.cs" />
     <Compile Include="Rsm\Implementation\PreparePhaseResult.cs" />
     <Compile Include="Rsm\Implementation\RsmPrepareNackMessageFilter.cs" />
-    <Compile Include="Rsm\Implementation\RsmPrepareAckMessageFilter.cs" />
+    <Compile Include="Rsm\Implementation\RsmMessageFilter.cs" />
     <Compile Include="Rsm\Implementation\ConsensusDecision.cs" />
     <Compile Include="Rsm\Interface\IBallot.cs" />
     <Compile Include="Rsm\Interface\IAcceptor.cs" />

@@ -2,21 +2,21 @@
 
 namespace wacs.Messaging.Messages.Intercom.Rsm
 {
-    public class RsmNackPrepareChosen : TypedMessage<RsmNackPrepareChosen.Payload>
+    public class RsmAckAccept : TypedMessage<RsmAckAccept.Payload>
     {
-        public RsmNackPrepareChosen(IMessage message)
+        public RsmAckAccept(IMessage message)
             : base(message)
         {
         }
 
-        public RsmNackPrepareChosen(IProcess sender, Payload payload)
+        public RsmAckAccept(IProcess sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }
 
         public static string MessageType
         {
-            get { return "RSM_NACK_PREPARE_CHOSEN"; }
+            get { return "RSM_ACK_ACCEPT"; }
         }
 
         public class Payload : IConsensusDecisionPayload

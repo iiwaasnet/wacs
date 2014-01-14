@@ -1,6 +1,6 @@
 ﻿namespace wacs.Messaging.Messages.Intercom.Rsm
 {
-    public interface IPreparePayload
+    public interface IConsensusDecisionPayload
     {
         LogIndex LogIndex { get; }
         Ballot Proposal { get; } 

@@ -36,7 +36,7 @@ namespace wacs.Rsm.Implementation
                    && payload.LogIndex.Equals(index);
         }
 
-        private static IPreparePayload GetPayload(IMessage message)
+        private static IConsensusDecisionPayload GetPayload(IMessage message)
         {
             if (RsmNackPrepareBlocked.MessageType == message.Body.MessageType)
             {

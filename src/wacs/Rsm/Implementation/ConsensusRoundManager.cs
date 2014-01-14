@@ -15,5 +15,10 @@ namespace wacs.Rsm.Implementation
         {
             return currentRoundBallot = currentRoundBallot.NewByIncrementing();
         }
+
+        public void SetMinBallot(IBallot minProposal)
+        {
+            currentRoundBallot = new Ballot(minProposal.ProposalNumber);
+        }
     }
 }

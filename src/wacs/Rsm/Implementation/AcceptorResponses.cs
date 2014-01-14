@@ -6,7 +6,7 @@ namespace wacs.Rsm.Implementation
 {
     public partial class Acceptor : IAcceptor
     {
-        private IMessage CreateNackNotLeaderMessage(IPreparePayload payload)
+        private IMessage CreateNackNotLeaderMessage(IConsensusDecisionPayload payload)
         {
             return new RsmNackPrepareNotLeader(nodeResolver.ResolveLocalNode(),
                                                new RsmNackPrepareNotLeader.Payload
@@ -16,7 +16,7 @@ namespace wacs.Rsm.Implementation
                                                });
         }
 
-        private IMessage CreateNackChosenMessage(IPreparePayload payload)
+        private IMessage CreateNackChosenMessage(IConsensusDecisionPayload payload)
         {
             return new RsmNackPrepareChosen(nodeResolver.ResolveLocalNode(),
                                             new RsmNackPrepareChosen.Payload
@@ -26,7 +26,7 @@ namespace wacs.Rsm.Implementation
                                             });
         }
 
-        private IMessage CreateNackPrepareMessage(IPreparePayload payload)
+        private IMessage CreateNackPrepareMessage(IConsensusDecisionPayload payload)
         {
             return new RsmNackPrepareBlocked(nodeResolver.ResolveLocalNode(),
                                              new RsmNackPrepareBlocked.Payload
@@ -40,7 +40,7 @@ namespace wacs.Rsm.Implementation
                                              });
         }
 
-        private IMessage CreateAckPrepareMessage(IPreparePayload payload, ILogEntry logEntry)
+        private IMessage CreateAckPrepareMessage(IConsensusDecisionPayload payload, ILogEntry logEntry)
         {
             return new RsmAckPrepare(nodeResolver.ResolveLocalNode(),
                                      new RsmAckPrepare.Payload

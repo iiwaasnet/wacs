@@ -19,7 +19,7 @@ namespace wacs.Messaging.Messages.Intercom.Rsm
             get { return "RSM_PREPARE"; }
         }
 
-        public class Payload : IPreparePayload
+        public class Payload : IConsensusDecisionPayload
         {
             public Process Leader { get; set; }
             public Ballot Proposal { get; set; }

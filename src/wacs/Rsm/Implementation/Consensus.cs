@@ -22,7 +22,9 @@ namespace wacs.Rsm.Implementation
         private readonly IIntercomMessageHub intercomMessageHub;
         private readonly IListener listener;
         private readonly IObservable<IMessage> ackPrepareStream;
+        private readonly IObservable<IMessage> ackAcceptStream;
         private readonly IObservable<IMessage> nackPrepareStream;
+        private readonly IObservable<IMessage> nackAcceptStream;
         private readonly ISynodConfigurationProvider synodConfigurationProvider;
         private readonly INodeResolver nodeResolver;
         private readonly IRsmConfiguration rsmConfig;
@@ -41,36 +43,94 @@ namespace wacs.Rsm.Implementation
             listener = intercomMessageHub.Subscribe();
 
             ackPrepareStream = listener.Where(m => m.Body.MessageType == RsmAckPrepare.MessageType);
+            ackAcceptStream = listener.Where(m => m.Body.MessageType == RsmAckAccept.MessageType);
             nackPrepareStream = listener.Where(m => m.Body.MessageType == RsmNackPrepareBlocked.MessageType
                                                     || m.Body.MessageType == RsmNackPrepareChosen.MessageType
                                                     || m.Body.MessageType == RsmNackPrepareNotLeader.MessageType);
+            nackAcceptStream = listener.Where(m => m.Body.MessageType ==);
         }
 
-        public IConsensusDecision Decide(ILogIndex index, IMessage command, bool fast)
+        public IConsensusDecision Decide(ILogIndex logIndex, IMessage command, bool fast)
         {
             var ballot = consensusRoundManager.GetNextBallot();
 
-            var prepareOutcome = RunPreparePhase(ballot, index);
+            var preparePhase = RunPreparePhase(ballot, logIndex);
+            if (PrepareNotCommitted(preparePhase))
+            {
+                return CreateValueNotDecidedResponse(preparePhase);
+            }
 
-            return null;
+            var value = (preparePhase.Outcome == PreparePhaseOutcome.SucceededWithOtherValue)
+                            ? preparePhase.AcceptedValue
+                            : command;
+
+            var acceptPhase = RunAcceptPhase(ballot, logIndex, value);
         }
 
-        private IConsensusDecision RunPreparePhase(IBallot ballot, ILogIndex index)
+        private AcceptPhaseResult RunAcceptPhase(IBallot ballot, ILogIndex index, IMessage command)
         {
-            var prepareOutcome = SendPrepare(index, ballot);
+            var acceptOutcome = SendAccept(ballot, index, command);
+        }
 
-            if (PrepareNotCommitted(prepareOutcome))
+        private AcceptPhaseResult SendAccept(IBallot ballot, ILogIndex logIndex, IMessage value)
+        {
+            var ackFilter = new RsmMessageFilter(ballot, logIndex, (m) => new RsmAckAccept(m).GetPayload(), nodeResolver, synodConfigurationProvider);
+            var nackFilter = new RsmMessageFilter(ballot, logIndex, (m) => new RsmNackAcceptBlocked(m).GetPayload(), nodeResolver, synodConfigurationProvider);
+
+            var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
+            var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());
+
+            using (ackAcceptStream.Subscribe(awaitableAckFilter))
             {
-                if(prepareOutcome.Outcome == PreparePhaseOutcome.FailedDueToLowBallot)
+                using (nackAcceptStream.Subscribe(awaitableNackFilter))
                 {
-                    consensusRoundManager.SetMinBallot(prepareOutcome.MinProposal);
-                }
+                    var message = CreateAcceptMessage(logIndex, ballot, value);
+                    intercomMessageHub.Broadcast(message);
 
-                return CreateFailedConsensusDecision(prepareOutcome);
+                    var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered},
+                                                   rsmConfig.CommandExecutionTimeout);
+
+                    AssertPrepareTimeout(index);
+
+                    if (PhaseAcknowledged(index))
+                    {
+                        return CreateAcceptSucceededResult(awaitableAckFilter.MessageStream);
+                    }
+                    if (PhaseRejected(index))
+                    {
+                        return CreateAcceptRejectedResult(awaitableNackFilter.MessageStream);
+                    }
+
+                    throw new InvalidStateException();
+                }
             }
         }
 
-        private IConsensusDecision CreateFailedConsensusDecision(PreparePhaseResult prepareOutcome)
+        private IMessage CreateAcceptMessage(ILogIndex logIndex, IBallot ballot, IMessage value)
+        {
+            return new RsmAccept(synodConfigurationProvider.LocalProcess,
+                                 new RsmAccept.Payload
+                                 {
+                                     Proposal = new Messaging.Messages.Intercom.Rsm.Ballot {ProposalNumber = ballot.ProposalNumber},
+                                     LogIndex = new Messaging.Messages.Intercom.Rsm.LogIndex {Index = logIndex.Index},
+                                     Leader = new Process {Id = synodConfigurationProvider.LocalProcess.Id},
+                                     Value = new Message(value.Envelope, value.Body)
+                                 });
+        }
+
+        private PreparePhaseResult RunPreparePhase(IBallot ballot, ILogIndex index)
+        {
+            var preparePhase = SendPrepare(index, ballot);
+
+            if (preparePhase.Outcome == PreparePhaseOutcome.FailedDueToLowBallot)
+            {
+                consensusRoundManager.SetMinBallot(preparePhase.MinProposal);
+            }
+
+            return preparePhase;
+        }
+
+        private IConsensusDecision CreateValueNotDecidedResponse(PreparePhaseResult prepareOutcome)
         {
             switch (prepareOutcome.Outcome)
             {
@@ -91,9 +151,15 @@ namespace wacs.Rsm.Implementation
                    && prepareOutcome.Outcome != PreparePhaseOutcome.SucceededWithProposedValue;
         }
 
+        private bool PrepareNotCommitted(IConsensusDecision decision)
+        {
+            return decision.Outcome != ConsensusOutcome.DecidedWithOtherValue
+                   && decision.Outcome != ConsensusOutcome.DecidedWithProposedValue;
+        }
+
         private PreparePhaseResult SendPrepare(ILogIndex logIndex, IBallot ballot)
         {
-            var ackFilter = new RsmPrepareAckMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
+            var ackFilter = new RsmMessageFilter(ballot, logIndex, (m) => new RsmAckPrepare(m).GetPayload(), nodeResolver, synodConfigurationProvider);
             var nackFilter = new RsmPrepareNackMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
 
             var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
@@ -111,11 +177,11 @@ namespace wacs.Rsm.Implementation
 
                     AssertPrepareTimeout(index);
 
-                    if (PrepareAcknowledged(index))
+                    if (PhaseAcknowledged(index))
                     {
                         return CreatePrepareSucceededResult(awaitableAckFilter.MessageStream);
                     }
-                    if (PrepareRejected(index))
+                    if (PhaseRejected(index))
                     {
                         return CreatePrepareRejectedResult(awaitableNackFilter.MessageStream);
                     }
@@ -139,8 +205,8 @@ namespace wacs.Rsm.Implementation
             }
 
             var minProposal = prepareResponses.Where(m => m.Body.MessageType == RsmNackPrepareBlocked.MessageType)
-                                                   .Select(m => new RsmNackPrepareBlocked(m).GetPayload())
-                                                   .Max(p => p.MinProposal);
+                                              .Select(m => new RsmNackPrepareBlocked(m).GetPayload())
+                                              .Max(p => p.MinProposal);
             if (minProposal != null)
             {
                 return new PreparePhaseResult
@@ -178,12 +244,12 @@ namespace wacs.Rsm.Implementation
             return new PreparePhaseResult {Outcome = PreparePhaseOutcome.SucceededWithProposedValue};
         }
 
-        private bool PrepareRejected(int index)
+        private bool PhaseRejected(int index)
         {
             return index == 1;
         }
 
-        private bool PrepareAcknowledged(int index)
+        private bool PhaseAcknowledged(int index)
         {
             return index == 0;
         }

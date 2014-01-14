@@ -19,7 +19,7 @@ namespace wacs.Messaging.Messages.Intercom.Rsm
             get { return "RSM_NACK_PREPARE_BLOCKED"; }
         }
 
-        public class Payload : IPreparePayload
+        public class Payload : IConsensusDecisionPayload
         {
             public LogIndex LogIndex { get; set; }
             public Ballot Proposal { get; set; }
