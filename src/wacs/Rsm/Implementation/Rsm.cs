@@ -34,22 +34,26 @@ namespace wacs.Rsm.Implementation
         {
             foreach (var awaitableResult in commandsQueue.GetConsumingEnumerable(token))
             {
-                ProcessCommand(awaitableResult);
+                var command = awaitableResult;
+                do
+                {
+                    command = ProcessCommand(command);
+                } while (command != null);
             }
         }
 
-        private IMessage ProcessCommand(IAwaitableResult<IMessage> awaitableResult)
+        private IAwaitableResult<IMessage> ProcessCommand(IAwaitableResult<IMessage> awaitableResult)
         {
             var firstUnchosenLogEntry = replicatedLog.GetFirstUnchosenLogEntry();
             var awaitable = (AwaitableRsmResponse) awaitableResult;
             var consensus = consensusFactory.CreateInstance();
             var decision = consensus.Decide(firstUnchosenLogEntry, awaitable.Command, RoundCouldBeFast());
 
-            if (decision.Outcome == ConsensusOutcome.RejectedDueToChosenLogEntry)
+            if (ConsensusNotReachedDueToShortHistoryPrefix(decision))
             {
                 leaseProvider.ResetLease();
             }
-            if (decision.Outcome == ConsensusOutcome.DecidedWithOtherValue || decision.Outcome == ConsensusOutcome.DecidedWithProposedValue)
+            if (ConsensusReached(decision))
             {
                 replicatedLog.SetLogEntry(firstUnchosenLogEntry,
                                           new LogEntry
@@ -58,6 +62,25 @@ namespace wacs.Rsm.Implementation
                                               Value = decision.DecidedValue
                                           });
             }
+
+            if (decision.Outcome == ConsensusOutcome.DecidedWithProposedValue)
+            {
+                return null;
+            }
+
+            return awaitableResult;
+        }
+
+        private static bool ConsensusNotReachedDueToShortHistoryPrefix(IConsensusDecision decision)
+        {
+            return decision.Outcome == ConsensusOutcome.RejectedDueToChosenLogEntry
+                   || decision.Outcome == ConsensusOutcome.FailedDueToNotBeingLeader;
+        }
+
+        private static bool ConsensusReached(IConsensusDecision decision)
+        {
+            return decision.Outcome == ConsensusOutcome.DecidedWithOtherValue
+                   || decision.Outcome == ConsensusOutcome.DecidedWithProposedValue;
         }
 
         private bool RoundCouldBeFast()
