@@ -7,7 +7,7 @@ namespace wacs.Rsm.Implementation
 {
     public partial class Acceptor : IAcceptor
     {
-        private IMessage RespondOnPrepareRequestFromLeader(RsmPrepare.Payload payload, Ballot proposal)
+        private IMessage RespondOnPrepareRequest(RsmPrepare.Payload payload, Ballot proposal)
         {
             IMessage response;
 
@@ -15,7 +15,7 @@ namespace wacs.Rsm.Implementation
 
             if (logEntry.State == LogEntryState.Chosen)
             {
-                response = CreateNackChosenMessage(payload);
+                response = CreateNackPrepareAlreadyChosenMessage(payload);
             }
             else
             {
@@ -41,7 +41,7 @@ namespace wacs.Rsm.Implementation
             return response;
         }
 
-        private bool PrepareCameNotFromLeader(IProcess sender)
+        private bool RequestCameNotFromLeader(IProcess sender)
         {
             return !sender.Equals(leaseProvider.GetLease().Result.Owner);
         }

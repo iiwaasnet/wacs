@@ -52,15 +52,15 @@ namespace wacs.Rsm.Implementation
 
                 IMessage response;
 
-                if (AcceptCameNotFromLeader(message.Envelope.Sender))
+                if (RequestCameNotFromLeader(message.Envelope.Sender))
                 {
-                    response = CreateNackNotLeaderMessage(payload);
+                    response = CreateNackAcceptNotLeaderMessage(payload);
                 }
                 else
                 {
                     lock (locker)
                     {
-                        response = RespondOnPrepareRequestFromLeader(payload, proposal);
+                        response = RespondOnAcceptRequest(payload, proposal);
                     }
                 }
 
@@ -81,15 +81,15 @@ namespace wacs.Rsm.Implementation
 
                 IMessage response;
 
-                if (PrepareCameNotFromLeader(message.Envelope.Sender))
+                if (RequestCameNotFromLeader(message.Envelope.Sender))
                 {
-                    response = CreateNackNotLeaderMessage(payload);
+                    response = CreateNackPrepareNotLeaderMessage(payload);
                 }
                 else
                 {
                     lock (locker)
                     {
-                        response = RespondOnPrepareRequestFromLeader(payload, proposal);
+                        response = RespondOnPrepareRequest(payload, proposal);
                     }
                 }
 

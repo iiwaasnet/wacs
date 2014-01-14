@@ -146,6 +146,7 @@
     <Compile Include="FLease\TxOutcome.cs" />
     <Compile Include="ITestService.cs" />
     <Compile Include="MainModule.cs" />
+    <Compile Include="Rsm\Implementation\AcceptorAcceptPhase.cs" />
     <Compile Include="Rsm\Implementation\AcceptorPreparePhase.cs" />
     <Compile Include="Rsm\Implementation\AcceptorResponses.cs" />
     <Compile Include="Rsm\Implementation\AcceptPhaseResult.cs" />

@@ -92,6 +92,8 @@
     <Compile Include="Messages\Intercom\Rsm\LogIndex.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmAckAccept.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmNackAcceptBlocked.cs" />
+    <Compile Include="Messages\Intercom\Rsm\RsmNackAcceptNotLeader.cs" />
+    <Compile Include="Messages\Intercom\Rsm\RsmNackAcceptChosen.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmNackPrepareNotLeader.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmNackPrepareChosen.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmNackPrepareBlocked.cs" />
