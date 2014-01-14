@@ -65,11 +65,33 @@ namespace wacs.Rsm.Implementation
                             : command;
 
             var acceptPhase = RunAcceptPhase(ballot, logIndex, value);
+
+            return CreateConsensusDecision(acceptPhase, preparePhase, command);
+        }
+
+        private IConsensusDecision CreateConsensusDecision(AcceptPhaseResult acceptPhase, PreparePhaseResult preparePhase, IMessage proposedValue)
+        {
+            if (acceptPhase.Outcome == AcceptPhaseOutcome.FailedDueToLowBallot)
+            {
+                return new ConsensusDecision {Outcome = ConsensusOutcome.FailedDueToLowBallot};
+            }
+
+            return new ConsensusDecision
+                   {
+                       Outcome = (preparePhase.Outcome == PreparePhaseOutcome.SucceededWithOtherValue)
+                                     ? ConsensusOutcome.DecidedWithOtherValue
+                                     : ConsensusOutcome.DecidedWithProposedValue,
+                       DecidedValue = (preparePhase.Outcome == PreparePhaseOutcome.SucceededWithOtherValue)
+                                          ? preparePhase.AcceptedValue
+                                          : proposedValue
+                   };
+
+            throw new InvalidStateException();
         }
 
         private AcceptPhaseResult RunAcceptPhase(IBallot ballot, ILogIndex index, IMessage command)
         {
-            var acceptOutcome = SendAccept(ballot, index, command);
+            return SendAccept(ballot, index, command);
         }
 
         private AcceptPhaseResult SendAccept(IBallot ballot, ILogIndex logIndex, IMessage value)
@@ -94,7 +116,7 @@ namespace wacs.Rsm.Implementation
 
                     if (PhaseAcknowledged(index))
                     {
-                        return CreateAcceptSucceededResult(awaitableAckFilter.MessageStream);
+                        return CreateAcceptSucceededResult();
                     }
                     if (PhaseRejected(index))
                     {
@@ -104,6 +126,23 @@ namespace wacs.Rsm.Implementation
                     throw new InvalidStateException();
                 }
             }
+        }
+
+        private AcceptPhaseResult CreateAcceptRejectedResult(IEnumerable<IMessage> messageStream)
+        {
+            var minProposal = messageStream.Select(m => new RsmNackAcceptBlocked(m).GetPayload())
+                                           .Where(p => p.MinProposal != null)
+                                           .Max(p => p.MinProposal);
+            return new AcceptPhaseResult
+                   {
+                       Outcome = AcceptPhaseOutcome.FailedDueToLowBallot,
+                       MinProposal = new Ballot(minProposal.ProposalNumber)
+                   };
+        }
+
+        private AcceptPhaseResult CreateAcceptSucceededResult()
+        {
+            return new AcceptPhaseResult {Outcome = AcceptPhaseOutcome.Succeeded};
         }
 
         private IMessage CreateAcceptMessage(ILogIndex logIndex, IBallot ballot, IMessage value)
