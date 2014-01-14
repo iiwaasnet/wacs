@@ -1,8 +1,10 @@
-﻿namespace wacs.Rsm.Interface
+﻿using wacs.Messaging.Messages;
+
+namespace wacs.Rsm.Interface
 {
     public interface ILogEntry
     {
-        IValue Value { get; }
+        IMessage Value { get; }
         LogEntryState State { get; }
     }
 }

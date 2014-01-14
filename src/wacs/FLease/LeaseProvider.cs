@@ -3,8 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using wacs.Configuration;
 using wacs.Diagnostics;
-using wacs.Messaging;
-using wacs.Messaging.Messages;
 using wacs.Resolver;
 
 namespace wacs.FLease
@@ -46,6 +44,11 @@ namespace wacs.FLease
             startTime = DateTime.UtcNow;
             register.Start();
             //leaseTimer.Change(TimeSpan.FromMilliseconds(0), config.MaxLeaseTimeSpan);
+        }
+
+        public void ResetLease()
+        {
+            Interlocked.Exchange(ref lastKnownLease, null);
         }
 
         public Task<ILease> GetLease()

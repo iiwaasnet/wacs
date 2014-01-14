@@ -47,7 +47,7 @@ namespace wacs.Rsm.Implementation
             nackPrepareStream = listener.Where(m => m.Body.MessageType == RsmNackPrepareBlocked.MessageType
                                                     || m.Body.MessageType == RsmNackPrepareChosen.MessageType
                                                     || m.Body.MessageType == RsmNackPrepareNotLeader.MessageType);
-            nackAcceptStream = listener.Where(m => m.Body.MessageType ==);
+            nackAcceptStream = listener.Where(m => m.Body.MessageType == RsmNackAcceptBlocked.MessageType);
         }
 
         public IConsensusDecision Decide(ILogIndex logIndex, IMessage command, bool fast)

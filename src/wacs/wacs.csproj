@@ -169,15 +169,14 @@
     <Compile Include="Rsm\Implementation\Rsm.cs" />
     <Compile Include="Rsm\Implementation\Proposer.cs" />
     <Compile Include="Rsm\Implementation\LogIndex.cs" />
+    <Compile Include="Rsm\Implementation\LogEntry.cs" />
     <Compile Include="TestService.cs" />
     <Compile Include="Rsm\Implementation\ClientMessageProcessor.cs" />
     <Compile Include="Rsm\Interface\IClientMessageProcessor.cs" />
-    <Compile Include="Rsm\Interface\ICommand.cs" />
     <Compile Include="Rsm\Interface\ILogEntry.cs" />
     <Compile Include="Rsm\Interface\ILogIndex.cs" />
     <Compile Include="Rsm\Interface\IProposer.cs" />
     <Compile Include="Rsm\Interface\IReplicatedLog.cs" />
-    <Compile Include="Rsm\Interface\IValue.cs" />
     <Compile Include="Rsm\Interface\LogEntryState.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

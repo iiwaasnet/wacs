@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using wacs.FLease;
 using wacs.Framework.State;
 using wacs.Messaging.Messages;
 using wacs.Rsm.Interface;
@@ -15,15 +16,17 @@ namespace wacs.Rsm.Implementation
         private readonly CancellationTokenSource cancellationSource;
         private readonly IConsensusFactory consensusFactory;
         private IConsensusDecision previousDecision;
+        private readonly ILeaseProvider leaseProvider;
 
-        public Rsm(IReplicatedLog replicatedLog, IConsensusFactory consensusFactory)
+        public Rsm(IReplicatedLog replicatedLog, IConsensusFactory consensusFactory, ILeaseProvider leaseProvider)
         {
             commandsQueue = new BlockingCollection<IAwaitableResult<IMessage>>(new ConcurrentQueue<IAwaitableResult<IMessage>>());
             this.replicatedLog = replicatedLog;
             cancellationSource = new CancellationTokenSource();
             this.consensusFactory = consensusFactory;
+            this.leaseProvider = leaseProvider;
 
-            processingThread = new Thread(()=> ProcessCommands(cancellationSource.Token));
+            processingThread = new Thread(() => ProcessCommands(cancellationSource.Token));
             processingThread.Start();
         }
 
@@ -35,12 +38,26 @@ namespace wacs.Rsm.Implementation
             }
         }
 
-        private void ProcessCommand(IAwaitableResult<IMessage> awaitableResult)
+        private IMessage ProcessCommand(IAwaitableResult<IMessage> awaitableResult)
         {
             var firstUnchosenLogEntry = replicatedLog.GetFirstUnchosenLogEntry();
             var awaitable = (AwaitableRsmResponse) awaitableResult;
             var consensus = consensusFactory.CreateInstance();
-            previousDecision = consensus.Decide(firstUnchosenLogEntry, awaitable.Command, RoundCouldBeFast());
+            var decision = consensus.Decide(firstUnchosenLogEntry, awaitable.Command, RoundCouldBeFast());
+
+            if (decision.Outcome == ConsensusOutcome.RejectedDueToChosenLogEntry)
+            {
+                leaseProvider.ResetLease();
+            }
+            if (decision.Outcome == ConsensusOutcome.DecidedWithOtherValue || decision.Outcome == ConsensusOutcome.DecidedWithProposedValue)
+            {
+                replicatedLog.SetLogEntry(firstUnchosenLogEntry,
+                                          new LogEntry
+                                          {
+                                              State = LogEntryState.Chosen,
+                                              Value = decision.DecidedValue
+                                          });
+            }
         }
 
         private bool RoundCouldBeFast()

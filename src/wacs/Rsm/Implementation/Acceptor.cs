@@ -39,6 +39,37 @@ namespace wacs.Rsm.Implementation
 
             listener.Where(m => m.Body.MessageType == RsmPrepare.MessageType)
                     .Subscribe(new MessageStreamListener(OnPrepareReceived));
+            listener.Where(m => m.Body.MessageType == RsmAccept.MessageType)
+                    .Subscribe(new MessageStreamListener(OnAcceptReceived));
+        }
+
+        private void OnAcceptReceived(IMessage message)
+        {
+            try
+            {
+                var payload = new RsmAccept(message).GetPayload();
+                var proposal = new Ballot(payload.Proposal.ProposalNumber);
+
+                IMessage response;
+
+                if (AcceptCameNotFromLeader(message.Envelope.Sender))
+                {
+                    response = CreateNackNotLeaderMessage(payload);
+                }
+                else
+                {
+                    lock (locker)
+                    {
+                        response = RespondOnPrepareRequestFromLeader(payload, proposal);
+                    }
+                }
+
+                intercomMessageHub.Send(new Process(message.Envelope.Sender.Id), response);
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
         }
 
         private void OnPrepareReceived(IMessage message)
