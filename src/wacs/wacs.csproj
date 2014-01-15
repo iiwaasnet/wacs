@@ -171,6 +171,7 @@
     <Compile Include="Rsm\Implementation\Proposer.cs" />
     <Compile Include="Rsm\Implementation\LogIndex.cs" />
     <Compile Include="Rsm\Implementation\LogEntry.cs" />
+    <Compile Include="Rsm\Implementation\ReplicatedLog.cs" />
     <Compile Include="TestService.cs" />
     <Compile Include="Rsm\Implementation\ClientMessageProcessor.cs" />
     <Compile Include="Rsm\Interface\IClientMessageProcessor.cs" />
