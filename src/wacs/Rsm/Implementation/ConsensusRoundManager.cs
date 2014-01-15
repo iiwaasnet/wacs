@@ -13,7 +13,7 @@ namespace wacs.Rsm.Implementation
 
         public IBallot GetNextBallot()
         {
-            return currentRoundBallot = currentRoundBallot.NewByIncrementing();
+            return currentRoundBallot = currentRoundBallot.Incrementing();
         }
 
         public void SetMinBallot(IBallot minProposal)

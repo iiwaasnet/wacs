@@ -5,7 +5,7 @@ namespace wacs.Rsm.Interface
 {
     public interface IBallot : IComparable
     {
-        Ballot NewByIncrementing();
+        Ballot Incrementing();
 
         ulong ProposalNumber { get; }
     }

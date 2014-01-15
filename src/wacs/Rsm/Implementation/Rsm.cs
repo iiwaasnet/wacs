@@ -44,7 +44,7 @@ namespace wacs.Rsm.Implementation
 
         private IAwaitableResult<IMessage> ProcessCommand(IAwaitableResult<IMessage> awaitableResult)
         {
-            var firstUnchosenLogEntry = replicatedLog.GetFirstUnchosenLogEntry();
+            var firstUnchosenLogEntry = replicatedLog.GetFirstUnchosenLogEntryIndex();
             var awaitable = (AwaitableRsmResponse) awaitableResult;
             var consensus = consensusFactory.CreateInstance();
             var decision = consensus.Decide(firstUnchosenLogEntry, awaitable.Command, RoundCouldBeFast());

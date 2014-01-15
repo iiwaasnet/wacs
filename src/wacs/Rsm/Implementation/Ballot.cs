@@ -84,7 +84,7 @@ namespace wacs.Rsm.Implementation
             return ProposalNumber.GetHashCode();
         }
 
-        public Ballot NewByIncrementing()
+        public Ballot Incrementing()
         {
             return new Ballot(proposalId + 1, processId);
         }

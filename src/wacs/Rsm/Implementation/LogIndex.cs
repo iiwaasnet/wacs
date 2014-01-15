@@ -71,6 +71,11 @@ namespace wacs.Rsm.Implementation
             return new LogIndex(Index + 1);
         }
 
+        public ILogIndex Dicrement()
+        {
+            return new LogIndex(Index - 1);
+        }
+
         public ulong Index { get; private set; }
     }
 }
