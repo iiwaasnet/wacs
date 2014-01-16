@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using wacs.Messaging.Messages;
 using wacs.Rsm.Interface;
 
 namespace wacs.Rsm.Implementation
@@ -11,11 +13,14 @@ namespace wacs.Rsm.Implementation
         private ILogIndex firstUnchosenIndex;
         private ILogIndex lowestChosenIndex;
         private ILogIndex firstLogIndex;
+        private readonly EventHandlerList eventHandlers;
+        private readonly object ValueChosenEvent = new object();
 
         public ReplicatedLog()
         {
             log = new Dictionary<ILogIndex, ILogEntry>();
             firstUnchosenIndex = firstLogIndex = lowestChosenIndex = new LogIndex(0);
+            eventHandlers = new EventHandlerList();
         }
 
         public ILogEntry GetLogEntry(ILogIndex iid)
@@ -26,13 +31,31 @@ namespace wacs.Rsm.Implementation
             }
         }
 
-        public void SetLogEntry(ILogIndex iid, ILogEntry value)
+        public void SetLogEntryAccepted(ILogIndex iid, IMessage value)
         {
             lock (locker)
             {
                 AssertLogEntryNotChosen(iid);
 
-                log[iid] = value;
+                log[iid] = new LogEntry
+                           {
+                               State = LogEntryState.Accepted,
+                               Value = value
+                           };
+            }
+        }
+
+        public void SetLogEntryChosen(ILogIndex iid, IMessage value)
+        {
+            lock (locker)
+            {
+                AssertLogEntryNotChosen(iid);
+
+                log[iid] = new LogEntry
+                           {
+                               State = LogEntryState.Chosen,
+                               Value = value
+                           };
 
                 if (iid.Equals(firstUnchosenIndex))
                 {
@@ -42,6 +65,8 @@ namespace wacs.Rsm.Implementation
                 {
                     lowestChosenIndex = iid;
                 }
+
+                OnValueChosen();
             }
         }
 
@@ -109,6 +134,22 @@ namespace wacs.Rsm.Implementation
             {
                 log.Remove(logIndex);
             }
+        }
+
+        private void OnValueChosen()
+        {
+            var handler = eventHandlers[ValueChosenEvent] as ValueChosenHandler;
+
+            if (handler != null)
+            {
+                handler();
+            }
+        }
+
+        public event ValueChosenHandler ValueChosen
+        {
+            add { eventHandlers.AddHandler(ValueChosenEvent, value); }
+            remove { eventHandlers.RemoveHandler(ValueChosenEvent, value); }
         }
     }
 }

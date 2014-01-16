@@ -30,12 +30,8 @@ namespace wacs.Rsm.Implementation
             if (proposal >= minProposal)
             {
                 minProposal = acceptedProposal = proposal;
-                replicatedLog.SetLogEntry(new LogIndex(payload.LogIndex.Index),
-                                          new LogEntry
-                                          {
-                                              State = LogEntryState.Accepted,
-                                              Value = new Message(payload.Value.Envelope, payload.Value.Body)
-                                          });
+                replicatedLog.SetLogEntryAccepted(new LogIndex(payload.LogIndex.Index),
+                                                  new Message(payload.Value.Envelope, payload.Value.Body));
                 response = CreateAckAcceptMessage(payload);
             }
             else

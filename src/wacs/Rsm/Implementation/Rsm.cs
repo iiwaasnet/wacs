@@ -55,7 +55,7 @@ namespace wacs.Rsm.Implementation
             }
             if (ConsensusReached(decision))
             {
-                replicatedLog.SetLogEntry(firstUnchosenLogEntry,
+                replicatedLog.SetLogEntryAccepted(firstUnchosenLogEntry,
                                           new LogEntry
                                           {
                                               State = LogEntryState.Chosen,
