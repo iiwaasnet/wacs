@@ -53,15 +53,6 @@ namespace wacs.Rsm.Implementation
             {
                 leaseProvider.ResetLease();
             }
-            if (ConsensusReached(decision))
-            {
-                replicatedLog.SetLogEntryAccepted(firstUnchosenLogEntry,
-                                          new LogEntry
-                                          {
-                                              State = LogEntryState.Chosen,
-                                              Value = decision.DecidedValue
-                                          });
-            }
 
             if (decision.Outcome == ConsensusOutcome.DecidedWithProposedValue)
             {

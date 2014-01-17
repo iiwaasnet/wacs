@@ -90,6 +90,7 @@
     <Compile Include="Messages\Intercom\Rsm\Ballot.cs" />
     <Compile Include="Messages\Intercom\Rsm\IConsensusDecisionPayload.cs" />
     <Compile Include="Messages\Intercom\Rsm\LogIndex.cs" />
+    <Compile Include="Messages\Intercom\Rsm\RsmChosen.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmAckAccept.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmNackAcceptBlocked.cs" />
     <Compile Include="Messages\Intercom\Rsm\RsmNackAcceptNotLeader.cs" />

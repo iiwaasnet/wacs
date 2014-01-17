@@ -28,10 +28,12 @@ namespace wacs.Rsm.Implementation
         private readonly ISynodConfigurationProvider synodConfigurationProvider;
         private readonly INodeResolver nodeResolver;
         private readonly IRsmConfiguration rsmConfig;
+        private readonly IReplicatedLog replicatedLog;
 
         public Consensus(IConsensusRoundManager consensusRoundManager,
                          IIntercomMessageHub intercomMessageHub,
                          ISynodConfigurationProvider synodConfigurationProvider,
+                         IReplicatedLog replicatedLog,
                          INodeResolver nodeResolver,
                          IRsmConfiguration rsmConfig)
         {
@@ -40,6 +42,7 @@ namespace wacs.Rsm.Implementation
             this.synodConfigurationProvider = synodConfigurationProvider;
             this.nodeResolver = nodeResolver;
             this.rsmConfig = rsmConfig;
+            this.replicatedLog = replicatedLog;
             listener = intercomMessageHub.Subscribe();
 
             ackPrepareStream = listener.Where(m => m.Body.MessageType == RsmAckPrepare.MessageType);
@@ -66,7 +69,39 @@ namespace wacs.Rsm.Implementation
 
             var acceptPhase = RunAcceptPhase(ballot, logIndex, value);
 
-            return CreateConsensusDecision(acceptPhase, preparePhase, command);
+            var decision = CreateConsensusDecision(acceptPhase, preparePhase, command);
+
+            if (ConsensusReached(decision))
+            {
+                replicatedLog.SetLogEntryChosen(logIndex, decision.DecidedValue);
+            }
+
+            BroadcastChosenValue(logIndex, decision.DecidedValue);
+
+            return decision;
+        }
+
+        private void BroadcastChosenValue(ILogIndex logIndex, IMessage chosenValue)
+        {
+            var message = CreateChosenMessage(logIndex, chosenValue);
+            intercomMessageHub.Broadcast(message);
+        }
+
+        private IMessage CreateChosenMessage(ILogIndex logIndex, IMessage chosenValue)
+        {
+            return new RsmChosen(synodConfigurationProvider.LocalProcess,
+                                 new RsmChosen.Payload
+                                 {
+                                     LogIndex = new Messaging.Messages.Intercom.Rsm.LogIndex {Index = logIndex.Index},
+                                     Leader = new Process {Id = synodConfigurationProvider.LocalProcess.Id},
+                                     Value = new Message(chosenValue.Envelope, chosenValue.Body)
+                                 });
+        }
+
+        private static bool ConsensusReached(IConsensusDecision decision)
+        {
+            return decision.Outcome == ConsensusOutcome.DecidedWithOtherValue
+                   || decision.Outcome == ConsensusOutcome.DecidedWithProposedValue;
         }
 
         private IConsensusDecision CreateConsensusDecision(AcceptPhaseResult acceptPhase, PreparePhaseResult preparePhase, IMessage proposedValue)
