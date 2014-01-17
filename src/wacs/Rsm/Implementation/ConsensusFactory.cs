@@ -12,10 +12,12 @@ namespace wacs.Rsm.Implementation
         private readonly ISynodConfigurationProvider synodConfigurationProvider;
         private readonly INodeResolver nodeResolver;
         private readonly IRsmConfiguration rsmConfig;
+        private readonly IReplicatedLog replicatedLog;
 
         public ConsensusFactory(IConsensusRoundManager consensusRoundManager,
                                 IIntercomMessageHub intercomMessageHub,
                                 ISynodConfigurationProvider synodConfigurationProvider,
+                                IReplicatedLog replicatedLog,
                                 INodeResolver nodeResolver,
                                 IRsmConfiguration rsmConfig)
         {
@@ -24,6 +26,7 @@ namespace wacs.Rsm.Implementation
             this.synodConfigurationProvider = synodConfigurationProvider;
             this.nodeResolver = nodeResolver;
             this.rsmConfig = rsmConfig;
+            this.replicatedLog = replicatedLog;
         }
 
         public IConsensus CreateInstance()
@@ -31,6 +34,7 @@ namespace wacs.Rsm.Implementation
             return new Consensus(consensusRoundManager,
                                  intercomMessageHub,
                                  synodConfigurationProvider,
+                                 replicatedLog,
                                  nodeResolver,
                                  rsmConfig);
         }

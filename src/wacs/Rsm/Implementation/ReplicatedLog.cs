@@ -37,11 +37,7 @@ namespace wacs.Rsm.Implementation
             {
                 AssertLogEntryNotChosen(iid);
 
-                log[iid] = new LogEntry
-                           {
-                               State = LogEntryState.Accepted,
-                               Value = value
-                           };
+                log[iid] = new LogEntry(value, iid, LogEntryState.Accepted);
             }
         }
 
@@ -51,11 +47,7 @@ namespace wacs.Rsm.Implementation
             {
                 AssertLogEntryNotChosen(iid);
 
-                log[iid] = new LogEntry
-                           {
-                               State = LogEntryState.Chosen,
-                               Value = value
-                           };
+                log[iid] = new LogEntry(value, iid, LogEntryState.Chosen);
 
                 if (iid.Equals(firstUnchosenIndex))
                 {

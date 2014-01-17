@@ -6,5 +6,6 @@ namespace wacs.Rsm.Interface
     {
         IMessage Value { get; }
         LogEntryState State { get; }
+        ILogIndex Index { get; }
     }
 }

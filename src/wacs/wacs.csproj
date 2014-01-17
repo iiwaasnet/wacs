@@ -166,12 +166,14 @@
     <Compile Include="Rsm\Interface\IConsensusFactory.cs" />
     <Compile Include="Rsm\Interface\IConsensusRoundManager.cs" />
     <Compile Include="Rsm\Interface\IConsensusDecision.cs" />
+    <Compile Include="Rsm\Interface\IReplicatedState.cs" />
     <Compile Include="Rsm\Interface\IRsm.cs" />
     <Compile Include="Rsm\Implementation\Rsm.cs" />
     <Compile Include="Rsm\Implementation\Proposer.cs" />
     <Compile Include="Rsm\Implementation\LogIndex.cs" />
     <Compile Include="Rsm\Implementation\LogEntry.cs" />
     <Compile Include="Rsm\Implementation\ReplicatedLog.cs" />
+    <Compile Include="Rsm\Implementation\ReplicatedState.cs" />
     <Compile Include="TestService.cs" />
     <Compile Include="Rsm\Implementation\ClientMessageProcessor.cs" />
     <Compile Include="Rsm\Interface\IClientMessageProcessor.cs" />
