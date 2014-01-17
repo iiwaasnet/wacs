@@ -5,6 +5,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using System.Windows.Forms;
 using wacs.Diagnostics;
+using wacs.Messaging.Hubs.Intercom;
 using wacs.Rsm.Interface;
 
 namespace wacs.Rsm.Implementation
@@ -18,8 +19,9 @@ namespace wacs.Rsm.Implementation
         private readonly Thread workerThread;
         private readonly TimeSpan nextCommandWaitTimeout;
         private ILogIndex lastAppliedCommandIndex;
+        private readonly IIntercomMessageHub intercomMessageHub;
 
-        public ReplicatedState(IReplicatedLog replicatedLog, ILogger logger)
+        public ReplicatedState(IReplicatedLog replicatedLog, IIntercomMessageHub intercomMessageHub, ILogger logger)
         {
             this.logger = logger;
             this.replicatedLog = replicatedLog;
@@ -29,6 +31,28 @@ namespace wacs.Rsm.Implementation
             nextCommandWaitTimeout = TimeSpan.FromSeconds(3);
             lastAppliedCommandIndex = new LogIndex(0);
             workerThread = new Thread(() => ProcessChosenCommands(cancellationSource.Token));
+            this.intercomMessageHub = intercomMessageHub;
+
+            InitStateFromSnapshot();
+        }
+
+        private void InitStateFromSnapshot()
+        {
+            var snapshot = RequestSnapshot();
+            ApplySnapshot(snapshot);
+
+            workerThread.Start();
+        }
+
+        private void ApplySnapshot(ISnapshot snapshot)
+        {
+            lastAppliedCommandIndex = snapshot.LastAppliedCommandIndex;
+            throw new NotImplementedException();
+        }
+
+        private ISnapshot RequestSnapshot()
+        {
+            throw new NotImplementedException();
         }
 
         private void ProcessChosenCommands(CancellationToken token)
