@@ -1,6 +1,7 @@
 ﻿using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Rsm.Interface;
+using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {
@@ -48,7 +49,7 @@ namespace wacs.Rsm.Implementation
                                          Proposal = payload.Proposal,
                                          LogIndex = payload.LogIndex,
                                          AcceptedValue = (logEntry != null && logEntry.State == LogEntryState.Accepted)
-                                                             ? new Message(logEntry.Value.Envelope, logEntry.Value.Body)
+                                                             ? new Message(logEntry.Command.Request.Envelope, logEntry.Command.Request.Body)
                                                              : null,
                                          AcceptedProposal = (acceptedProposal != null)
                                                                 ? new Messaging.Messages.Intercom.Rsm.Ballot {ProposalNumber = acceptedProposal.ProposalNumber}

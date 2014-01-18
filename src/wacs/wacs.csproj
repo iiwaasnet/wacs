@@ -150,12 +150,13 @@
     <Compile Include="Rsm\Implementation\AcceptorPreparePhase.cs" />
     <Compile Include="Rsm\Implementation\AcceptorResponses.cs" />
     <Compile Include="Rsm\Implementation\AcceptPhaseResult.cs" />
-    <Compile Include="Rsm\Implementation\AwaitableRsmResponse.cs" />
+    <Compile Include="Rsm\Implementation\AwaitableRsmRequest.cs" />
     <Compile Include="Rsm\Implementation\Ballot.cs" />
     <Compile Include="Rsm\Implementation\Consensus.cs" />
     <Compile Include="Rsm\Implementation\ConsensusFactory.cs" />
     <Compile Include="Rsm\Implementation\Acceptor.cs" />
     <Compile Include="Rsm\Implementation\ConsensusRoundManager.cs" />
+    <Compile Include="Rsm\Interface\ISnapshot.cs" />
     <Compile Include="Rsm\Implementation\PreparePhaseResult.cs" />
     <Compile Include="Rsm\Implementation\RsmPrepareNackMessageFilter.cs" />
     <Compile Include="Rsm\Implementation\RsmMessageFilter.cs" />
@@ -174,6 +175,7 @@
     <Compile Include="Rsm\Implementation\LogEntry.cs" />
     <Compile Include="Rsm\Implementation\ReplicatedLog.cs" />
     <Compile Include="Rsm\Implementation\ReplicatedState.cs" />
+    <Compile Include="Rsm\Interface\ISyncCommand.cs" />
     <Compile Include="TestService.cs" />
     <Compile Include="Rsm\Implementation\ClientMessageProcessor.cs" />
     <Compile Include="Rsm\Interface\IClientMessageProcessor.cs" />

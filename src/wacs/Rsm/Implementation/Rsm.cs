@@ -5,12 +5,13 @@ using wacs.FLease;
 using wacs.Framework.State;
 using wacs.Messaging.Messages;
 using wacs.Rsm.Interface;
+using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {
     public class Rsm : IRsm
     {
-        private readonly BlockingCollection<IAwaitableResult<IMessage>> commandsQueue;
+        private readonly BlockingCollection<IAwaitableResponse<IMessage>> commandsQueue;
         private readonly IReplicatedLog replicatedLog;
         private readonly Thread processingThread;
         private readonly CancellationTokenSource cancellationSource;
@@ -20,7 +21,7 @@ namespace wacs.Rsm.Implementation
 
         public Rsm(IReplicatedLog replicatedLog, IConsensusFactory consensusFactory, ILeaseProvider leaseProvider)
         {
-            commandsQueue = new BlockingCollection<IAwaitableResult<IMessage>>(new ConcurrentQueue<IAwaitableResult<IMessage>>());
+            commandsQueue = new BlockingCollection<IAwaitableResponse<IMessage>>(new ConcurrentQueue<IAwaitableResponse<IMessage>>());
             this.replicatedLog = replicatedLog;
             cancellationSource = new CancellationTokenSource();
             this.consensusFactory = consensusFactory;
@@ -42,12 +43,12 @@ namespace wacs.Rsm.Implementation
             }
         }
 
-        private IAwaitableResult<IMessage> ProcessCommand(IAwaitableResult<IMessage> awaitableResult)
+        private IAwaitableResponse<IMessage> ProcessCommand(IAwaitableResponse<IMessage> awaitableResponse)
         {
             var firstUnchosenLogEntry = replicatedLog.GetFirstUnchosenLogEntryIndex();
-            var awaitable = (AwaitableRsmResponse) awaitableResult;
+            var awaitableRequest = (AwaitableRsmRequest) awaitableResponse;
             var consensus = consensusFactory.CreateInstance();
-            var decision = consensus.Decide(firstUnchosenLogEntry, awaitable.Command, RoundCouldBeFast());
+            var decision = consensus.Decide(firstUnchosenLogEntry, awaitableRequest, RoundCouldBeFast());
 
             if (ConsensusNotReachedDueToShortHistoryPrefix(decision))
             {
@@ -59,7 +60,7 @@ namespace wacs.Rsm.Implementation
                 return null;
             }
 
-            return awaitableResult;
+            return awaitableResponse;
         }
 
         private static bool ConsensusNotReachedDueToShortHistoryPrefix(IConsensusDecision decision)
@@ -79,9 +80,9 @@ namespace wacs.Rsm.Implementation
             return previousDecision != null && previousDecision.NextRoundCouldBeFast;
         }
 
-        public IAwaitableResult<IMessage> EnqueueForExecution(IMessage command)
+        public IAwaitableResponse<IMessage> EnqueueForExecution(IMessage command)
         {
-            var awaitableRsmResponse = new AwaitableRsmResponse(command);
+            var awaitableRsmResponse = new AwaitableRsmRequest(command);
             commandsQueue.Add(awaitableRsmResponse);
 
             return awaitableRsmResponse;

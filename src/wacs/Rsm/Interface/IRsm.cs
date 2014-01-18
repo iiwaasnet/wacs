@@ -6,6 +6,6 @@ namespace wacs.Rsm.Interface
 {
     public interface IRsm : IDisposable
     {
-        IAwaitableResult<IMessage> EnqueueForExecution(IMessage command); 
+        IAwaitableResponse<Messaging.Messages.IMessage> EnqueueForExecution(Messaging.Messages.IMessage command); 
     }
 }

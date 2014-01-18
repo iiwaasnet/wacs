@@ -10,6 +10,7 @@ using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Lease;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
+using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.FLease
 {

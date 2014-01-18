@@ -1,10 +1,8 @@
-﻿using wacs.Messaging.Messages;
-
-namespace wacs.Rsm.Interface
+﻿namespace wacs.Rsm.Interface
 {
     public interface ILogEntry
     {
-        IMessage Value { get; }
+        ISyncCommand Command { get; }
         LogEntryState State { get; }
         ILogIndex Index { get; }
     }

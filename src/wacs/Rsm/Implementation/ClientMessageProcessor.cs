@@ -4,6 +4,7 @@ using wacs.Messaging.Hubs.Client;
 using wacs.Messaging.Messages;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
+using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {
@@ -48,7 +49,7 @@ namespace wacs.Rsm.Implementation
             {
                 var awaitable = rsm.EnqueueForExecution(request);
 
-                return awaitable.GetResult();
+                return awaitable.GetResponse();
             }
             // TODO: Add to a lsmCommandQueue (Local State Machine queue)
             return null;

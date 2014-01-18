@@ -9,7 +9,7 @@ namespace wacs.Rsm.Interface
 
         void SetLogEntryAccepted(ILogIndex iid, IMessage value);
 
-        void SetLogEntryChosen(ILogIndex iid, IMessage value);
+        void SetLogEntryChosen(ILogIndex iid, ISyncCommand value);
 
         ILogIndex GetFirstUnchosenLogEntryIndex();
 

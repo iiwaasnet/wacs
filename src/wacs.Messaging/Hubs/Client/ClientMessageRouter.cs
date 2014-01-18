@@ -16,7 +16,7 @@ namespace wacs.Messaging.Hubs.Client
     {
         private readonly IClientMessageHubConfiguration config;
         private readonly ILogger logger;
-        private readonly BlockingCollection<IAwaitableResult<IMessage>> forwardQueue;
+        private readonly BlockingCollection<IAwaitableResponse<IMessage>> forwardQueue;
         private readonly IEnumerable<Thread> forwardingThreads;
         private readonly CancellationTokenSource cancellationSource;
         private readonly ZmqContext context;
@@ -27,7 +27,7 @@ namespace wacs.Messaging.Hubs.Client
             this.logger = logger;
             this.config = config;
             cancellationSource = new CancellationTokenSource();
-            forwardQueue = new BlockingCollection<IAwaitableResult<IMessage>>(new ConcurrentQueue<IAwaitableResult<IMessage>>());
+            forwardQueue = new BlockingCollection<IAwaitableResponse<IMessage>>(new ConcurrentQueue<IAwaitableResponse<IMessage>>());
             context = ZmqContext.Create();
             forwardingThreads = StartForwardingThreads().ToArray();
         }
@@ -72,7 +72,7 @@ namespace wacs.Messaging.Hubs.Client
             logger.WarnFormat("Forwarding thread {0} terminated", Thread.CurrentThread.ManagedThreadId);
         }
 
-        private void ForwardMessagesToLeader(ZmqSocket socket, IAwaitableResult<IMessage> queuedRequest)
+        private void ForwardMessagesToLeader(ZmqSocket socket, IAwaitableResponse<IMessage> queuedRequest)
         {
             var forwardRequest = (AwaitableResponse) queuedRequest;
 
@@ -107,10 +107,10 @@ namespace wacs.Messaging.Hubs.Client
 
         public IMessage ForwardClientRequestToLeader(INode leader, IMessage message)
         {
-            IAwaitableResult<IMessage> response = new AwaitableResponse(leader, message);
+            IAwaitableResponse<IMessage> response = new AwaitableResponse(leader, message);
             forwardQueue.Add(response);
 
-            return response.GetResult();
+            return response.GetResponse();
         }
 
         public void Dispose()

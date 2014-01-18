@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using wacs.Diagnostics;
 using wacs.Messaging.Hubs.Intercom;
 using wacs.Rsm.Interface;
+using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {
@@ -70,11 +71,16 @@ namespace wacs.Rsm.Implementation
         {
             foreach (var logEntry in GetNextChosenLogEntries(lastAppliedCommandIndex.Increment()))
             {
-                ProcessCommand(logEntry.Value);
+                ProcessCommand(logEntry.Command);
                 lastAppliedCommandIndex = logEntry.Index;
             }
 
             stateChangeGateway.Reset();
+        }
+
+        private void ProcessCommand(ISyncCommand command)
+        {
+            throw new NotImplementedException();
         }
 
         private IEnumerable<ILogEntry> GetNextChosenLogEntries(ILogIndex startLogIndex)

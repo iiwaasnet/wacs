@@ -41,7 +41,7 @@
   <ItemGroup>
     <Compile Include="InvalidStateException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="State\IAwaitableResult.cs" />
+    <Compile Include="State\IAwaitableResponse.cs" />
     <Compile Include="State\IChangeNotifiable.cs" />
     <Compile Include="State\IObservableAtomicValue.cs" />
     <Compile Include="State\IObservableConcurrentDictionary.cs" />

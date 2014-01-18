@@ -2,18 +2,19 @@
 using System.Threading;
 using wacs.Framework.State;
 using wacs.Messaging.Messages;
+using wacs.Rsm.Interface;
 
 namespace wacs.Rsm.Implementation
 {
-    internal class AwaitableRsmResponse : IAwaitableResult<IMessage>
+    internal class AwaitableRsmRequest : ISyncCommand
     {
         private readonly ManualResetEventSlim waitHandle;
         private IMessage response;
-        
-        internal AwaitableRsmResponse(IMessage command)
+
+        internal AwaitableRsmRequest(IMessage command)
         {
             waitHandle = new ManualResetEventSlim(false);
-            Command = command;
+            Request = command;
         }
 
         internal void SetResponse(IMessage response)
@@ -28,20 +29,20 @@ namespace wacs.Rsm.Implementation
             waitHandle.Dispose();
         }
 
-        IMessage IAwaitableResult<IMessage>.GetResult()
+        IMessage IAwaitableResponse<IMessage>.GetResponse()
         {
             waitHandle.Wait();
 
             return response;
         }
 
-        IMessage IAwaitableResult<IMessage>.GetResult(TimeSpan timeout)
+        IMessage IAwaitableResponse<IMessage>.GetResponse(TimeSpan timeout)
         {
             waitHandle.Wait(timeout);
 
             return response;
         }
 
-        internal IMessage Command { get; private set; }
+        public IMessage Request { get; set; }
     }
 }

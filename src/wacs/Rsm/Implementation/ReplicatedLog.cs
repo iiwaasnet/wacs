@@ -37,11 +37,12 @@ namespace wacs.Rsm.Implementation
             {
                 AssertLogEntryNotChosen(iid);
 
-                log[iid] = new LogEntry(value, iid, LogEntryState.Accepted);
+                var logEntry = new AwaitableRsmRequest(value);
+                log[iid] = new LogEntry(logEntry, iid, LogEntryState.Accepted);
             }
         }
 
-        public void SetLogEntryChosen(ILogIndex iid, IMessage value)
+        public void SetLogEntryChosen(ILogIndex iid, ISyncCommand value)
         {
             lock (locker)
             {

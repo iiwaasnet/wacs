@@ -6,7 +6,7 @@ using wacs.Messaging.Messages;
 
 namespace wacs.Messaging.Hubs.Client
 {
-    internal class AwaitableResponse : IAwaitableResult<IMessage>
+    internal class AwaitableResponse : IAwaitableResponse<IMessage>
     {
         private readonly ManualResetEventSlim waitHandle;
         private IMessage response;
@@ -24,14 +24,14 @@ namespace wacs.Messaging.Hubs.Client
             waitHandle.Set();
         }
 
-        IMessage IAwaitableResult<IMessage>.GetResult()
+        IMessage IAwaitableResponse<IMessage>.GetResponse()
         {
             waitHandle.Wait();
 
             return response;
         }
 
-        IMessage IAwaitableResult<IMessage>.GetResult(TimeSpan timeout)
+        IMessage IAwaitableResponse<IMessage>.GetResponse(TimeSpan timeout)
         {
             if (waitHandle.Wait(timeout))
             {
