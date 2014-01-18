@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
-using System.Windows.Forms;
 using wacs.Diagnostics;
 using wacs.Messaging.Hubs.Intercom;
 using wacs.Rsm.Interface;
-using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {
-    public class ReplicatedState : IReplicatedState
+    public class ReplicationDemultiplexor : IReplicationDemultiplexor
     {
         private readonly IReplicatedLog replicatedLog;
         private readonly ILogger logger;
@@ -21,8 +17,12 @@ namespace wacs.Rsm.Implementation
         private readonly TimeSpan nextCommandWaitTimeout;
         private ILogIndex lastAppliedCommandIndex;
         private readonly IIntercomMessageHub intercomMessageHub;
+        private readonly IEnumerable<IReplicatedStateMachine> stateMachines;
 
-        public ReplicatedState(IReplicatedLog replicatedLog, IIntercomMessageHub intercomMessageHub, ILogger logger)
+        public ReplicationDemultiplexor(IReplicatedLog replicatedLog,
+                                        IIntercomMessageHub intercomMessageHub,
+                                        IEnumerable<IReplicatedStateMachine> stateMachines,
+                                        ILogger logger)
         {
             this.logger = logger;
             this.replicatedLog = replicatedLog;
@@ -33,6 +33,7 @@ namespace wacs.Rsm.Implementation
             lastAppliedCommandIndex = new LogIndex(0);
             workerThread = new Thread(() => ProcessChosenCommands(cancellationSource.Token));
             this.intercomMessageHub = intercomMessageHub;
+            this.stateMachines = stateMachines;
 
             InitStateFromSnapshot();
         }
@@ -80,7 +81,17 @@ namespace wacs.Rsm.Implementation
 
         private void ProcessCommand(ISyncCommand command)
         {
-            throw new NotImplementedException();
+            foreach (var stateMachine in stateMachines)
+            {
+                try
+                {
+                    stateMachine.ProcessCommand(command);
+                }
+                catch (Exception err)
+                {
+                    logger.Error(err);
+                }
+            }
         }
 
         private IEnumerable<ILogEntry> GetNextChosenLogEntries(ILogIndex startLogIndex)

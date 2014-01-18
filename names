@@ -2,5 +2,3 @@
 - high availability wait-free synchronization service (HAWSS)
 - wait-free coordination service (WACS)
 - high-availability coordination service (HICOS)
-- fault-tolarent coordination service
-- reconfigurable replicated state machine

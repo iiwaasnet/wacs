@@ -2,7 +2,7 @@
 
 namespace wacs.Rsm.Interface
 {
-    public interface IReplicatedState : IDisposable
+    public interface IReplicationDemultiplexor : IDisposable
     {
          
     }
