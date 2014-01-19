@@ -6,29 +6,29 @@ namespace wacs
 {
     public class WACService : ServiceControl
     {
-        private readonly ITestService testService;
+        private readonly IBootstrapper bootstrapper;
         private readonly ILogger logger;
 
-        public WACService(ITestService testService, ILogger logger)
+        public WACService(IBootstrapper bootstrapper, ILogger logger)
         {
-            this.testService = testService;
+            this.bootstrapper = bootstrapper;
             this.logger = logger;
         }
 
         public bool Start(HostControl hostControl)
         {
-            testService.Start();
+            bootstrapper.Start();
 
-            logger.InfoFormat("WACS Id:[{0}] started at [{1}]", testService.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
+            logger.InfoFormat("WACS Id:[{0}] started at [{1}]", bootstrapper.Id, DateTime.UtcNow.ToString("HH:mm:ss fff"));
 
             return true;
         }
 
         public bool Stop(HostControl hostControl)
         {
-            testService.Stop();
+            bootstrapper.Stop();
 
-            logger.InfoFormat("WACS Id:[{0}] stopped", testService.Id);
+            logger.InfoFormat("WACS Id:[{0}] stopped", bootstrapper.Id);
 
             return true;
         }

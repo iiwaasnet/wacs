@@ -67,7 +67,7 @@ namespace tests.Unit.FLease
             }
             var majority = numberOfNodes / 2 + 1;
 
-            leaseProviders.ForEach(p => p.Start());
+            //leaseProviders.ForEach(p => p.Start());
 
             var leases = Enumerable.Empty<ILease>();
             do
@@ -78,42 +78,7 @@ namespace tests.Unit.FLease
             Assert.GreaterOrEqual(leases.GroupBy(l => l.ExpiresAt).Max(g => g.Count()), majority);
             Assert.GreaterOrEqual(leases.GroupBy(l => l.Owner.Id).Max(g => g.Count()), majority);
 
-            leaseProviders.ToList().ForEach(p => p.Stop());
-        }
-
-        [Test]
-        public void TestStartingLeaseProvider_StartsRoundBasedRegister()
-        {
-            var builder = DIHelper.CreateBuilder();
-
-            builder.RegisterType<InprocIntercomMessageHub>().As<IIntercomMessageHub>().SingleInstance();
-            var register = new Mock<IRoundBasedRegister>();
-
-            builder.Register(c => register.Object).As<IRoundBasedRegister>().SingleInstance();
-
-            var leaseProvider = builder.Build().Resolve<ILeaseProvider>();
-
-            leaseProvider.Start();
-
-            register.Verify(m => m.Start(), Times.Once());
-        }
-
-        [Test]
-        public void TestStopingLeaseProvider_StopsRoundBasedRegister()
-        {
-            var builder = DIHelper.CreateBuilder();
-
-            builder.RegisterType<InprocIntercomMessageHub>().As<IIntercomMessageHub>().SingleInstance();
-            var owner = new Process();
-            var register = new Mock<IRoundBasedRegister>();
-
-            builder.Register(c => register.Object).As<IRoundBasedRegister>().SingleInstance();
-
-            var leaseProvider = builder.Build().Resolve<ILeaseProvider>();
-
-            leaseProvider.Stop();
-
-            register.Verify(m => m.Stop(), Times.Once());
+            leaseProviders.ToList().ForEach(p => p.Dispose());
         }
 
         private ILeaseProvider BuildLeaseProvider(SetupData setupData, IIntercomMessageHub intercomMessageHub)

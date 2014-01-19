@@ -8,7 +8,7 @@ using wacs.Resolver;
 
 namespace wacs
 {
-    public class TestService : ITestService
+    public class Bootstrapper : IBootstrapper
     {
         private readonly ILeaseProvider leaseProvider;
         private readonly CancellationTokenSource token;
@@ -16,7 +16,7 @@ namespace wacs
         private readonly ILogger logger;
         private readonly INodeResolver nodeResolver;
 
-        public TestService(ILeaseProvider leaseProvider,
+        public Bootstrapper(ILeaseProvider leaseProvider,
                             IBallotGenerator ballotGenerator,
                             INodeResolver nodeResolver,
                             ILogger logger)
@@ -67,7 +67,6 @@ namespace wacs
 
         public void Start()
         {
-            leaseProvider.Start();
             Task.Factory.StartNew(() => ApplyCommands(token.Token), token.Token);
         }
 
@@ -75,7 +74,7 @@ namespace wacs
         {
             nodeResolver.Dispose();
             token.Cancel();
-            leaseProvider.Stop();
+            leaseProvider.Dispose();
             token.Dispose();
         }
 

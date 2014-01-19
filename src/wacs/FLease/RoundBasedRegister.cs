@@ -4,13 +4,10 @@ using System.Reactive.Linq;
 using System.Threading;
 using wacs.Configuration;
 using wacs.Diagnostics;
-using wacs.Messaging;
 using wacs.Messaging.Hubs.Intercom;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Lease;
 using wacs.Resolver;
-using wacs.Rsm.Interface;
-using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.FLease
 {
@@ -59,6 +56,8 @@ namespace wacs.FLease
             nackReadStream = listener.Where(m => m.Body.MessageType == LeaseNackRead.MessageType);
             ackWriteStream = listener.Where(m => m.Body.MessageType == LeaseAckWrite.MessageType);
             nackWriteStream = listener.Where(m => m.Body.MessageType == LeaseNackWrite.MessageType);
+
+            listener.Start();
         }
 
         private void OnWriteReceived(IMessage message)
@@ -155,7 +154,7 @@ namespace wacs.FLease
         public ILeaseTxResult Write(IBallot ballot, ILease lease)
         {
             var ackFilter = new LeaderElectionMessageFilter(ballot, (m) => new LeaseAckWrite(m).GetPayload(), nodeResolver, synodConfigurationProvider);
-            var nackFilter = new LeaderElectionMessageFilter(ballot,(m) => new LeaseNackWrite(m).GetPayload(), nodeResolver, synodConfigurationProvider);
+            var nackFilter = new LeaderElectionMessageFilter(ballot, (m) => new LeaseNackWrite(m).GetPayload(), nodeResolver, synodConfigurationProvider);
 
             var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
             var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());
@@ -195,12 +194,7 @@ namespace wacs.FLease
             return synodConfigurationProvider.Synod.Count() / 2 + 1;
         }
 
-        public void Start()
-        {
-            listener.Start();
-        }
-
-        public void Stop()
+        public void Dispose()
         {
             listener.Stop();
         }

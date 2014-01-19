@@ -1,6 +1,6 @@
 ﻿namespace wacs
 {
-    public interface ITestService
+    public interface IBootstrapper
     {
         void Start();
 

@@ -19,7 +19,7 @@ namespace wacs
 
         private void RegisterPerInstance(ContainerBuilder builder)
         {
-            builder.RegisterType<TestService>().As<ITestService>().SingleInstance();
+            builder.RegisterType<Bootstrapper>().As<IBootstrapper>().SingleInstance();
 
             builder.RegisterType<LeaseProvider>().As<ILeaseProvider>();
             builder.RegisterType<RoundBasedRegister>().As<IRoundBasedRegister>();

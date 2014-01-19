@@ -52,18 +52,17 @@ namespace tests.Unit.FLease
             nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-            var register = builder.Build().Resolve<IRoundBasedRegister>();
-            register.Start();
+            using (var register = builder.Build().Resolve<IRoundBasedRegister>())
+            {
+                var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+                var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
-            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
+                Assert.IsTrue(ballot1 > ballot);
 
-            Assert.IsTrue(ballot1 > ballot);
+                Assert.AreEqual(TxOutcome.Commit, register.Read(ballot1).TxOutcome);
+                Assert.AreEqual(TxOutcome.Abort, register.Read(ballot).TxOutcome);
 
-            Assert.AreEqual(TxOutcome.Commit, register.Read(ballot1).TxOutcome);
-            Assert.AreEqual(TxOutcome.Abort, register.Read(ballot).TxOutcome);
-
-            register.Stop();
+            }
         }
 
         [Test(Description = "Lemma R1: Read-abort")]
@@ -76,18 +75,18 @@ namespace tests.Unit.FLease
             nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-            var register = builder.Build().Resolve<IRoundBasedRegister>();
-            register.Start();
+            using (var register = builder.Build().Resolve<IRoundBasedRegister>())
+            {
 
-            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
+                var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+                var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
-            Assert.IsTrue(ballot1 > ballot);
+                Assert.IsTrue(ballot1 > ballot);
 
-            Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, new Lease(owner, DateTime.UtcNow)).TxOutcome);
-            Assert.AreEqual(TxOutcome.Abort, register.Read(ballot).TxOutcome);
+                Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, new Lease(owner, DateTime.UtcNow)).TxOutcome);
+                Assert.AreEqual(TxOutcome.Abort, register.Read(ballot).TxOutcome);
 
-            register.Stop();
+            }
         }
 
         [Test(Description = "Lemma R2: Write-abort")]
@@ -100,18 +99,18 @@ namespace tests.Unit.FLease
             nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-            var register = builder.Build().Resolve<IRoundBasedRegister>();
-            register.Start();
+            using (var register = builder.Build().Resolve<IRoundBasedRegister>())
+            {
 
-            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
+                var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+                var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
-            Assert.IsTrue(ballot1 > ballot);
+                Assert.IsTrue(ballot1 > ballot);
 
-            Assert.AreEqual(TxOutcome.Commit, register.Read(ballot1).TxOutcome);
-            Assert.AreEqual(TxOutcome.Abort, register.Write(ballot, new Lease(owner, DateTime.UtcNow)).TxOutcome);
+                Assert.AreEqual(TxOutcome.Commit, register.Read(ballot1).TxOutcome);
+                Assert.AreEqual(TxOutcome.Abort, register.Write(ballot, new Lease(owner, DateTime.UtcNow)).TxOutcome);
 
-            register.Stop();
+            }
         }
 
         [Test(Description = "Lemma R2: Write-abort")]
@@ -124,18 +123,18 @@ namespace tests.Unit.FLease
             nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-            var register = builder.Build().Resolve<IRoundBasedRegister>();
-            register.Start();
+            using (var register = builder.Build().Resolve<IRoundBasedRegister>())
+            {
 
-            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
+                var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+                var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
-            Assert.IsTrue(ballot1 > ballot);
+                Assert.IsTrue(ballot1 > ballot);
 
-            Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, new Lease(owner, DateTime.UtcNow)).TxOutcome);
-            Assert.AreEqual(TxOutcome.Abort, register.Write(ballot, new Lease(owner, DateTime.UtcNow)).TxOutcome);
+                Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, new Lease(owner, DateTime.UtcNow)).TxOutcome);
+                Assert.AreEqual(TxOutcome.Abort, register.Write(ballot, new Lease(owner, DateTime.UtcNow)).TxOutcome);
 
-            register.Stop();
+            }
         }
 
         [Test(Description = "Lemma R3: Read-write-commit")]
@@ -148,19 +147,19 @@ namespace tests.Unit.FLease
             nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-            var register = builder.Build().Resolve<IRoundBasedRegister>();
-            register.Start();
+            using (var register = builder.Build().Resolve<IRoundBasedRegister>())
+            {
 
-            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
+                var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+                var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
-            Assert.IsTrue(ballot1 > ballot);
+                Assert.IsTrue(ballot1 > ballot);
 
-            Assert.AreEqual(TxOutcome.Commit, register.Read(ballot1).TxOutcome);
-            Assert.AreEqual(TxOutcome.Abort, register.Read(ballot).TxOutcome);
-            Assert.AreEqual(TxOutcome.Abort, register.Read(ballot1).TxOutcome);
+                Assert.AreEqual(TxOutcome.Commit, register.Read(ballot1).TxOutcome);
+                Assert.AreEqual(TxOutcome.Abort, register.Read(ballot).TxOutcome);
+                Assert.AreEqual(TxOutcome.Abort, register.Read(ballot1).TxOutcome);
 
-            register.Stop();
+            }
         }
 
         [Test(Description = "Lemma R3: Read-write-commit")]
@@ -173,18 +172,18 @@ namespace tests.Unit.FLease
             nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-            var register = builder.Build().Resolve<IRoundBasedRegister>();
-            register.Start();
+            using (var register = builder.Build().Resolve<IRoundBasedRegister>())
+            {
 
-            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
+                var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+                var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
-            Assert.IsTrue(ballot1 > ballot);
+                Assert.IsTrue(ballot1 > ballot);
 
-            Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, new Lease(owner, DateTime.UtcNow)).TxOutcome);
-            Assert.AreEqual(TxOutcome.Abort, register.Write(ballot, new Lease(owner, DateTime.UtcNow)).TxOutcome);
+                Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, new Lease(owner, DateTime.UtcNow)).TxOutcome);
+                Assert.AreEqual(TxOutcome.Abort, register.Write(ballot, new Lease(owner, DateTime.UtcNow)).TxOutcome);
 
-            register.Stop();
+            }
         }
 
         [Test(Description = "Lemma R4: Read-commit")]
@@ -197,22 +196,22 @@ namespace tests.Unit.FLease
             nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-            var register = builder.Build().Resolve<IRoundBasedRegister>();
-            register.Start();
+            using (var register = builder.Build().Resolve<IRoundBasedRegister>())
+            {
 
-            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
+                var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+                var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
-            Assert.IsTrue(ballot1 > ballot);
+                Assert.IsTrue(ballot1 > ballot);
 
-            var lease = new Lease(owner, DateTime.UtcNow);
-            Assert.AreEqual(TxOutcome.Commit, register.Write(ballot, lease).TxOutcome);
-            var readLease = register.Read(ballot1);
-            Assert.AreEqual(TxOutcome.Commit, readLease.TxOutcome);
-            Assert.AreEqual(lease.Owner.Id, readLease.Lease.Owner.Id);
-            Assert.AreEqual(lease.ExpiresAt, readLease.Lease.ExpiresAt);
+                var lease = new Lease(owner, DateTime.UtcNow);
+                Assert.AreEqual(TxOutcome.Commit, register.Write(ballot, lease).TxOutcome);
+                var readLease = register.Read(ballot1);
+                Assert.AreEqual(TxOutcome.Commit, readLease.TxOutcome);
+                Assert.AreEqual(lease.Owner.Id, readLease.Lease.Owner.Id);
+                Assert.AreEqual(lease.ExpiresAt, readLease.Lease.ExpiresAt);
 
-            register.Stop();
+            }
         }
 
         [Test(Description = "Lemma R5: Write-commit")]
@@ -225,26 +224,26 @@ namespace tests.Unit.FLease
             nodeResolver.Setup(m => m.ResolveLocalNode()).Returns(owner);
             builder.Register(c => nodeResolver.Object).As<INodeResolver>().SingleInstance();
 
-            var register = builder.Build().Resolve<IRoundBasedRegister>();
-            register.Start();
+            using (var register = builder.Build().Resolve<IRoundBasedRegister>())
+            {
 
-            var ballot = new Ballot(DateTime.UtcNow, 0, owner);
-            var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
-            var ballot3 = new Ballot(DateTime.UtcNow, 3, owner);
+                var ballot = new Ballot(DateTime.UtcNow, 0, owner);
+                var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
+                var ballot3 = new Ballot(DateTime.UtcNow, 3, owner);
 
-            Assert.IsTrue(ballot1 > ballot);
+                Assert.IsTrue(ballot1 > ballot);
 
-            var lease1 = new Lease(owner, DateTime.UtcNow);
-            var lease2 = new Lease(owner, DateTime.UtcNow + TimeSpan.FromSeconds(2));
+                var lease1 = new Lease(owner, DateTime.UtcNow);
+                var lease2 = new Lease(owner, DateTime.UtcNow + TimeSpan.FromSeconds(2));
 
-            Assert.AreEqual(TxOutcome.Commit, register.Write(ballot, lease1).TxOutcome);
-            Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, lease2).TxOutcome);
-            var readLease = register.Read(ballot3);
-            Assert.AreEqual(TxOutcome.Commit, readLease.TxOutcome);
-            Assert.AreEqual(lease2.Owner.Id, readLease.Lease.Owner.Id);
-            Assert.AreEqual(lease2.ExpiresAt, readLease.Lease.ExpiresAt);
+                Assert.AreEqual(TxOutcome.Commit, register.Write(ballot, lease1).TxOutcome);
+                Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, lease2).TxOutcome);
+                var readLease = register.Read(ballot3);
+                Assert.AreEqual(TxOutcome.Commit, readLease.TxOutcome);
+                Assert.AreEqual(lease2.Owner.Id, readLease.Lease.Owner.Id);
+                Assert.AreEqual(lease2.ExpiresAt, readLease.Lease.ExpiresAt);
 
-            register.Stop();
+            }
         }
 
         private static Node CreateLocalNode()

@@ -17,7 +17,6 @@ namespace wacs.FLease
         private readonly IRoundBasedRegister register;
         private readonly SemaphoreSlim renewGateway;
         private volatile ILease lastKnownLease;
-        private DateTime startTime;
 
         public LeaseProvider(IRoundBasedRegister register,
                              IBallotGenerator ballotGenerator,
@@ -39,13 +38,6 @@ namespace wacs.FLease
             leaseTimer = new Timer(state => ScheduledReadOrRenewLease(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
         }
 
-        public void Start()
-        {
-            startTime = DateTime.UtcNow;
-            register.Start();
-            //leaseTimer.Change(TimeSpan.FromMilliseconds(0), config.MaxLeaseTimeSpan);
-        }
-
         public void ResetLease()
         {
             Interlocked.Exchange(ref lastKnownLease, null);
@@ -56,15 +48,11 @@ namespace wacs.FLease
             return Task.Factory.StartNew(() => GetLastKnownLease());
         }
 
-        public void Stop()
-        {
-            register.Stop();
-            leaseTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
-        }
-
         public void Dispose()
         {
+            leaseTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             leaseTimer.Dispose();
+            register.Dispose();
             renewGateway.Dispose();
         }
 
@@ -213,12 +201,7 @@ namespace wacs.FLease
 
         private void WaitBeforeNextLeaseIssued(ILeaseConfiguration config)
         {
-            var diff = DateTime.UtcNow - startTime;
-
-            if (diff < config.MaxLeaseTimeSpan)
-            {
-                Sleep(config.MaxLeaseTimeSpan - diff);
-            }
+            Sleep(config.MaxLeaseTimeSpan);
         }
 
         private void Sleep(TimeSpan delay)

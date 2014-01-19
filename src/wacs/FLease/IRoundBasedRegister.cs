@@ -1,9 +1,8 @@
-﻿namespace wacs.FLease
-{
-	public interface IRoundBasedRegister : ILeaseReader, ILeaseWriter
-	{
-		void Start();
+﻿using System;
 
-		void Stop();
+namespace wacs.FLease
+{
+	public interface IRoundBasedRegister : ILeaseReader, ILeaseWriter, IDisposable
+	{
 	}
 }

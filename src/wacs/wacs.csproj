@@ -144,7 +144,7 @@
     <Compile Include="FLease\RoundBasedRegister.cs" />
     <Compile Include="FLease\RoundBasedRegisterLogging.cs" />
     <Compile Include="FLease\TxOutcome.cs" />
-    <Compile Include="ITestService.cs" />
+    <Compile Include="IBootstrapper.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="Rsm\Implementation\AcceptorAcceptPhase.cs" />
     <Compile Include="Rsm\Implementation\AcceptorPreparePhase.cs" />
@@ -178,7 +178,7 @@
     <Compile Include="Rsm\Implementation\ReplicationDemultiplexor.cs" />
     <Compile Include="Rsm\Interface\ISyncCommand.cs" />
     <Compile Include="Rsm\Implementation\WacsStateMachine.cs" />
-    <Compile Include="TestService.cs" />
+    <Compile Include="Bootstrapper.cs" />
     <Compile Include="Rsm\Implementation\ClientMessageProcessor.cs" />
     <Compile Include="Rsm\Interface\IClientMessageProcessor.cs" />
     <Compile Include="Rsm\Interface\ILogEntry.cs" />
