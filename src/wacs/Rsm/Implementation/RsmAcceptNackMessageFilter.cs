@@ -7,14 +7,14 @@ using wacs.Rsm.Interface;
 
 namespace wacs.Rsm.Implementation
 {
-    public class RsmPrepareNackMessageFilter
+    public class RsmAcceptNackMessageFilter
     {
         private readonly ILogIndex index;
         private readonly IBallot ballot;
         private readonly INodeResolver nodeResolver;
         private readonly ISynodConfigurationProvider synodConfigurationProvider;
 
-        public RsmPrepareNackMessageFilter(IBallot ballot,
+        public RsmAcceptNackMessageFilter(IBallot ballot,
                                            ILogIndex index,
                                            INodeResolver nodeResolver,
                                            ISynodConfigurationProvider synodConfigurationProvider)
@@ -38,17 +38,17 @@ namespace wacs.Rsm.Implementation
 
         private static IConsensusDecisionPayload GetPayload(IMessage message)
         {
-            if (RsmNackPrepareBlocked.MessageType == message.Body.MessageType)
+            if (RsmNackAcceptBlocked.MessageType == message.Body.MessageType)
             {
-                return new RsmNackPrepareBlocked(message).GetPayload();
+                return new RsmNackAcceptBlocked(message).GetPayload();
             }
-            if (RsmNackPrepareChosen.MessageType == message.Body.MessageType)
+            if (RsmNackAcceptChosen.MessageType == message.Body.MessageType)
             {
-                return new RsmNackPrepareChosen(message).GetPayload();
+                return new RsmNackAcceptChosen(message).GetPayload();
             }
-            if (RsmNackPrepareNotLeader.MessageType == message.Body.MessageType)
+            if (RsmNackAcceptNotLeader.MessageType == message.Body.MessageType)
             {
-                return new RsmNackPrepareNotLeader(message).GetPayload();
+                return new RsmNackAcceptNotLeader(message).GetPayload();
             }
 
             throw new Exception(string.Format("Message type {0} is unknown!", message.Body.MessageType));

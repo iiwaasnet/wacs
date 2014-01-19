@@ -4,7 +4,6 @@ using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
-using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {
@@ -17,10 +16,10 @@ namespace wacs.Rsm.Implementation
         private readonly Func<IMessage, IConsensusDecisionPayload> payload;
 
         public RsmMessageFilter(IBallot ballot,
-                                   ILogIndex index,
-                                   Func<IMessage, IConsensusDecisionPayload> payload,
-                                   INodeResolver nodeResolver,
-                                   ISynodConfigurationProvider synodConfigurationProvider)
+                                ILogIndex index,
+                                Func<IMessage, IConsensusDecisionPayload> payload,
+                                INodeResolver nodeResolver,
+                                ISynodConfigurationProvider synodConfigurationProvider)
         {
             this.index = index;
             this.ballot = ballot;
@@ -35,8 +34,8 @@ namespace wacs.Rsm.Implementation
             var process = new Process(message.Envelope.Sender.Id);
 
             return ProcessIsInSynod(process)
-                   && messagePayload.Proposal.Equals(ballot)
-                   && messagePayload.LogIndex.Equals(index);
+                   && new Ballot(messagePayload.Proposal.ProposalNumber).Equals(ballot)
+                   && new LogIndex(messagePayload.LogIndex.Index).Equals(index);
         }
 
         private bool ProcessIsInSynod(IProcess process)

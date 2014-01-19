@@ -9,13 +9,16 @@ namespace wacs
         private readonly ILogger logger;
         private readonly IClientMessageProcessor clientMessageProcessor;
         private readonly INodeResolver nodeResolver;
+        private readonly IAcceptor acceptor;
 
         public Bootstrapper(INodeResolver nodeResolver,
                             IClientMessageProcessor clientMessageProcessor,
+                            IAcceptor acceptor,
                             ILogger logger)
         {
             this.logger = logger;
             this.nodeResolver = nodeResolver;
+            this.acceptor = acceptor;
             this.clientMessageProcessor = clientMessageProcessor;
         }
 

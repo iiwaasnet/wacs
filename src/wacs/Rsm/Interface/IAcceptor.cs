@@ -1,7 +1,8 @@
-﻿namespace wacs.Rsm.Interface
+﻿using System;
+
+namespace wacs.Rsm.Interface
 {
-    public interface IAcceptor
+    public interface IAcceptor : IDisposable
     {
-         
     }
 }

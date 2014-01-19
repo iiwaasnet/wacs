@@ -27,7 +27,13 @@ namespace wacs.Rsm.Implementation
         {
             lock (locker)
             {
-                return log[iid];
+                ILogEntry logEntry;
+                if (log.TryGetValue(iid, out logEntry))
+                {
+                    return logEntry;
+                }
+
+                return new LogEntry(null, iid, LogEntryState.Unknown);
             }
         }
 

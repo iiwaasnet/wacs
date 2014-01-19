@@ -46,11 +46,16 @@ namespace wacs.Rsm.Implementation
             listener = intercomMessageHub.Subscribe();
 
             ackPrepareStream = listener.Where(m => m.Body.MessageType == RsmAckPrepare.MessageType);
-            ackAcceptStream = listener.Where(m => m.Body.MessageType == RsmAckAccept.MessageType);
             nackPrepareStream = listener.Where(m => m.Body.MessageType == RsmNackPrepareBlocked.MessageType
                                                     || m.Body.MessageType == RsmNackPrepareChosen.MessageType
                                                     || m.Body.MessageType == RsmNackPrepareNotLeader.MessageType);
-            nackAcceptStream = listener.Where(m => m.Body.MessageType == RsmNackAcceptBlocked.MessageType);
+
+            ackAcceptStream = listener.Where(m => m.Body.MessageType == RsmAckAccept.MessageType);
+            nackAcceptStream = listener.Where(m => m.Body.MessageType == RsmNackAcceptBlocked.MessageType
+                                                   || m.Body.MessageType == RsmNackAcceptChosen.MessageType
+                                                   || m.Body.MessageType == RsmNackAcceptNotLeader.MessageType);
+
+            listener.Start();
         }
 
         public IConsensusDecision Decide(ILogIndex logIndex, ISyncCommand command, bool fast)
@@ -134,7 +139,7 @@ namespace wacs.Rsm.Implementation
         private AcceptPhaseResult SendAccept(IBallot ballot, ILogIndex logIndex, IMessage value)
         {
             var ackFilter = new RsmMessageFilter(ballot, logIndex, (m) => new RsmAckAccept(m).GetPayload(), nodeResolver, synodConfigurationProvider);
-            var nackFilter = new RsmMessageFilter(ballot, logIndex, (m) => new RsmNackAcceptBlocked(m).GetPayload(), nodeResolver, synodConfigurationProvider);
+            var nackFilter = new RsmAcceptNackMessageFilter(ballot, logIndex, nodeResolver, synodConfigurationProvider);
 
             var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, GetQuorum());
             var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, GetQuorum());
@@ -352,6 +357,12 @@ namespace wacs.Rsm.Implementation
         private int GetQuorum()
         {
             return synodConfigurationProvider.Synod.Count() / 2 + 1;
+        }
+
+        public void Dispose()
+        {
+            listener.Stop();
+            listener.Dispose();
         }
     }
 }

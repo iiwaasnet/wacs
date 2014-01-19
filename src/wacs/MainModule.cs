@@ -26,6 +26,7 @@ namespace wacs
             builder.RegisterType<ReplicatedLog>().As<IReplicatedLog>().SingleInstance();
             builder.RegisterType<ConsensusFactory>().As<IConsensusFactory>().SingleInstance();
             builder.RegisterType<ConsensusRoundManager>().As<IConsensusRoundManager>().SingleInstance();
+            builder.RegisterType<Acceptor>().As<IAcceptor>().SingleInstance();
 
             builder.RegisterType<BallotGenerator>().As<IBallotGenerator>().SingleInstance();
             builder.RegisterType<Bootstrapper>().As<IBootstrapper>().SingleInstance();

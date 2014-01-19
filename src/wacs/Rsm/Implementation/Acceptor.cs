@@ -34,6 +34,7 @@ namespace wacs.Rsm.Implementation
             this.intercomMessageHub = intercomMessageHub;
             this.nodeResolver = nodeResolver;
             this.leaseProvider = leaseProvider;
+            minProposal = new Ballot(0);
 
             listener = intercomMessageHub.Subscribe();
 
@@ -41,6 +42,8 @@ namespace wacs.Rsm.Implementation
                     .Subscribe(new MessageStreamListener(OnPrepareReceived));
             listener.Where(m => m.Body.MessageType == RsmAccept.MessageType)
                     .Subscribe(new MessageStreamListener(OnAcceptReceived));
+
+            listener.Start();
         }
 
         private void OnAcceptReceived(IMessage message)
@@ -99,6 +102,12 @@ namespace wacs.Rsm.Implementation
             {
                 logger.Error(err);
             }
+        }
+
+        public void Dispose()
+        {
+            listener.Stop();
+            listener.Dispose();
         }
     }
 }
