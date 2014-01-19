@@ -16,7 +16,7 @@ namespace wacs.Messaging.Messages
         {
             return new Dictionary<string, object>
                    {
-                       {CreateNode.MessageType, null}
+                       {CreateNodeRequest.MessageType, null}
                    };
         }
 

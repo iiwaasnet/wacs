@@ -7,7 +7,7 @@ using ZeroMQ;
 
 namespace wacs.Communication.Hubs.Client
 {
-    internal class ClientMultipartMessage
+    public class ClientMultipartMessage
     {
         private readonly IEnumerable<byte[]> frames;
 
@@ -58,7 +58,7 @@ namespace wacs.Communication.Hubs.Client
             }
         }
 
-        internal int GetSenderId()
+        public int GetSenderId()
         {
             return frames.First().GetInt();
         }
@@ -68,7 +68,7 @@ namespace wacs.Communication.Hubs.Client
             return frames.First();
         }
 
-        internal string GetMessageType()
+        public string GetMessageType()
         {
             return frames.Skip(1).First().GetString();
         }
@@ -78,12 +78,12 @@ namespace wacs.Communication.Hubs.Client
             return frames.Skip(1).First();
         }
 
-        internal byte[] GetMessage()
+        public byte[] GetMessage()
         {
             return frames.Skip(2).Aggregate(new byte[0], (seed, array) => seed.Concat(array).ToArray());
         }
 
-        internal IEnumerable<byte[]> Frames
+        public IEnumerable<byte[]> Frames
         {
             get { return frames; }
         }

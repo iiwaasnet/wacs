@@ -49,7 +49,8 @@
   <ItemGroup>
     <Compile Include="Messages\Body.cs" />
     <Compile Include="Messages\ClientMessagesRepository.cs" />
-    <Compile Include="Messages\Client\wacs\CreateNode.cs" />
+    <Compile Include="Messages\Client\wacs\CreateNodeResponse.cs" />
+    <Compile Include="Messages\Client\wacs\CreateNodeRequest.cs" />
     <Compile Include="Messages\Client\Error\ErrorMessageCodes.cs" />
     <Compile Include="Messages\Client\Error\ErrorMessage.cs" />
     <Compile Include="Messages\Envelope.cs" />
