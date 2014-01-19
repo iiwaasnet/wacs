@@ -36,7 +36,6 @@ namespace wacs.Communication.Hubs.Client
             context = ZmqContext.Create();
             device = CreateProcessingDevice();
             processingThreads = CreateRequestProcessingThreads().ToArray();
-            device.Start();
         }
 
         private IEnumerable<Thread> CreateRequestProcessingThreads()
@@ -48,6 +47,11 @@ namespace wacs.Communication.Hubs.Client
 
                 yield return thread;
             }
+
+            var deviceThread = new Thread(() => device.Start());
+            deviceThread.Start();
+
+            yield return deviceThread;
         }
 
         private void AcceptIncomingRequests(CancellationToken token, ZmqSocket receiver)
@@ -60,9 +64,12 @@ namespace wacs.Communication.Hubs.Client
                 {
                     var request = receiver.ReceiveMessage(config.ReceiveWaitTimeout);
 
-                    var response = ProcessRequest(request);
+                    if (!request.IsEmpty)
+                    {
+                        var response = ProcessRequest(request);
 
-                    receiver.SendMessage(new ZmqMessage(response.Frames));
+                        receiver.SendMessage(new ZmqMessage(response.Frames));
+                    }
                 }
             }
         }

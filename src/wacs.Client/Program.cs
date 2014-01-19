@@ -39,7 +39,7 @@ namespace wacs.Client
                         Console.WriteLine("NodeIndex: {0}", payload.NodeIndex);
 
 
-                        Thread.Sleep(TimeSpan.FromSeconds(10));
+                        Thread.Sleep(TimeSpan.FromSeconds(100));
                     }
                 }
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Framework.State;
 using wacs.Messaging.Messages;
@@ -17,9 +18,14 @@ namespace wacs.Rsm.Implementation
         private readonly IConsensusFactory consensusFactory;
         private IConsensusDecision previousDecision;
         private readonly ILeaseProvider leaseProvider;
+        private readonly ILogger logger;
 
-        public Rsm(IReplicatedLog replicatedLog, IConsensusFactory consensusFactory, ILeaseProvider leaseProvider)
+        public Rsm(IReplicatedLog replicatedLog,
+                   IConsensusFactory consensusFactory,
+                   ILeaseProvider leaseProvider,
+                   ILogger logger)
         {
+            this.logger = logger;
             commandsQueue = new BlockingCollection<IAwaitableResponse<IMessage>>(new ConcurrentQueue<IAwaitableResponse<IMessage>>());
             this.replicatedLog = replicatedLog;
             cancellationSource = new CancellationTokenSource();
@@ -34,11 +40,18 @@ namespace wacs.Rsm.Implementation
         {
             foreach (var awaitableResult in commandsQueue.GetConsumingEnumerable(token))
             {
-                var command = awaitableResult;
-                do
+                try
                 {
-                    command = ProcessCommand(command);
-                } while (command != null);
+                    var command = awaitableResult;
+                    do
+                    {
+                        command = ProcessCommand(command);
+                    } while (command != null);
+                }
+                catch (Exception err)
+                {
+                    logger.Error(err);
+                }
             }
         }
 
