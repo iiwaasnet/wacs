@@ -67,8 +67,9 @@
     <Compile Include="Hubs\Intercom\IntercomMultipartMessage.cs" />
     <Compile Include="Messages\Body.cs" />
     <Compile Include="Messages\ClientMessagesRepository.cs" />
-    <Compile Include="Messages\Client\Error\ErrorMessage.cs" />
+    <Compile Include="Messages\Client\wacs\CreateNode.cs" />
     <Compile Include="Messages\Client\Error\ErrorMessageCodes.cs" />
+    <Compile Include="Messages\Client\Error\ErrorMessage.cs" />
     <Compile Include="Messages\Envelope.cs" />
     <Compile Include="Messages\IBody.cs" />
     <Compile Include="Messages\IClientMessagesRepository.cs" />
