@@ -8,9 +8,8 @@ using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.Messaging.Messages;
 using ZeroMQ;
-using Process = wacs.Configuration.Process;
 
-namespace wacs.Messaging.Hubs.Intercom
+namespace wacs.Communication.Hubs.Intercom
 {
     public class IntercomMessageHub : IIntercomMessageHub
     {
@@ -217,7 +216,7 @@ namespace wacs.Messaging.Hubs.Intercom
             {
                 try
                 {
-                    var msg = new Message(new Envelope {Sender = new Process(message.GetSenderId())},
+                    var msg = new Message(new Envelope {Sender = new Configuration.Process(message.GetSenderId())},
                                           new Body
                                           {
                                               MessageType = message.GetMessageType(),

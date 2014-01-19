@@ -4,7 +4,7 @@ using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.Messaging.Messages;
 
-namespace wacs.Messaging.Hubs.Intercom
+namespace wacs.Communication.Hubs.Intercom
 {
     public class InprocIntercomMessageHub : IIntercomMessageHub
     {

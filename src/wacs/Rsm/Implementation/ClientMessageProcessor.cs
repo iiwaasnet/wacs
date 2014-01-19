@@ -1,6 +1,6 @@
 ﻿using System;
+using wacs.Communication.Hubs.Client;
 using wacs.FLease;
-using wacs.Messaging.Hubs.Client;
 using wacs.Messaging.Messages;
 using wacs.Resolver;
 using wacs.Rsm.Interface;

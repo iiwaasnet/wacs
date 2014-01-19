@@ -4,7 +4,7 @@ using wacs.Configuration;
 using wacs.Framework.State;
 using wacs.Messaging.Messages;
 
-namespace wacs.Messaging.Hubs.Client
+namespace wacs.Communication.Hubs.Client
 {
     internal class AwaitableResponse : IAwaitableResponse<IMessage>
     {

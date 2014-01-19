@@ -2,7 +2,7 @@
 using wacs.Configuration;
 using wacs.Messaging.Messages;
 
-namespace wacs.Messaging.Hubs.Client
+namespace wacs.Communication.Hubs.Client
 {
     public interface IClientMessageRouter : IDisposable
     {

@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9DF356B9-2357-427B-B8FB-4D27EEF84C6C}</ProjectGuid>
+    <ProjectGuid>{380D9E8B-D5AC-42D4-8BD0-26526D88F91F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>wacs.Messaging</RootNamespace>
-    <AssemblyName>wacs.Messaging</AssemblyName>
+    <RootNamespace>wacs.Communication</RootNamespace>
+    <AssemblyName>wacs.Communication</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -35,8 +35,8 @@
     <Reference Include="Castle.Core">
       <HintPath>..\packages\Castle.Core.3.2.2\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="clrzmq">
+      <HintPath>..\dependencies\zmq\x64\clrzmq.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -47,48 +47,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Messages\Body.cs" />
-    <Compile Include="Messages\ClientMessagesRepository.cs" />
-    <Compile Include="Messages\Client\wacs\CreateNode.cs" />
-    <Compile Include="Messages\Client\Error\ErrorMessageCodes.cs" />
-    <Compile Include="Messages\Client\Error\ErrorMessage.cs" />
-    <Compile Include="Messages\Envelope.cs" />
-    <Compile Include="Messages\IBody.cs" />
-    <Compile Include="Messages\IClientMessagesRepository.cs" />
-    <Compile Include="Messages\IEnvelope.cs" />
-    <Compile Include="Messages\IMessage.cs" />
-    <Compile Include="Messages\IMessageSerializer.cs" />
-    <Compile Include="Messages\Intercom\Lease\Ballot.cs" />
-    <Compile Include="Messages\Intercom\Lease\ILeaseMessagePayload.cs" />
-    <Compile Include="Messages\Intercom\Lease\Lease.cs" />
-    <Compile Include="Messages\Intercom\Lease\LeaseAckRead.cs" />
-    <Compile Include="Messages\Intercom\Lease\LeaseAckWrite.cs" />
-    <Compile Include="Messages\Intercom\Lease\LeaseNackRead.cs" />
-    <Compile Include="Messages\Intercom\Lease\LeaseNackWrite.cs" />
-    <Compile Include="Messages\Intercom\Lease\LeaseRead.cs" />
-    <Compile Include="Messages\Intercom\Lease\LeaseWrite.cs" />
-    <Compile Include="Messages\Intercom\NodeResolver\Node.cs" />
-    <Compile Include="Messages\Intercom\Process.cs" />
-    <Compile Include="Messages\Intercom\NodeResolver\ProcessAnnouncementMessage.cs" />
-    <Compile Include="Messages\Intercom\Rsm\Ballot.cs" />
-    <Compile Include="Messages\Intercom\Rsm\IConsensusDecisionPayload.cs" />
-    <Compile Include="Messages\Intercom\Rsm\LogIndex.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmChosen.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmAckAccept.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmNackAcceptBlocked.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmNackAcceptNotLeader.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmNackAcceptChosen.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmNackPrepareNotLeader.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmNackPrepareChosen.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmNackPrepareBlocked.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmAckPrepare.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmAccept.cs" />
-    <Compile Include="Messages\Intercom\Rsm\RsmPrepare.cs" />
-    <Compile Include="Messages\ITypedMessage.cs" />
-    <Compile Include="Messages\Message.cs" />
-    <Compile Include="Messages\MessageSerializer.cs" />
+    <Compile Include="Hubs\BroadcastRequest.cs" />
+    <Compile Include="Hubs\Client\AwaitableResponse.cs" />
+    <Compile Include="Hubs\Client\ClientMessageHub.cs" />
+    <Compile Include="Hubs\Client\ClientMessageRouter.cs" />
+    <Compile Include="Hubs\Client\ClientMultipartMessage.cs" />
+    <Compile Include="Hubs\Client\IClientMessageHub.cs" />
+    <Compile Include="Hubs\Client\IClientMessageRouter.cs" />
+    <Compile Include="Hubs\Intercom\DataEncoder.cs" />
+    <Compile Include="Hubs\Intercom\ForwardRequest.cs" />
+    <Compile Include="Hubs\Intercom\IIntercomMessageHub.cs" />
+    <Compile Include="Hubs\Intercom\IListener.cs" />
+    <Compile Include="Hubs\Intercom\InprocIntercomMessageHub.cs" />
+    <Compile Include="Hubs\Intercom\IntercomMessageHub.cs" />
+    <Compile Include="Hubs\Intercom\IntercomMultipartMessage.cs" />
+    <Compile Include="Hubs\Intercom\Listener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Messages\TypedMessage.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\wacs.Configuration\wacs.Configuration.csproj">
@@ -103,8 +77,15 @@
       <Project>{b60b64f2-46fd-4591-b501-acb66b10a117}</Project>
       <Name>wacs.Framework</Name>
     </ProjectReference>
+    <ProjectReference Include="..\wacs.Messaging\wacs.Messaging.csproj">
+      <Project>{9df356b9-2357-427b-b8fb-4d27eef84c6c}</Project>
+      <Name>wacs.Messaging</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="libzmq.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -4,7 +4,7 @@ using System.Threading;
 using wacs.Diagnostics;
 using wacs.Messaging.Messages;
 
-namespace wacs.Messaging.Hubs.Intercom
+namespace wacs.Communication.Hubs.Intercom
 {
     public class Listener : IListener
     {

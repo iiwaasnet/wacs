@@ -1,22 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using wacs.Messaging.Hubs.Intercom;
+using wacs.Configuration;
 using wacs.Messaging.Messages;
 using ZeroMQ;
 
-namespace wacs.Messaging.Hubs.Client
+namespace wacs.Communication.Hubs.Intercom
 {
-    internal class ClientMultipartMessage
+    internal class IntercomMultipartMessage
     {
         private readonly IEnumerable<byte[]> frames;
+        internal static readonly byte[] MulticastId;
 
-        public ClientMultipartMessage(IMessage message)
+        static IntercomMultipartMessage()
         {
-            frames = BuildMessageParts(message).ToArray();
+            MulticastId = "*".GetBytes();
         }
 
-        public ClientMultipartMessage(ZmqMessage message)
+        public IntercomMultipartMessage(IProcess recipient, IMessage message)
+        {
+            frames = BuildMessageParts(recipient, message).ToArray();
+        }
+
+        public IntercomMultipartMessage(ZmqMessage message)
         {
             AssertMessage(message);
 
@@ -28,8 +34,9 @@ namespace wacs.Messaging.Hubs.Client
             return message.Select(m => m.Buffer).ToArray();
         }
 
-        private IEnumerable<byte[]> BuildMessageParts(IMessage message)
+        private IEnumerable<byte[]> BuildMessageParts(IProcess recipient, IMessage message)
         {
+            yield return BuildMessageFilter(recipient);
             yield return BuildSenderId(message);
             yield return BuildMessageType(message);
             yield return BuildMessageBody(message);
@@ -50,37 +57,54 @@ namespace wacs.Messaging.Hubs.Client
             return message.Envelope.Sender.Id.GetBytes();
         }
 
+        private byte[] BuildMessageFilter(IProcess recipient)
+        {
+            return (recipient != null)
+                       ? recipient.Id.GetBytes()
+                       : MulticastId;
+        }
+
         private static void AssertMessage(ZmqMessage message)
         {
-            if (message.FrameCount < 3)
+            if (message.FrameCount < 4)
             {
                 throw new Exception(string.Format("Inconsistent message received! FrameCount: [{0}] Bytes: [{1}]", message.FrameCount, message.TotalSize));
             }
         }
 
-        internal int GetSenderId()
+        internal string GetFilter()
         {
-            return frames.First().GetInt();
+            return frames.First().GetString();
         }
 
-        internal byte[] GetSenderIdBytes()
+        internal byte[] GetFilterBytes()
         {
             return frames.First();
         }
 
-        internal string GetMessageType()
+        internal int GetSenderId()
         {
-            return frames.Skip(1).First().GetString();
+            return frames.Skip(1).First().GetInt();
         }
 
-        internal byte[] GetMessageTypeBytes()
+        internal byte[] GetSenderIdBytes()
         {
             return frames.Skip(1).First();
         }
 
+        internal string GetMessageType()
+        {
+            return frames.Skip(2).First().GetString();
+        }
+
+        internal byte[] GetMessageTypeBytes()
+        {
+            return frames.Skip(2).First();
+        }
+
         internal byte[] GetMessage()
         {
-            return frames.Skip(2).Aggregate(new byte[0], (seed, array) => seed.Concat(array).ToArray());
+            return frames.Skip(3).Aggregate(new byte[0], (seed, array) => seed.Concat(array).ToArray());
         }
 
         internal IEnumerable<byte[]> Frames

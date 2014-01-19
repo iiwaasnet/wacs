@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace wacs.Messaging.Hubs.Intercom
+namespace wacs.Communication.Hubs.Intercom
 {
     public static class DataEncoder
     {

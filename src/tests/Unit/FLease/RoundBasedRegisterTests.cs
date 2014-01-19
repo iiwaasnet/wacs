@@ -3,24 +3,16 @@ using Autofac;
 using Moq;
 using NUnit.Framework;
 using tests.Unit.Helpers;
-using wacs;
+using wacs.Communication.Hubs.Intercom;
 using wacs.Configuration;
 using wacs.FLease;
-using wacs.Messaging;
-using wacs.Messaging.Hubs.Intercom;
-using wacs.Messaging.Messages;
 using wacs.Resolver;
-using wacs.Rsm.Implementation;
-using Ballot = wacs.FLease.Ballot;
 
 namespace tests.Unit.FLease
 {
     [TestFixture]
     public class RoundBasedRegisterTests
     {
-        private ContainerBuilder builder;
-        private INode node;
-
         [SetUp]
         public void Setup()
         {
@@ -42,6 +34,14 @@ namespace tests.Unit.FLease
             builder.Register(c => config.Object).As<IWacsConfiguration>().SingleInstance();
         }
 
+        private ContainerBuilder builder;
+        private INode node;
+
+        private static Node CreateLocalNode()
+        {
+            return new Node("tcp://127.0.0.1", 3030, 4030);
+        }
+
         [Test(Description = "Lemma R1: Read-abort")]
         public void TestReadWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
         {
@@ -61,7 +61,6 @@ namespace tests.Unit.FLease
 
                 Assert.AreEqual(TxOutcome.Commit, register.Read(ballot1).TxOutcome);
                 Assert.AreEqual(TxOutcome.Abort, register.Read(ballot).TxOutcome);
-
             }
         }
 
@@ -77,7 +76,6 @@ namespace tests.Unit.FLease
 
             using (var register = builder.Build().Resolve<IRoundBasedRegister>())
             {
-
                 var ballot = new Ballot(DateTime.UtcNow, 0, owner);
                 var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
@@ -85,7 +83,6 @@ namespace tests.Unit.FLease
 
                 Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, new Lease(owner, DateTime.UtcNow)).TxOutcome);
                 Assert.AreEqual(TxOutcome.Abort, register.Read(ballot).TxOutcome);
-
             }
         }
 
@@ -101,7 +98,6 @@ namespace tests.Unit.FLease
 
             using (var register = builder.Build().Resolve<IRoundBasedRegister>())
             {
-
                 var ballot = new Ballot(DateTime.UtcNow, 0, owner);
                 var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
@@ -109,7 +105,6 @@ namespace tests.Unit.FLease
 
                 Assert.AreEqual(TxOutcome.Commit, register.Read(ballot1).TxOutcome);
                 Assert.AreEqual(TxOutcome.Abort, register.Write(ballot, new Lease(owner, DateTime.UtcNow)).TxOutcome);
-
             }
         }
 
@@ -125,7 +120,6 @@ namespace tests.Unit.FLease
 
             using (var register = builder.Build().Resolve<IRoundBasedRegister>())
             {
-
                 var ballot = new Ballot(DateTime.UtcNow, 0, owner);
                 var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
@@ -133,7 +127,6 @@ namespace tests.Unit.FLease
 
                 Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, new Lease(owner, DateTime.UtcNow)).TxOutcome);
                 Assert.AreEqual(TxOutcome.Abort, register.Write(ballot, new Lease(owner, DateTime.UtcNow)).TxOutcome);
-
             }
         }
 
@@ -149,7 +142,6 @@ namespace tests.Unit.FLease
 
             using (var register = builder.Build().Resolve<IRoundBasedRegister>())
             {
-
                 var ballot = new Ballot(DateTime.UtcNow, 0, owner);
                 var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
@@ -158,7 +150,6 @@ namespace tests.Unit.FLease
                 Assert.AreEqual(TxOutcome.Commit, register.Read(ballot1).TxOutcome);
                 Assert.AreEqual(TxOutcome.Abort, register.Read(ballot).TxOutcome);
                 Assert.AreEqual(TxOutcome.Abort, register.Read(ballot1).TxOutcome);
-
             }
         }
 
@@ -174,7 +165,6 @@ namespace tests.Unit.FLease
 
             using (var register = builder.Build().Resolve<IRoundBasedRegister>())
             {
-
                 var ballot = new Ballot(DateTime.UtcNow, 0, owner);
                 var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
@@ -182,7 +172,6 @@ namespace tests.Unit.FLease
 
                 Assert.AreEqual(TxOutcome.Commit, register.Write(ballot1, new Lease(owner, DateTime.UtcNow)).TxOutcome);
                 Assert.AreEqual(TxOutcome.Abort, register.Write(ballot, new Lease(owner, DateTime.UtcNow)).TxOutcome);
-
             }
         }
 
@@ -198,7 +187,6 @@ namespace tests.Unit.FLease
 
             using (var register = builder.Build().Resolve<IRoundBasedRegister>())
             {
-
                 var ballot = new Ballot(DateTime.UtcNow, 0, owner);
                 var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
 
@@ -210,7 +198,6 @@ namespace tests.Unit.FLease
                 Assert.AreEqual(TxOutcome.Commit, readLease.TxOutcome);
                 Assert.AreEqual(lease.Owner.Id, readLease.Lease.Owner.Id);
                 Assert.AreEqual(lease.ExpiresAt, readLease.Lease.ExpiresAt);
-
             }
         }
 
@@ -226,7 +213,6 @@ namespace tests.Unit.FLease
 
             using (var register = builder.Build().Resolve<IRoundBasedRegister>())
             {
-
                 var ballot = new Ballot(DateTime.UtcNow, 0, owner);
                 var ballot1 = new Ballot(DateTime.UtcNow, 1, owner);
                 var ballot3 = new Ballot(DateTime.UtcNow, 3, owner);
@@ -242,13 +228,7 @@ namespace tests.Unit.FLease
                 Assert.AreEqual(TxOutcome.Commit, readLease.TxOutcome);
                 Assert.AreEqual(lease2.Owner.Id, readLease.Lease.Owner.Id);
                 Assert.AreEqual(lease2.ExpiresAt, readLease.Lease.ExpiresAt);
-
             }
-        }
-
-        private static Node CreateLocalNode()
-        {
-            return new Node("tcp://127.0.0.1", 3030, 4030);
         }
     }
 }

@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Reactive.Linq;
+using wacs.Communication.Hubs.Intercom;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.FLease;
-using wacs.Messaging.Hubs.Intercom;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
-using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {

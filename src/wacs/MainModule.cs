@@ -1,10 +1,10 @@
 ﻿using Autofac;
 using Topshelf;
+using wacs.Communication.Hubs.Client;
+using wacs.Communication.Hubs.Intercom;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.FLease;
-using wacs.Messaging.Hubs.Client;
-using wacs.Messaging.Hubs.Intercom;
 using wacs.Messaging.Messages;
 using wacs.Resolver;
 using wacs.Rsm.Implementation;

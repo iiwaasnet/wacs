@@ -1,6 +1,6 @@
 ﻿using wacs.Messaging.Messages;
 
-namespace wacs.Messaging.Hubs
+namespace wacs.Communication.Hubs
 {
 	public class BroadcastRequest
 	{

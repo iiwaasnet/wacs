@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using wacs.Communication.Hubs.Intercom;
 using wacs.Diagnostics;
-using wacs.Messaging.Hubs.Intercom;
 using wacs.Rsm.Interface;
 
 namespace wacs.Rsm.Implementation

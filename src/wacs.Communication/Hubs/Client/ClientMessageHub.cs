@@ -10,7 +10,7 @@ using wacs.Messaging.Messages.Client.Error;
 using ZeroMQ;
 using ZeroMQ.Devices;
 
-namespace wacs.Messaging.Hubs.Client
+namespace wacs.Communication.Hubs.Client
 {
     public class ClientMessageHub : IClientMessageHub
     {

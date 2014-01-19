@@ -1,5 +1,5 @@
-﻿using wacs.Configuration;
-using wacs.Messaging.Hubs.Intercom;
+﻿using wacs.Communication.Hubs.Intercom;
+using wacs.Configuration;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
 

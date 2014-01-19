@@ -1,7 +1,7 @@
 ﻿using System;
 using wacs.Messaging.Messages;
 
-namespace wacs.Messaging.Hubs.Client
+namespace wacs.Communication.Hubs.Client
 {
     public interface IClientMessageHub : IDisposable
     {

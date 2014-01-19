@@ -1,7 +1,7 @@
 ﻿using System;
 using wacs.Messaging.Messages;
 
-namespace wacs.Messaging.Hubs.Intercom
+namespace wacs.Communication.Hubs.Intercom
 {
 	public interface IListener : IObservable<IMessage>, IDisposable
 	{

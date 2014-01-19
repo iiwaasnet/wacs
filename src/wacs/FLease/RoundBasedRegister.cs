@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
+using wacs.Communication.Hubs.Intercom;
 using wacs.Configuration;
 using wacs.Diagnostics;
-using wacs.Messaging.Hubs.Intercom;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Lease;
 using wacs.Resolver;

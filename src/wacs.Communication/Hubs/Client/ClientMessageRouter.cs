@@ -10,7 +10,7 @@ using wacs.Framework.State;
 using wacs.Messaging.Messages;
 using ZeroMQ;
 
-namespace wacs.Messaging.Hubs.Client
+namespace wacs.Communication.Hubs.Client
 {
     public class ClientMessageRouter : IClientMessageRouter
     {

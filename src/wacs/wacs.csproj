@@ -206,6 +206,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\wacs.Communication\wacs.Communication.csproj">
+      <Project>{380d9e8b-d5ac-42d4-8bd0-26526d88f91f}</Project>
+      <Name>wacs.Communication</Name>
+    </ProjectReference>
     <ProjectReference Include="..\wacs.Configuration\wacs.Configuration.csproj">
       <Project>{780a8e1d-892a-4537-ad0f-28b785586397}</Project>
       <Name>wacs.Configuration</Name>
