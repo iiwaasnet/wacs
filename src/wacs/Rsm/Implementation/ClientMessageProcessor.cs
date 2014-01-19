@@ -4,7 +4,6 @@ using wacs.Messaging.Hubs.Client;
 using wacs.Messaging.Messages;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
-using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {

@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using wacs.Messaging.Messages.Client.wacs;
 
 namespace wacs.Messaging.Messages
 {
@@ -14,7 +14,10 @@ namespace wacs.Messaging.Messages
 
         private IDictionary<string, object> CreateListOfQuorumAcceptableMessages()
         {
-            return new Dictionary<string, object>();
+            return new Dictionary<string, object>
+                   {
+                       {CreateNode.MessageType, null}
+                   };
         }
 
         public bool RequiresQuorum(IMessage message)

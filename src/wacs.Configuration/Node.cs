@@ -17,7 +17,7 @@ namespace wacs.Configuration
             ServicePort = servicePort;
 
             intercomAddress = CreateEndpointAddress(BaseAddress, IntercomPort);
-            serviceAddress = CreateEndpointAddress(BaseAddress, IntercomPort);
+            serviceAddress = CreateEndpointAddress(BaseAddress, ServicePort);
         }
 
         private string CreateEndpointAddress(string baseAddress, int port)

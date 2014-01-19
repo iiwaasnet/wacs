@@ -5,7 +5,6 @@ using wacs.FLease;
 using wacs.Framework.State;
 using wacs.Messaging.Messages;
 using wacs.Rsm.Interface;
-using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {

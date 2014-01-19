@@ -3,9 +3,12 @@ using Topshelf;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.FLease;
+using wacs.Messaging.Hubs.Client;
 using wacs.Messaging.Hubs.Intercom;
 using wacs.Messaging.Messages;
 using wacs.Resolver;
+using wacs.Rsm.Implementation;
+using wacs.Rsm.Interface;
 
 namespace wacs
 {
@@ -13,28 +16,23 @@ namespace wacs
     {
         protected override void Load(ContainerBuilder builder)
         {
-            RegisterSingletons(builder);
-            RegisterPerInstance(builder);
-        }
+            builder.RegisterType<LeaseProvider>().As<ILeaseProvider>().SingleInstance();
+            builder.RegisterType<RoundBasedRegister>().As<IRoundBasedRegister>().SingleInstance();
+            builder.RegisterType<ClientMessageProcessor>().As<IClientMessageProcessor>().SingleInstance();
+            builder.RegisterType<ClientMessagesRepository>().As<IClientMessagesRepository>().SingleInstance();
+            builder.RegisterType<ClientMessageHub>().As<IClientMessageHub>().SingleInstance();
+            builder.RegisterType<ClientMessageRouter>().As<IClientMessageRouter>().SingleInstance();
+            builder.RegisterType<Rsm.Implementation.Rsm>().As<IRsm>().SingleInstance();
 
-        private void RegisterPerInstance(ContainerBuilder builder)
-        {
+            builder.RegisterType<BallotGenerator>().As<IBallotGenerator>().SingleInstance();
             builder.RegisterType<Bootstrapper>().As<IBootstrapper>().SingleInstance();
-
-            builder.RegisterType<LeaseProvider>().As<ILeaseProvider>();
-            builder.RegisterType<RoundBasedRegister>().As<IRoundBasedRegister>();
-
-            builder.RegisterType<BallotGenerator>().As<IBallotGenerator>();
-        }
-
-        private void RegisterSingletons(ContainerBuilder builder)
-        {
             builder.Register(c => new Logger("fileLogger")).As<ILogger>().SingleInstance();
             builder.RegisterType<WACService>().As<ServiceControl>().SingleInstance();
             builder.RegisterType<IntercomMessageHub>().As<IIntercomMessageHub>().SingleInstance();
             builder.RegisterType<MessageSerializer>().As<IMessageSerializer>().SingleInstance();
             builder.RegisterType<NodeResolver>().As<INodeResolver>().SingleInstance();
             builder.RegisterType<SynodConfigurationProvider>().As<ISynodConfigurationProvider>().SingleInstance();
+
             RegisterConfigurations(builder);
         }
 

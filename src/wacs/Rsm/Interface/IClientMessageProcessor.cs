@@ -1,4 +1,4 @@
-﻿using wacs.Messaging.Messages;
+﻿using System;
 
 namespace wacs.Rsm.Interface
 {

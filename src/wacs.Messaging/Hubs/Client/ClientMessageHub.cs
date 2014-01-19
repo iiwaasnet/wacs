@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using Castle.Core.Internal;
 using wacs.Configuration;
 using wacs.Diagnostics;
-using wacs.Messaging.Hubs.Intercom;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Client.Error;
 using ZeroMQ;
