@@ -75,8 +75,6 @@ namespace wacs.Rsm.Implementation
                 ProcessCommand(logEntry.Command);
                 lastAppliedCommandIndex = logEntry.Index;
             }
-
-            stateChangeGateway.Reset();
         }
 
         private void ProcessCommand(ISyncCommand command)
@@ -103,6 +101,7 @@ namespace wacs.Rsm.Implementation
                 if (logEntry != null && logEntry.State == LogEntryState.Chosen)
                 {
                     yield return logEntry;
+                    startLogIndex = startLogIndex.Increment();
                 }
                 else
                 {
