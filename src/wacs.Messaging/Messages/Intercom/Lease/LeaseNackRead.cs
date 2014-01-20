@@ -1,15 +1,13 @@
-﻿using wacs.Configuration;
-
-namespace wacs.Messaging.Messages.Intercom.Lease
+﻿namespace wacs.Messaging.Messages.Intercom.Lease
 {
     public class LeaseNackRead : TypedMessage<LeaseNackRead.Payload>
     {
-        public LeaseNackRead(IMessage message) 
+        public LeaseNackRead(IMessage message)
             : base(message)
         {
         }
 
-        public LeaseNackRead(IProcess sender, Payload payload)
+        public LeaseNackRead(Process sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }
@@ -18,7 +16,7 @@ namespace wacs.Messaging.Messages.Intercom.Lease
         {
             get { return "LEASE_NACKREAD"; }
         }
-        
+
         public class Payload : ILeaseMessagePayload
         {
             public Ballot Ballot { get; set; }

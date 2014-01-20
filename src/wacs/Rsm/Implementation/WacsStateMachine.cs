@@ -32,7 +32,7 @@ namespace wacs.Rsm.Implementation
 
         private void CreateNode(ISyncCommand command)
         {
-            var response = new CreateNodeResponse(nodeResolver.ResolveLocalNode(),
+            var response = new CreateNodeResponse(new Messaging.Messages.Process{Id = nodeResolver.ResolveLocalNode().Id},
                                                   new CreateNodeResponse.Payload
                                                   {
                                                       NodeIndex = Interlocked.Increment(ref nextNodeIndex)

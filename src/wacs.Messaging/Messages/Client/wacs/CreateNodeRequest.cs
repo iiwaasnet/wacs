@@ -1,4 +1,4 @@
-﻿using wacs.Configuration;
+﻿using wacs.Messaging.Messages.Intercom;
 
 namespace wacs.Messaging.Messages.Client.wacs
 {
@@ -9,7 +9,7 @@ namespace wacs.Messaging.Messages.Client.wacs
         {
         }
 
-        public CreateNodeRequest(IProcess sender, Payload payload)
+        public CreateNodeRequest(Process sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }

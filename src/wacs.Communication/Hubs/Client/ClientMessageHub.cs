@@ -87,7 +87,7 @@ namespace wacs.Communication.Hubs.Client
         private ClientMultipartMessage ProcessClientRequest(ZmqMessage request)
         {
             var multipartMessage = new ClientMultipartMessage(request);
-            var message = new Message(new Envelope {Sender = new Process(multipartMessage.GetSenderId())},
+            var message = new Message(new Envelope {Sender = new Messaging.Messages.Process{Id = multipartMessage.GetSenderId()}},
                                       new Body
                                       {
                                           MessageType = multipartMessage.GetMessageType(),
@@ -103,7 +103,7 @@ namespace wacs.Communication.Hubs.Client
         {
             var localProcess = synodConfigProvider.LocalProcess;
 
-            var errorMessage = new ErrorMessage(localProcess,
+            var errorMessage = new ErrorMessage(new Messaging.Messages.Process{Id = localProcess.Id},
                                                 new ErrorMessage.Payload
                                                 {
                                                     ErrorCode = ErrorMessageCodes.NodeIsPassive,
@@ -169,7 +169,7 @@ namespace wacs.Communication.Hubs.Client
         {
             var localProcess = synodConfigProvider.LocalProcess;
 
-            return new ErrorMessage(localProcess,
+            return new ErrorMessage(new Messaging.Messages.Process{Id = localProcess.Id},
                                     new ErrorMessage.Payload
                                     {
                                         ErrorCode = ErrorMessageCodes.MessageNotProcessed,

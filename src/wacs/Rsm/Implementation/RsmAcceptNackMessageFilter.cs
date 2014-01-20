@@ -29,7 +29,7 @@ namespace wacs.Rsm.Implementation
         {
             var payload = GetPayload(message);
 
-            var process = new Process(message.Envelope.Sender.Id);
+            var process = new Configuration.Process(message.Envelope.Sender.Id);
 
             return ProcessIsInSynod(process)
                    && new Ballot(payload.Proposal.ProposalNumber).Equals(ballot)

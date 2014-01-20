@@ -1,4 +1,4 @@
-﻿using wacs.Configuration;
+﻿using wacs.Messaging.Messages.Intercom;
 
 namespace wacs.Messaging.Messages
 {
@@ -12,7 +12,7 @@ namespace wacs.Messaging.Messages
         {
         }
 
-        protected TypedMessage(IProcess sender, T payload, string messageType)
+        protected TypedMessage(Process sender, T payload, string messageType)
         {
             Envelope = new Envelope {Sender = sender};
             Body = new Body

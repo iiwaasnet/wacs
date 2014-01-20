@@ -21,7 +21,7 @@ namespace wacs.Client
                     socket.Connect(ServerEndpoint);
                     while (true)
                     {
-                        var request = new CreateNodeRequest(new Process(0),
+                        var request = new CreateNodeRequest(new Messaging.Messages.Process{Id = 0},
                                                             new CreateNodeRequest.Payload
                                                             {
                                                                 NodeName = "A"
@@ -29,7 +29,7 @@ namespace wacs.Client
                         socket.SendMessage(new ZmqMessage(new ClientMultipartMessage(request).Frames));
                         var resp = socket.ReceiveMessage();
                         var response = new ClientMultipartMessage(resp);
-                        var msg = new Message(new Envelope {Sender = new Process(response.GetSenderId())},
+                        var msg = new Message(new Envelope {Sender = new Messaging.Messages.Process{Id = response.GetSenderId()}},
                                               new Body
                                               {
                                                   MessageType = response.GetMessageType(),

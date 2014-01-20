@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Reactive.Linq;
 using wacs.Communication.Hubs.Intercom;
-using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
+using Process = wacs.Configuration.Process;
 
 namespace wacs.Rsm.Implementation
 {
@@ -55,7 +55,7 @@ namespace wacs.Rsm.Implementation
 
                 IMessage response;
 
-                if (RequestCameNotFromLeader(message.Envelope.Sender))
+                if (RequestCameNotFromLeader(new Process(message.Envelope.Sender.Id)))
                 {
                     response = CreateNackAcceptNotLeaderMessage(payload);
                 }
@@ -84,7 +84,7 @@ namespace wacs.Rsm.Implementation
 
                 IMessage response;
 
-                if (RequestCameNotFromLeader(message.Envelope.Sender))
+                if (RequestCameNotFromLeader(new Process(message.Envelope.Sender.Id)))
                 {
                     response = CreateNackPrepareNotLeaderMessage(payload);
                 }

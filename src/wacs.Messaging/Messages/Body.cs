@@ -1,8 +1,8 @@
 ﻿namespace wacs.Messaging.Messages
 {
-	public class Body : IBody
-	{
-		public string MessageType { get; set; }
-		public byte[] Content { get; set; }
-	}
+    public class Body
+    {
+        public string MessageType { get; set; }
+        public byte[] Content { get; set; }
+    }
 }

@@ -54,9 +54,7 @@
     <Compile Include="Messages\Client\Error\ErrorMessageCodes.cs" />
     <Compile Include="Messages\Client\Error\ErrorMessage.cs" />
     <Compile Include="Messages\Envelope.cs" />
-    <Compile Include="Messages\IBody.cs" />
     <Compile Include="Messages\IClientMessagesRepository.cs" />
-    <Compile Include="Messages\IEnvelope.cs" />
     <Compile Include="Messages\IMessage.cs" />
     <Compile Include="Messages\IMessageSerializer.cs" />
     <Compile Include="Messages\Intercom\Lease\Ballot.cs" />
@@ -69,7 +67,7 @@
     <Compile Include="Messages\Intercom\Lease\LeaseRead.cs" />
     <Compile Include="Messages\Intercom\Lease\LeaseWrite.cs" />
     <Compile Include="Messages\Intercom\NodeResolver\Node.cs" />
-    <Compile Include="Messages\Intercom\Process.cs" />
+    <Compile Include="Messages\Process.cs" />
     <Compile Include="Messages\Intercom\NodeResolver\ProcessAnnouncementMessage.cs" />
     <Compile Include="Messages\Intercom\Rsm\Ballot.cs" />
     <Compile Include="Messages\Intercom\Rsm\IConsensusDecisionPayload.cs" />

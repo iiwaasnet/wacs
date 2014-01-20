@@ -85,7 +85,7 @@ namespace wacs.Communication.Hubs.Client
             var response = socket.ReceiveMessage();
             var responseMessage = new ClientMultipartMessage(response);
 
-            forwardRequest.SetResponse(new Message(new Envelope {Sender = new Process(responseMessage.GetSenderId())},
+            forwardRequest.SetResponse(new Message(new Envelope { Sender = new Messaging.Messages.Process { Id = responseMessage.GetSenderId() } },
                                                    new Body
                                                    {
                                                        MessageType = responseMessage.GetMessageType(),

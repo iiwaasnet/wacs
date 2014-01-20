@@ -1,7 +1,7 @@
 ﻿namespace wacs.Messaging.Messages
 {
     public class Message : IMessage
-	{
+    {
         private static readonly IMessageSerializer messageSerializer;
 
         static Message()
@@ -13,7 +13,7 @@
         {
         }
 
-        public Message(IEnvelope envelope, IBody body)
+        public Message(Envelope envelope, Body body)
         {
             Envelope = envelope;
             Body = body;
@@ -24,13 +24,12 @@
             return messageSerializer.Serialize(payload);
         }
 
-        static protected T Deserialize<T>(byte[] content)
+        protected static T Deserialize<T>(byte[] content)
         {
             return messageSerializer.Deserialize<T>(content);
         }
 
-        public IEnvelope Envelope { get; protected set; }
-		public IBody Body { get; protected set; }
-
-	}
+        public Envelope Envelope { get; protected set; }
+        public Body Body { get; protected set; }
+    }
 }

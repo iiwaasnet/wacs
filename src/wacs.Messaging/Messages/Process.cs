@@ -1,4 +1,4 @@
-namespace wacs.Messaging.Messages.Intercom
+namespace wacs.Messaging.Messages
 {
     public class Process
     {

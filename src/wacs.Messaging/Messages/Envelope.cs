@@ -1,9 +1,9 @@
-﻿using wacs.Configuration;
+﻿using wacs.Messaging.Messages.Intercom;
 
 namespace wacs.Messaging.Messages
 {
-	public class Envelope : IEnvelope
-	{
-		public IProcess Sender { get; set; }
-	}
+    public class Envelope
+    {
+        public Process Sender { get; set; }
+    }
 }

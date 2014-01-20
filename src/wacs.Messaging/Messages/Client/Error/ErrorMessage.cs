@@ -1,4 +1,4 @@
-﻿using wacs.Configuration;
+﻿using wacs.Messaging.Messages.Intercom;
 
 namespace wacs.Messaging.Messages.Client.Error
 {
@@ -9,7 +9,7 @@ namespace wacs.Messaging.Messages.Client.Error
         {
         }
 
-        public ErrorMessage(IProcess sender, Payload payload)
+        public ErrorMessage(Process sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }

@@ -3,6 +3,6 @@
     public interface IConsensusDecisionPayload
     {
         LogIndex LogIndex { get; }
-        Ballot Proposal { get; } 
+        Ballot Proposal { get; }
     }
 }

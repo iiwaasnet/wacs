@@ -1,6 +1,4 @@
-﻿using wacs.Configuration;
-
-namespace wacs.Messaging.Messages.Intercom.Rsm
+﻿namespace wacs.Messaging.Messages.Intercom.Rsm
 {
     public class RsmNackPrepareBlocked : TypedMessage<RsmNackPrepareBlocked.Payload>
     {
@@ -9,7 +7,7 @@ namespace wacs.Messaging.Messages.Intercom.Rsm
         {
         }
 
-        public RsmNackPrepareBlocked(IProcess sender, Payload payload)
+        public RsmNackPrepareBlocked(Process sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }

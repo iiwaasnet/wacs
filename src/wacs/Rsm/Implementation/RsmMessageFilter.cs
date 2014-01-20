@@ -31,7 +31,7 @@ namespace wacs.Rsm.Implementation
         internal bool Match(IMessage message)
         {
             var messagePayload = payload(message);
-            var process = new Process(message.Envelope.Sender.Id);
+            var process = new Configuration.Process(message.Envelope.Sender.Id);
 
             return ProcessIsInSynod(process)
                    && new Ballot(messagePayload.Proposal.ProposalNumber).Equals(ballot)

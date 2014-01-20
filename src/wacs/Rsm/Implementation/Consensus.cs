@@ -12,7 +12,7 @@ using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
 using IBallot = wacs.Rsm.Interface.IBallot;
-using Process = wacs.Messaging.Messages.Intercom.Process;
+using Process = wacs.Messaging.Messages.Process;
 
 namespace wacs.Rsm.Implementation
 {
@@ -96,7 +96,7 @@ namespace wacs.Rsm.Implementation
 
         private IMessage CreateChosenMessage(ILogIndex logIndex, IMessage chosenValue)
         {
-            return new RsmChosen(synodConfigurationProvider.LocalProcess,
+            return new RsmChosen(new Process {Id = synodConfigurationProvider.LocalProcess.Id},
                                  new RsmChosen.Payload
                                  {
                                      LogIndex = new Messaging.Messages.Intercom.Rsm.LogIndex {Index = logIndex.Index},
@@ -189,7 +189,7 @@ namespace wacs.Rsm.Implementation
 
         private IMessage CreateAcceptMessage(ILogIndex logIndex, IBallot ballot, IMessage value)
         {
-            return new RsmAccept(synodConfigurationProvider.LocalProcess,
+            return new RsmAccept(new Process {Id = synodConfigurationProvider.LocalProcess.Id},
                                  new RsmAccept.Payload
                                  {
                                      Proposal = new Messaging.Messages.Intercom.Rsm.Ballot {ProposalNumber = ballot.ProposalNumber},
@@ -345,7 +345,7 @@ namespace wacs.Rsm.Implementation
 
         private IMessage CreatePrepareMessage(ILogIndex index, IBallot ballot)
         {
-            return new RsmPrepare(synodConfigurationProvider.LocalProcess,
+            return new RsmPrepare(new Process {Id = synodConfigurationProvider.LocalProcess.Id},
                                   new RsmPrepare.Payload
                                   {
                                       Proposal = new Messaging.Messages.Intercom.Rsm.Ballot {ProposalNumber = ballot.ProposalNumber},

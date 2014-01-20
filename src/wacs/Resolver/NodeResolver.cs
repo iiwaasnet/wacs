@@ -12,7 +12,7 @@ using wacs.FLease;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.NodeResolver;
 using Node = wacs.Messaging.Messages.Intercom.NodeResolver.Node;
-using Process = wacs.Messaging.Messages.Intercom.Process;
+using Process = wacs.Messaging.Messages.Process;
 
 namespace wacs.Resolver
 {
@@ -127,7 +127,7 @@ namespace wacs.Resolver
                     while (!token.IsCancellationRequested)
                     {
                         intercomMessageHub
-                            .Broadcast(new ProcessAnnouncementMessage(localProcess,
+                            .Broadcast(new ProcessAnnouncementMessage(new Process {Id = localProcess.Id},
                                                                       new ProcessAnnouncementMessage.Payload
                                                                       {
                                                                           Node = new Node

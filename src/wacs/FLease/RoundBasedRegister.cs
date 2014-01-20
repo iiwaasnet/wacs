@@ -8,6 +8,7 @@ using wacs.Diagnostics;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Lease;
 using wacs.Resolver;
+using Process = wacs.Configuration.Process;
 
 namespace wacs.FLease
 {
@@ -72,7 +73,7 @@ namespace wacs.FLease
             {
                 LogNackWrite(ballot);
 
-                response = new LeaseNackWrite(owner, new LeaseNackWrite.Payload {Ballot = payload.Ballot});
+                response = new LeaseNackWrite(new Messaging.Messages.Process {Id = owner.Id}, new LeaseNackWrite.Payload {Ballot = payload.Ballot});
             }
             else
             {
@@ -82,9 +83,9 @@ namespace wacs.FLease
                 lease = new Lease(new Process(payload.Lease.ProcessId),
                                   new DateTime(payload.Lease.ExpiresAt, DateTimeKind.Utc));
 
-                response = new LeaseAckWrite(owner, new LeaseAckWrite.Payload {Ballot = payload.Ballot});
+                response = new LeaseAckWrite(new Messaging.Messages.Process {Id = owner.Id}, new LeaseAckWrite.Payload {Ballot = payload.Ballot});
             }
-            intercomMessageHub.Send(message.Envelope.Sender, response);
+            intercomMessageHub.Send(new Process(message.Envelope.Sender.Id), response);
         }
 
         private void OnReadReceived(IMessage message)
@@ -100,7 +101,7 @@ namespace wacs.FLease
             {
                 LogNackRead(ballot);
 
-                response = new LeaseNackRead(owner, new LeaseNackRead.Payload {Ballot = payload.Ballot});
+                response = new LeaseNackRead(new Messaging.Messages.Process {Id = owner.Id}, new LeaseNackRead.Payload {Ballot = payload.Ballot});
             }
             else
             {
@@ -110,7 +111,7 @@ namespace wacs.FLease
                 response = CreateLeaseAckReadMessage(payload);
             }
 
-            intercomMessageHub.Send(message.Envelope.Sender, response);
+            intercomMessageHub.Send(new Process(message.Envelope.Sender.Id), response);
         }
 
         public ILeaseTxResult Read(IBallot ballot)
@@ -201,7 +202,7 @@ namespace wacs.FLease
 
         private IMessage CreateWriteMessage(IBallot ballot, ILease lease)
         {
-            return new LeaseWrite(owner,
+            return new LeaseWrite(new Messaging.Messages.Process {Id = owner.Id},
                                   new LeaseWrite.Payload
                                   {
                                       Ballot = new Messaging.Messages.Intercom.Lease.Ballot
@@ -220,7 +221,7 @@ namespace wacs.FLease
 
         private Message CreateReadMessage(IBallot ballot)
         {
-            return new LeaseRead(owner,
+            return new LeaseRead(new Messaging.Messages.Process { Id = owner.Id },
                                  new LeaseRead.Payload
                                  {
                                      Ballot = new Messaging.Messages.Intercom.Lease.Ballot
@@ -234,7 +235,7 @@ namespace wacs.FLease
 
         private IMessage CreateLeaseAckReadMessage(LeaseRead.Payload payload)
         {
-            return new LeaseAckRead(owner,
+            return new LeaseAckRead(new Messaging.Messages.Process {Id = owner.Id},
                                     new LeaseAckRead.Payload
                                     {
                                         Ballot = payload.Ballot,

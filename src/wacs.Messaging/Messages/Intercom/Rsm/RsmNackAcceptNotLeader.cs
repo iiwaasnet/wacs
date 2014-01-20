@@ -1,6 +1,4 @@
-﻿using wacs.Configuration;
-
-namespace wacs.Messaging.Messages.Intercom.Rsm
+﻿namespace wacs.Messaging.Messages.Intercom.Rsm
 {
     public class RsmNackAcceptNotLeader : TypedMessage<RsmNackAcceptNotLeader.Payload>
     {
@@ -9,7 +7,7 @@ namespace wacs.Messaging.Messages.Intercom.Rsm
         {
         }
 
-        public RsmNackAcceptNotLeader(IProcess sender, Payload payload)
+        public RsmNackAcceptNotLeader(Process sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }

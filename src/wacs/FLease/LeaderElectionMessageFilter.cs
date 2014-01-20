@@ -26,7 +26,7 @@ namespace wacs.FLease
 
         public bool Match(IMessage message)
         {
-            var process = new Process(message.Envelope.Sender.Id);
+            var process = new Configuration.Process(message.Envelope.Sender.Id);
 
             var messagePayload = payload(message);
 

@@ -1,6 +1,4 @@
-﻿using wacs.Configuration;
-
-namespace wacs.Messaging.Messages.Intercom.Lease
+﻿namespace wacs.Messaging.Messages.Intercom.Lease
 {
     public class LeaseRead : TypedMessage<LeaseRead.Payload>
     {
@@ -9,7 +7,7 @@ namespace wacs.Messaging.Messages.Intercom.Lease
         {
         }
 
-        public LeaseRead(IProcess sender, Payload payload)
+        public LeaseRead(Process sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }

@@ -2,7 +2,7 @@
 {
     public interface IMessage
     {
-        IEnvelope Envelope { get; }
-        IBody Body { get; }
+        Envelope Envelope { get; }
+        Body Body { get; }
     }
 }

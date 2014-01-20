@@ -30,7 +30,7 @@ namespace wacs.FLease
             {
                 lock (locker)
                 {
-                    var process = new Process(value.Envelope.Sender.Id);
+                    var process = new Configuration.Process(value.Envelope.Sender.Id);
 
                     if (!awaitable.IsSet)
                     {

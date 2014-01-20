@@ -1,6 +1,4 @@
-﻿using wacs.Configuration;
-
-namespace wacs.Messaging.Messages.Intercom.Lease
+﻿namespace wacs.Messaging.Messages.Intercom.Lease
 {
     public class LeaseNackWrite : TypedMessage<LeaseNackWrite.Payload>
     {
@@ -9,7 +7,7 @@ namespace wacs.Messaging.Messages.Intercom.Lease
         {
         }
 
-        public LeaseNackWrite(IProcess sender, Payload payload)
+        public LeaseNackWrite(Process sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }

@@ -1,7 +1,6 @@
 ﻿using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Rsm.Interface;
-using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {
@@ -9,7 +8,7 @@ namespace wacs.Rsm.Implementation
     {
         private IMessage CreateNackPrepareNotLeaderMessage(IConsensusDecisionPayload payload)
         {
-            return new RsmNackPrepareNotLeader(nodeResolver.ResolveLocalNode(),
+            return new RsmNackPrepareNotLeader(new Process {Id = nodeResolver.ResolveLocalNode().Id},
                                                new RsmNackPrepareNotLeader.Payload
                                                {
                                                    Proposal = payload.Proposal,
@@ -19,7 +18,7 @@ namespace wacs.Rsm.Implementation
 
         private IMessage CreateNackPrepareAlreadyChosenMessage(IConsensusDecisionPayload payload)
         {
-            return new RsmNackPrepareChosen(nodeResolver.ResolveLocalNode(),
+            return new RsmNackPrepareChosen(new Process {Id = nodeResolver.ResolveLocalNode().Id},
                                             new RsmNackPrepareChosen.Payload
                                             {
                                                 Proposal = payload.Proposal,
@@ -29,7 +28,7 @@ namespace wacs.Rsm.Implementation
 
         private IMessage CreateNackPrepareMessage(IConsensusDecisionPayload payload)
         {
-            return new RsmNackPrepareBlocked(nodeResolver.ResolveLocalNode(),
+            return new RsmNackPrepareBlocked(new Process {Id = nodeResolver.ResolveLocalNode().Id},
                                              new RsmNackPrepareBlocked.Payload
                                              {
                                                  Proposal = payload.Proposal,
@@ -43,7 +42,7 @@ namespace wacs.Rsm.Implementation
 
         private IMessage CreateAckPrepareMessage(IConsensusDecisionPayload payload, ILogEntry logEntry)
         {
-            return new RsmAckPrepare(nodeResolver.ResolveLocalNode(),
+            return new RsmAckPrepare(new Process {Id = nodeResolver.ResolveLocalNode().Id},
                                      new RsmAckPrepare.Payload
                                      {
                                          Proposal = payload.Proposal,
@@ -59,7 +58,7 @@ namespace wacs.Rsm.Implementation
 
         private IMessage CreateNackAcceptNotLeaderMessage(RsmAccept.Payload payload)
         {
-            return new RsmNackAcceptNotLeader(nodeResolver.ResolveLocalNode(),
+            return new RsmNackAcceptNotLeader(new Process {Id = nodeResolver.ResolveLocalNode().Id},
                                               new RsmNackAcceptNotLeader.Payload
                                               {
                                                   Proposal = payload.Proposal,
@@ -69,7 +68,7 @@ namespace wacs.Rsm.Implementation
 
         private IMessage CreateNackAcceptAlreadyChosenMessage(RsmAccept.Payload payload)
         {
-            return new RsmNackAcceptChosen(nodeResolver.ResolveLocalNode(),
+            return new RsmNackAcceptChosen(new Process {Id = nodeResolver.ResolveLocalNode().Id},
                                            new RsmNackAcceptChosen.Payload
                                            {
                                                Proposal = payload.Proposal,
@@ -79,7 +78,7 @@ namespace wacs.Rsm.Implementation
 
         private IMessage CreateNackAcceptMessage(RsmAccept.Payload payload)
         {
-            return new RsmNackAcceptBlocked(nodeResolver.ResolveLocalNode(),
+            return new RsmNackAcceptBlocked(new Process {Id = nodeResolver.ResolveLocalNode().Id},
                                             new RsmNackAcceptBlocked.Payload
                                             {
                                                 Proposal = payload.Proposal,
@@ -93,7 +92,7 @@ namespace wacs.Rsm.Implementation
 
         private IMessage CreateAckAcceptMessage(RsmAccept.Payload payload)
         {
-            return new RsmAckAccept(nodeResolver.ResolveLocalNode(),
+            return new RsmAckAccept(new Process {Id = nodeResolver.ResolveLocalNode().Id},
                                     new RsmAckAccept.Payload
                                     {
                                         Proposal = payload.Proposal,

@@ -1,6 +1,4 @@
-﻿using wacs.Configuration;
-
-namespace wacs.Messaging.Messages.Intercom.NodeResolver
+﻿namespace wacs.Messaging.Messages.Intercom.NodeResolver
 {
     public class ProcessAnnouncementMessage : TypedMessage<ProcessAnnouncementMessage.Payload>
     {
@@ -9,7 +7,7 @@ namespace wacs.Messaging.Messages.Intercom.NodeResolver
         {
         }
 
-        public ProcessAnnouncementMessage(IProcess sender, Payload payload)
+        public ProcessAnnouncementMessage(Process sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }

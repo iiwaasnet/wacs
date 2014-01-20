@@ -216,7 +216,7 @@ namespace wacs.Communication.Hubs.Intercom
             {
                 try
                 {
-                    var msg = new Message(new Envelope {Sender = new Configuration.Process(message.GetSenderId())},
+                    var msg = new Message(new Envelope {Sender = new Messaging.Messages.Process{Id = message.GetSenderId()}},
                                           new Body
                                           {
                                               MessageType = message.GetMessageType(),

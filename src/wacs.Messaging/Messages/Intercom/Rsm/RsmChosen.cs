@@ -1,6 +1,4 @@
-﻿using wacs.Configuration;
-
-namespace wacs.Messaging.Messages.Intercom.Rsm
+﻿namespace wacs.Messaging.Messages.Intercom.Rsm
 {
     public class RsmChosen : TypedMessage<RsmChosen.Payload>
     {
@@ -9,7 +7,7 @@ namespace wacs.Messaging.Messages.Intercom.Rsm
         {
         }
 
-        public RsmChosen(IProcess sender, Payload payload)
+        public RsmChosen(Process sender, Payload payload)
             : base(sender, payload, MessageType)
         {
         }
