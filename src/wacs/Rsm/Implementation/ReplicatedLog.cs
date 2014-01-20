@@ -19,7 +19,8 @@ namespace wacs.Rsm.Implementation
         public ReplicatedLog()
         {
             log = new Dictionary<ILogIndex, ILogEntry>();
-            firstUnchosenIndex = firstLogIndex = lowestChosenIndex = new LogIndex(0);
+            firstUnchosenIndex = firstLogIndex = new LogIndex(1);
+            lowestChosenIndex = new LogIndex(0);
             eventHandlers = new EventHandlerList();
         }
 
@@ -77,7 +78,7 @@ namespace wacs.Rsm.Implementation
             do
             {
                 nextLogIndex = currentLogIndex.Increment();
-            } while (!log.TryGetValue(nextLogIndex, out logEntry) || logEntry.State != LogEntryState.Chosen);
+            } while (log.TryGetValue(nextLogIndex, out logEntry) && logEntry.State == LogEntryState.Chosen);
 
             return nextLogIndex;
         }

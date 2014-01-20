@@ -48,13 +48,13 @@ namespace wacs.Rsm.Implementation
 
         private void ApplySnapshot(ISnapshot snapshot)
         {
+            return;
             lastAppliedCommandIndex = snapshot.LastAppliedCommandIndex;
-            throw new NotImplementedException();
         }
 
         private ISnapshot RequestSnapshot()
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         private void ProcessChosenCommands(CancellationToken token)

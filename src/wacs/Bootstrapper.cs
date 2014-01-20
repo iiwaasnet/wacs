@@ -10,9 +10,11 @@ namespace wacs
         private readonly IClientMessageProcessor clientMessageProcessor;
         private readonly INodeResolver nodeResolver;
         private readonly IAcceptor acceptor;
+        private readonly IReplicationDemultiplexor replicationDemultiplexor;
 
         public Bootstrapper(INodeResolver nodeResolver,
                             IClientMessageProcessor clientMessageProcessor,
+                            IReplicationDemultiplexor replicationDemultiplexor,
                             IAcceptor acceptor,
                             ILogger logger)
         {
@@ -20,6 +22,7 @@ namespace wacs
             this.nodeResolver = nodeResolver;
             this.acceptor = acceptor;
             this.clientMessageProcessor = clientMessageProcessor;
+            this.replicationDemultiplexor = replicationDemultiplexor;
         }
 
         //private void ApplyCommands(CancellationToken token)
@@ -67,6 +70,7 @@ namespace wacs
         public void Stop()
         {
             nodeResolver.Dispose();
+            replicationDemultiplexor.Dispose();
         }
 
         public int Id

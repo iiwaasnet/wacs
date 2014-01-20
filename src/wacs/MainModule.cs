@@ -24,10 +24,11 @@ namespace wacs
             builder.RegisterType<ClientMessageRouter>().As<IClientMessageRouter>().SingleInstance();
             builder.RegisterType<Rsm.Implementation.Rsm>().As<IRsm>().SingleInstance();
             builder.RegisterType<ReplicatedLog>().As<IReplicatedLog>().SingleInstance();
+            builder.RegisterType<WacsStateMachine>().As<IReplicatedStateMachine>().SingleInstance();
             builder.RegisterType<ConsensusFactory>().As<IConsensusFactory>().SingleInstance();
             builder.RegisterType<ConsensusRoundManager>().As<IConsensusRoundManager>().SingleInstance();
             builder.RegisterType<Acceptor>().As<IAcceptor>().SingleInstance();
-
+            builder.RegisterType<ReplicationDemultiplexor>().As<IReplicationDemultiplexor>().SingleInstance();
             builder.RegisterType<BallotGenerator>().As<IBallotGenerator>().SingleInstance();
             builder.RegisterType<Bootstrapper>().As<IBootstrapper>().SingleInstance();
             builder.Register(c => new Logger("fileLogger")).As<ILogger>().SingleInstance();
