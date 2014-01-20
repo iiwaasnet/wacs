@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using wacs.Communication.Hubs.Client;
 using wacs.Configuration;
@@ -19,8 +20,10 @@ namespace wacs.Client
                 using (var socket = context.CreateSocket(SocketType.REQ))
                 {
                     socket.Connect(ServerEndpoint);
+                    var timer = new Stopwatch();
                     while (true)
                     {
+                        timer.Start();
                         var request = new CreateNodeRequest(new Messaging.Messages.Process{Id = 0},
                                                             new CreateNodeRequest.Payload
                                                             {
@@ -36,10 +39,13 @@ namespace wacs.Client
                                                   Content = response.GetMessage()
                                               });
                         var payload = new CreateNodeResponse(msg).GetPayload();
-                        Console.WriteLine("NodeIndex: {0}", payload.NodeIndex);
 
+                        timer.Stop();
 
-                        Thread.Sleep(TimeSpan.FromSeconds(100));
+                        Console.WriteLine("NodeIndex: {0} done in {1} msec", payload.NodeIndex, timer.ElapsedMilliseconds);
+                        timer.Reset();
+
+                        //Thread.Sleep(TimeSpan.FromSeconds(5));
                     }
                 }
             }
