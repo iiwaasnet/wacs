@@ -1,5 +1,6 @@
 ﻿using System;
 using wacs.Communication.Hubs.Client;
+using wacs.Configuration;
 using wacs.FLease;
 using wacs.Messaging.Messages;
 using wacs.Resolver;
@@ -14,19 +15,22 @@ namespace wacs.Rsm.Implementation
         private readonly INodeResolver nodeResolver;
         private readonly IRsm rsm;
         private readonly IClientMessagesRepository messagesRepository;
+        private readonly IRsmConfiguration rsmConfiguration;
 
         public ClientMessageProcessor(IClientMessageHub clientMessageHub,
                                       IClientMessageRouter messageRouter,
                                       INodeResolver nodeResolver,
                                       IClientMessagesRepository messagesRepository,
                                       IRsm rsm,
-                                      ILeaseProvider leaseProvider)
+                                      ILeaseProvider leaseProvider,
+                                      IRsmConfiguration rsmConfiguration)
         {
             this.messageRouter = messageRouter;
             this.leaseProvider = leaseProvider;
             this.nodeResolver = nodeResolver;
             this.rsm = rsm;
             this.messagesRepository = messagesRepository;
+            this.rsmConfiguration = rsmConfiguration;
             clientMessageHub.RegisterMessageProcessor(ProcessClientMessage);
         }
 
@@ -48,7 +52,7 @@ namespace wacs.Rsm.Implementation
             {
                 var awaitable = rsm.EnqueueForExecution(request);
 
-                return awaitable.GetResponse();
+                return awaitable.GetResponse(rsmConfiguration.CommandExecutionTimeout);
             }
             // TODO: Add to a lsmCommandQueue (Local State Machine queue)
             return null;

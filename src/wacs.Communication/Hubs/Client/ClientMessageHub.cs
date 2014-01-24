@@ -9,6 +9,7 @@ using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Client.Error;
 using ZeroMQ;
 using ZeroMQ.Devices;
+using Process = wacs.Messaging.Messages.Process;
 
 namespace wacs.Communication.Hubs.Client
 {
@@ -64,13 +65,20 @@ namespace wacs.Communication.Hubs.Client
 
                 while (!token.IsCancellationRequested)
                 {
-                    var request = receiver.ReceiveMessage(config.ReceiveWaitTimeout);
-
-                    if (!request.IsEmpty)
+                    try
                     {
-                        var response = ProcessRequest(request);
+                        var request = receiver.ReceiveMessage(config.ReceiveWaitTimeout);
 
-                        receiver.SendMessage(new ZmqMessage(response.Frames));
+                        if (!request.IsEmpty)
+                        {
+                            var response = ProcessRequest(request);
+
+                            receiver.SendMessage(new ZmqMessage(response.Frames));
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
                     }
                 }
             }
@@ -78,18 +86,32 @@ namespace wacs.Communication.Hubs.Client
 
         private ClientMultipartMessage ProcessRequest(ZmqMessage request)
         {
-            if (!LocalNodeIsActive())
+            try
             {
-                return CreatePassiveNodeErrorMessage();
-            }
+                if (!LocalNodeIsActive())
+                {
+                    return CreatePassiveNodeErrorMessage();
+                }
 
-            return ProcessClientRequest(request);
+                return ProcessClientRequest(request);
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+
+                return new ClientMultipartMessage(new ErrorMessage(new Process {Id = synodConfigProvider.LocalProcess.Id},
+                                                                   new ErrorMessage.Payload
+                                                                   {
+                                                                       NodeAddress = synodConfigProvider.LocalNode.BaseAddress,
+                                                                       Error = err.ToString()
+                                                                   }));
+            }
         }
 
         private ClientMultipartMessage ProcessClientRequest(ZmqMessage request)
         {
             var multipartMessage = new ClientMultipartMessage(request);
-            var message = new Message(new Envelope {Sender = new Messaging.Messages.Process{Id = multipartMessage.GetSenderId()}},
+            var message = new Message(new Envelope {Sender = new Process {Id = multipartMessage.GetSenderId()}},
                                       new Body
                                       {
                                           MessageType = multipartMessage.GetMessageType(),
@@ -105,12 +127,11 @@ namespace wacs.Communication.Hubs.Client
         {
             var localProcess = synodConfigProvider.LocalProcess;
 
-            var errorMessage = new ErrorMessage(new Messaging.Messages.Process{Id = localProcess.Id},
+            var errorMessage = new ErrorMessage(new Process {Id = localProcess.Id},
                                                 new ErrorMessage.Payload
                                                 {
                                                     ErrorCode = ErrorMessageCodes.NodeIsPassive,
-                                                    NodeAddress = synodConfigProvider.LocalNode.GetServiceAddress(),
-                                                    ProcessId = localProcess.Id
+                                                    NodeAddress = synodConfigProvider.LocalNode.GetServiceAddress()
                                                 });
             return new ClientMultipartMessage(errorMessage);
         }
@@ -171,12 +192,11 @@ namespace wacs.Communication.Hubs.Client
         {
             var localProcess = synodConfigProvider.LocalProcess;
 
-            return new ErrorMessage(new Messaging.Messages.Process{Id = localProcess.Id},
+            return new ErrorMessage(new Process {Id = localProcess.Id},
                                     new ErrorMessage.Payload
                                     {
                                         ErrorCode = ErrorMessageCodes.MessageNotProcessed,
-                                        NodeAddress = synodConfigProvider.LocalNode.GetServiceAddress(),
-                                        ProcessId = localProcess.Id
+                                        NodeAddress = synodConfigProvider.LocalNode.GetServiceAddress()
                                     });
         }
     }

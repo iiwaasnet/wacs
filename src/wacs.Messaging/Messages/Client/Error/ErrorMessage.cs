@@ -1,6 +1,4 @@
-﻿using wacs.Messaging.Messages.Intercom;
-
-namespace wacs.Messaging.Messages.Client.Error
+﻿namespace wacs.Messaging.Messages.Client.Error
 {
     public class ErrorMessage : TypedMessage<ErrorMessage.Payload>
     {
@@ -24,7 +22,6 @@ namespace wacs.Messaging.Messages.Client.Error
             public string ErrorCode { get; set; }
             public string Error { get; set; }
             public string NodeAddress { get; set; }
-            public int ProcessId { get; set; }
         }
     }
 }
