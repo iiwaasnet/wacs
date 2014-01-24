@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using wacs.Diagnostics;
 using wacs.FLease;
@@ -60,7 +61,12 @@ namespace wacs.Rsm.Implementation
             var firstUnchosenLogEntry = replicatedLog.GetFirstUnchosenLogEntryIndex();
             var awaitableRequest = (AwaitableRsmRequest) awaitableResponse;
             var consensus = consensusFactory.CreateInstance();
+
+            var timer = new Stopwatch();
+            timer.Start();
             var decision = consensus.Decide(firstUnchosenLogEntry, awaitableRequest, RoundCouldBeFast());
+            timer.Stop();
+            logger.InfoFormat("Consensus reached in {0} msec", timer.ElapsedMilliseconds);
 
             if (ConsensusNotReachedDueToShortHistoryPrefix(decision))
             {

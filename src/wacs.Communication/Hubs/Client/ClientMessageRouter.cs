@@ -49,6 +49,8 @@ namespace wacs.Communication.Hubs.Client
             {
                 using (var socket = context.CreateSocket(SocketType.REQ))
                 {
+                    socket.SendHighWatermark = 100;
+                    socket.ReceiveHighWatermark = 200;
                     while (!token.IsCancellationRequested)
                     {
                         try

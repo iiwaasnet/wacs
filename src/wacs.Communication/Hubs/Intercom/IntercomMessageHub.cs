@@ -194,7 +194,7 @@ namespace wacs.Communication.Hubs.Intercom
                 if (message.IsComplete)
                 {
                     var multipartMessage = new IntercomMultipartMessage(message);
-                    logger.InfoFormat("Msg received: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
+                    //logger.InfoFormat("Msg received: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
                     inMessageQueue.Add(multipartMessage);
                 }
 
@@ -263,7 +263,7 @@ namespace wacs.Communication.Hubs.Intercom
 
         private void SendMessage(IntercomMultipartMessage multipartMessage)
         {
-            logger.InfoFormat("Msg sent: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
+            //logger.InfoFormat("Msg sent: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
             var message = new ZmqMessage(multipartMessage.Frames);
             sender.SendMessage(message);
         }

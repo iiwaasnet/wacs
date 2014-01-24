@@ -58,6 +58,8 @@ namespace wacs.Communication.Hubs.Client
         {
             using (receiver)
             {
+                receiver.SendHighWatermark = 100;
+                receiver.ReceiveHighWatermark = 200;
                 receiver.Connect(InprocWorkersAddress);
 
                 while (!token.IsCancellationRequested)
