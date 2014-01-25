@@ -49,10 +49,12 @@ namespace wacs.Communication.Hubs.Client
                 yield return thread;
             }
 
-            var deviceThread = new Thread(() => device.Start());
-            deviceThread.Start();
+            device.Start();
 
-            yield return deviceThread;
+            //var deviceThread = new Thread(() => device.Start());
+            //deviceThread.Start();
+
+            //yield return deviceThread;
         }
 
         private void AcceptIncomingRequests(CancellationToken token, ZmqSocket receiver)
@@ -141,7 +143,7 @@ namespace wacs.Communication.Hubs.Client
             var queue = new QueueDevice(context,
                                         synodConfigProvider.LocalNode.GetServiceAddress(),
                                         InprocWorkersAddress,
-                                        DeviceMode.Blocking);
+                                        DeviceMode.Threaded);
             queue.Initialize();
 
             return queue;
