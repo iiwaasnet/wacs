@@ -69,7 +69,7 @@ namespace wacs.Communication.Hubs.Client
                     {
                         var request = receiver.ReceiveMessage(config.ReceiveWaitTimeout);
 
-                        if (!request.IsEmpty)
+                        if (!request.IsEmpty && request.IsComplete)
                         {
                             var response = ProcessRequest(request);
 
