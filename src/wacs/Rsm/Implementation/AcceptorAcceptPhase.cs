@@ -5,7 +5,7 @@ using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {
-    public partial class Acceptor : IAcceptor
+    public partial class Acceptor
     {
         private IMessage RespondOnAcceptRequest(RsmAccept.Payload payload, Ballot proposal)
         {
