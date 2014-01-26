@@ -14,21 +14,21 @@ namespace wacs.Rsm.Implementation
         private readonly BlockingCollection<IAwaitableResponse<IMessage>> commandsQueue;
         private readonly IReplicatedLog replicatedLog;
         private readonly Thread processingThread;
-        private readonly IConsensusFactory consensusFactory;
         private IConsensusDecision previousDecision;
         private readonly ILeaseProvider leaseProvider;
+        private readonly IConsensus consensus;
         private readonly ILogger logger;
 
         public Rsm(IReplicatedLog replicatedLog,
-                   IConsensusFactory consensusFactory,
                    ILeaseProvider leaseProvider,
+                   IConsensus consensus,
                    ILogger logger)
         {
             this.logger = logger;
             commandsQueue = new BlockingCollection<IAwaitableResponse<IMessage>>(new ConcurrentQueue<IAwaitableResponse<IMessage>>());
             this.replicatedLog = replicatedLog;
-            this.consensusFactory = consensusFactory;
             this.leaseProvider = leaseProvider;
+            this.consensus = consensus;
 
             processingThread = new Thread(ProcessCommands);
             processingThread.Start();
@@ -57,22 +57,20 @@ namespace wacs.Rsm.Implementation
         {
             var firstUnchosenLogEntry = replicatedLog.GetFirstUnchosenLogEntryIndex();
             var awaitableRequest = (AwaitableRsmRequest) awaitableResponse;
-            using (var consensus = consensusFactory.CreateInstance())
+
+            var decision = consensus.Decide(firstUnchosenLogEntry, awaitableRequest, RoundCouldBeFast());
+
+            if (ConsensusNotReachedDueToShortHistoryPrefix(decision))
             {
-                var decision = consensus.Decide(firstUnchosenLogEntry, awaitableRequest, RoundCouldBeFast());
-
-                if (ConsensusNotReachedDueToShortHistoryPrefix(decision))
-                {
-                    leaseProvider.ResetLease();
-                }
-
-                if (decision.Outcome == ConsensusOutcome.DecidedWithProposedValue)
-                {
-                    return null;
-                }
-
-                return awaitableResponse;
+                leaseProvider.ResetLease();
             }
+
+            if (decision.Outcome == ConsensusOutcome.DecidedWithProposedValue)
+            {
+                return null;
+            }
+
+            return awaitableResponse;
         }
 
         private static bool ConsensusNotReachedDueToShortHistoryPrefix(IConsensusDecision decision)
@@ -105,6 +103,7 @@ namespace wacs.Rsm.Implementation
             commandsQueue.CompleteAdding();
             processingThread.Join();
             commandsQueue.Dispose();
+            consensus.Dispose();
         }
     }
 }

@@ -50,11 +50,6 @@ namespace wacs.Communication.Hubs.Client
             }
 
             device.Start();
-
-            //var deviceThread = new Thread(() => device.Start());
-            //deviceThread.Start();
-
-            //yield return deviceThread;
         }
 
         private void AcceptIncomingRequests(CancellationToken token, ZmqSocket receiver)
