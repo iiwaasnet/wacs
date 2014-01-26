@@ -5,7 +5,7 @@ namespace wacs.FLease
 {
 	public interface ILeaseProvider : IDisposable
 	{
-		Task<ILease> GetLease();
+		ILease GetLease();
 	    void ResetLease();
 	}
 }

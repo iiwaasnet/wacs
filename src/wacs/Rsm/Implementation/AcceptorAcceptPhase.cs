@@ -1,7 +1,7 @@
-﻿using wacs.Messaging.Messages;
+﻿using System.Diagnostics;
+using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Rsm.Interface;
-using IMessage = wacs.Messaging.Messages.IMessage;
 
 namespace wacs.Rsm.Implementation
 {
@@ -19,7 +19,13 @@ namespace wacs.Rsm.Implementation
             }
             else
             {
+                var timer = new Stopwatch();
+                timer.Start();
+
                 response = RespondOnUnchosenLogEntry(payload, proposal);
+
+                timer.Stop();
+                logger.InfoFormat("RespondOnAcceptRequest in {0} msec", timer.ElapsedMilliseconds);
             }
             return response;
         }

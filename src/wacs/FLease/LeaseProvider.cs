@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using wacs.Configuration;
@@ -43,9 +44,17 @@ namespace wacs.FLease
             Interlocked.Exchange(ref lastKnownLease, null);
         }
 
-        public Task<ILease> GetLease()
+        public ILease GetLease()
         {
-            return Task.Factory.StartNew(() => GetLastKnownLease());
+            var timer = new Stopwatch();
+            timer.Start();
+
+            var lease = GetLastKnownLease();
+
+            timer.Stop();
+            logger.InfoFormat("Lease received in {0} msec", timer.ElapsedMilliseconds);
+
+            return lease;
         }
 
         public void Dispose()

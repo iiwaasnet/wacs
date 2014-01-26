@@ -61,13 +61,15 @@ namespace wacs.Communication.Hubs.Intercom
             this.configProvider.WorldChanged += OnWorldChanged;
             new Thread(() => PollReceivers(multicastPoller, cancellationSource.Token)).Start();
             new Thread(() => PollReceivers(unicastPoller, cancellationSource.Token)).Start();
-            new Thread(() => ForwardIncomingMessages(cancellationSource.Token)).Start();
-            new Thread(() => ForwardOutgoingSenders(cancellationSource.Token)).Start();
+            new Thread(ForwardIncomingMessages).Start();
+            new Thread(ForwardOutgoingSenders).Start();
         }
 
         public void Dispose()
         {
             cancellationSource.Cancel(false);
+            outMessageQueue.CompleteAdding();
+            inMessageQueue.CompleteAdding();
 
             multicastListener.Dispose();
             unicastListener.Dispose();
@@ -79,6 +81,7 @@ namespace wacs.Communication.Hubs.Intercom
             senderContext.Dispose();
             unicastContext.Dispose();
             multicastContext.Dispose();
+            cancellationSource.Dispose();
         }
 
         public IListener Subscribe()
@@ -103,9 +106,9 @@ namespace wacs.Communication.Hubs.Intercom
             outMessageQueue.Add(multipartMessage);
         }
 
-        private void ForwardOutgoingSenders(CancellationToken token)
+        private void ForwardOutgoingSenders()
         {
-            foreach (var message in outMessageQueue.GetConsumingEnumerable(token))
+            foreach (var message in outMessageQueue.GetConsumingEnumerable())
             {
                 try
                 {
@@ -199,7 +202,7 @@ namespace wacs.Communication.Hubs.Intercom
                 }
 
                 timer.Stop();
-                //logger.InfoFormat("Msg queued in {0} msec", timer.ElapsedMilliseconds);
+                logger.InfoFormat("Msg received in {0} msec", timer.ElapsedMilliseconds);
                 //logger.InfoFormat("Backlog:{0} Receive bfr:{1}",
                 //                  socketEventArgs.Socket.Backlog,
                 //                  socketEventArgs.Socket.ReceiveBufferSize);
@@ -210,9 +213,9 @@ namespace wacs.Communication.Hubs.Intercom
             }
         }
 
-        private void ForwardIncomingMessages(CancellationToken token)
+        private void ForwardIncomingMessages()
         {
-            foreach (var message in inMessageQueue.GetConsumingEnumerable(token))
+            foreach (var message in inMessageQueue.GetConsumingEnumerable())
             {
                 try
                 {
@@ -263,9 +266,15 @@ namespace wacs.Communication.Hubs.Intercom
 
         private void SendMessage(IntercomMultipartMessage multipartMessage)
         {
+            var timer = new Stopwatch();
+            timer.Start();
             //logger.InfoFormat("Msg sent: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
+
             var message = new ZmqMessage(multipartMessage.Frames);
             sender.SendMessage(message);
+
+            timer.Stop();
+            logger.InfoFormat("Msg sent in {0}", timer.ElapsedMilliseconds);
         }
     }
 }

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using wacs.Communication.Hubs.Intercom;
 using wacs.Configuration;
+using wacs.Diagnostics;
 using wacs.FLease;
 using wacs.Framework;
 using wacs.Messaging.Messages;
@@ -29,14 +31,17 @@ namespace wacs.Rsm.Implementation
         private readonly INodeResolver nodeResolver;
         private readonly IRsmConfiguration rsmConfig;
         private readonly IReplicatedLog replicatedLog;
+        private readonly ILogger logger;
 
         public Consensus(IConsensusRoundManager consensusRoundManager,
                          IIntercomMessageHub intercomMessageHub,
                          ISynodConfigurationProvider synodConfigurationProvider,
                          IReplicatedLog replicatedLog,
                          INodeResolver nodeResolver,
-                         IRsmConfiguration rsmConfig)
+                         IRsmConfiguration rsmConfig,
+                         ILogger logger)
         {
+            this.logger = logger;
             this.consensusRoundManager = consensusRoundManager;
             this.intercomMessageHub = intercomMessageHub;
             this.synodConfigurationProvider = synodConfigurationProvider;
@@ -62,11 +67,18 @@ namespace wacs.Rsm.Implementation
         {
             var ballot = consensusRoundManager.GetNextBallot();
 
+            var timer = new Stopwatch();
+            timer.Start();
+
             var preparePhase = RunPreparePhase(ballot, logIndex);
             if (PrepareNotCommitted(preparePhase))
             {
                 return CreateValueNotDecidedResponse(preparePhase);
             }
+
+            timer.Stop();
+            logger.InfoFormat("Prepare phase finished in {0} msec", timer.ElapsedMilliseconds);
+            timer.Restart();
 
             var value = (preparePhase.Outcome == PreparePhaseOutcome.SucceededWithOtherValue)
                             ? preparePhase.AcceptedValue
@@ -76,14 +88,22 @@ namespace wacs.Rsm.Implementation
 
             var decision = CreateConsensusDecision(acceptPhase, preparePhase, command.Request);
 
+            timer.Stop();
+            logger.InfoFormat("Accept phase finished in {0} msec", timer.ElapsedMilliseconds);
+            timer.Restart();
+
             if (ConsensusReached(decision))
             {
                 var chosenValue = (AwaitableRsmRequest) command;
                 chosenValue.Request = decision.DecidedValue;
                 replicatedLog.SetLogEntryChosen(logIndex, chosenValue);
+
+                BroadcastChosenValue(logIndex, decision.DecidedValue);
             }
 
-            BroadcastChosenValue(logIndex, decision.DecidedValue);
+
+            timer.Stop();
+            logger.InfoFormat("Broadcast chosen value in {0} msec", timer.ElapsedMilliseconds);
 
             return decision;
         }
@@ -149,7 +169,15 @@ namespace wacs.Rsm.Implementation
                 using (nackAcceptStream.Subscribe(awaitableNackFilter))
                 {
                     var message = CreateAcceptMessage(logIndex, ballot, value);
+
+                    var timer = new Stopwatch();
+                    timer.Start();
+
+
                     intercomMessageHub.Broadcast(message);
+
+                    timer.Stop();
+                    logger.InfoFormat("SendAccept {0} msec", timer.ElapsedMilliseconds);
 
                     var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered},
                                                    rsmConfig.CommandExecutionTimeout);
@@ -251,10 +279,18 @@ namespace wacs.Rsm.Implementation
                 using (nackPrepareStream.Subscribe(awaitableNackFilter))
                 {
                     var message = CreatePrepareMessage(logIndex, ballot);
+
+                    var timer = new Stopwatch();
+                    timer.Start();
+
                     intercomMessageHub.Broadcast(message);
 
                     var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered},
                                                    rsmConfig.CommandExecutionTimeout);
+
+                    timer.Stop();
+                    logger.InfoFormat("SendPrepare {0} msec", timer.ElapsedMilliseconds);
+
 
                     AssertPrepareTimeout(index);
 

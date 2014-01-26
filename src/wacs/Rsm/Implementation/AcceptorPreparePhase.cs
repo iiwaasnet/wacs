@@ -1,4 +1,5 @@
-﻿using wacs.Configuration;
+﻿using System.Diagnostics;
+using wacs.Configuration;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Intercom.Rsm;
 using wacs.Rsm.Interface;
@@ -19,7 +20,15 @@ namespace wacs.Rsm.Implementation
             }
             else
             {
+                
+
+                var timer = new Stopwatch();
+                timer.Start();
+
                 response = RespondOnUnchosenLogEntry(payload, proposal, logEntry);
+
+                timer.Stop();
+                logger.InfoFormat("RespondOnPrepareRequest in {0} msec", timer.ElapsedMilliseconds);
             }
             return response;
         }
@@ -43,7 +52,7 @@ namespace wacs.Rsm.Implementation
 
         private bool RequestCameNotFromLeader(IProcess sender)
         {
-            return !sender.Equals(leaseProvider.GetLease().Result.Owner);
+            return !sender.Equals(leaseProvider.GetLease().Owner);
         }
     }
 }

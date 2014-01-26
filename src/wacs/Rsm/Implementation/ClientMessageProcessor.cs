@@ -72,7 +72,7 @@ namespace wacs.Rsm.Implementation
         {
             // TODO: set timeout for getting lease
 
-            var lease = leaseProvider.GetLease().Result;
+            var lease = leaseProvider.GetLease();
 
             if (lease == null)
             {

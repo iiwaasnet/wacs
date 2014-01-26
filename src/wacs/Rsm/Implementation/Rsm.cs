@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Threading;
 using wacs.Diagnostics;
 using wacs.FLease;
@@ -15,7 +14,6 @@ namespace wacs.Rsm.Implementation
         private readonly BlockingCollection<IAwaitableResponse<IMessage>> commandsQueue;
         private readonly IReplicatedLog replicatedLog;
         private readonly Thread processingThread;
-        private readonly CancellationTokenSource cancellationSource;
         private readonly IConsensusFactory consensusFactory;
         private IConsensusDecision previousDecision;
         private readonly ILeaseProvider leaseProvider;
@@ -29,17 +27,16 @@ namespace wacs.Rsm.Implementation
             this.logger = logger;
             commandsQueue = new BlockingCollection<IAwaitableResponse<IMessage>>(new ConcurrentQueue<IAwaitableResponse<IMessage>>());
             this.replicatedLog = replicatedLog;
-            cancellationSource = new CancellationTokenSource();
             this.consensusFactory = consensusFactory;
             this.leaseProvider = leaseProvider;
 
-            processingThread = new Thread(() => ProcessCommands(cancellationSource.Token));
+            processingThread = new Thread(ProcessCommands);
             processingThread.Start();
         }
 
-        private void ProcessCommands(CancellationToken token)
+        private void ProcessCommands()
         {
-            foreach (var awaitableResult in commandsQueue.GetConsumingEnumerable(token))
+            foreach (var awaitableResult in commandsQueue.GetConsumingEnumerable())
             {
                 try
                 {
@@ -60,25 +57,22 @@ namespace wacs.Rsm.Implementation
         {
             var firstUnchosenLogEntry = replicatedLog.GetFirstUnchosenLogEntryIndex();
             var awaitableRequest = (AwaitableRsmRequest) awaitableResponse;
-            var consensus = consensusFactory.CreateInstance();
-
-            var timer = new Stopwatch();
-            timer.Start();
-            var decision = consensus.Decide(firstUnchosenLogEntry, awaitableRequest, RoundCouldBeFast());
-            timer.Stop();
-            logger.InfoFormat("Consensus reached in {0} msec", timer.ElapsedMilliseconds);
-
-            if (ConsensusNotReachedDueToShortHistoryPrefix(decision))
+            using (var consensus = consensusFactory.CreateInstance())
             {
-                leaseProvider.ResetLease();
-            }
+                var decision = consensus.Decide(firstUnchosenLogEntry, awaitableRequest, RoundCouldBeFast());
 
-            if (decision.Outcome == ConsensusOutcome.DecidedWithProposedValue)
-            {
-                return null;
-            }
+                if (ConsensusNotReachedDueToShortHistoryPrefix(decision))
+                {
+                    leaseProvider.ResetLease();
+                }
 
-            return awaitableResponse;
+                if (decision.Outcome == ConsensusOutcome.DecidedWithProposedValue)
+                {
+                    return null;
+                }
+
+                return awaitableResponse;
+            }
         }
 
         private static bool ConsensusNotReachedDueToShortHistoryPrefix(IConsensusDecision decision)
@@ -108,10 +102,9 @@ namespace wacs.Rsm.Implementation
 
         void IDisposable.Dispose()
         {
-            cancellationSource.Cancel(false);
+            commandsQueue.CompleteAdding();
             processingThread.Join();
             commandsQueue.Dispose();
-            cancellationSource.Dispose();
         }
     }
 }

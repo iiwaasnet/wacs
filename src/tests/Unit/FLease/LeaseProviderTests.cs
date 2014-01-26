@@ -63,9 +63,9 @@ namespace tests.Unit.FLease
         {
             var lease = new Lease(new Process(), DateTime.UtcNow + TimeSpan.FromSeconds(3));
             var leaseProvider = new Mock<ILeaseProvider>();
-            leaseProvider.Setup(m => m.GetLease()).Returns(Task.FromResult<ILease>(lease));
+            leaseProvider.Setup(m => m.GetLease()).Returns(lease);
 
-            var acquiredLease = leaseProvider.Object.GetLease().Result;
+            var acquiredLease = leaseProvider.Object.GetLease();
 
             Assert.AreEqual(lease.Owner.Id, acquiredLease.Owner.Id);
             Assert.AreEqual(lease.ExpiresAt, acquiredLease.ExpiresAt);
@@ -110,7 +110,7 @@ namespace tests.Unit.FLease
             var leases = Enumerable.Empty<ILease>();
             do
             {
-                leases = leaseProviders.Select(p => p.GetLease().Result).ToArray();
+                leases = leaseProviders.Select(p => p.GetLease()).ToArray();
             } while (leases.Any(l => l == null));
 
             Assert.GreaterOrEqual(leases.GroupBy(l => l.ExpiresAt).Max(g => g.Count()), majority);

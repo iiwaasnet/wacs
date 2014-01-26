@@ -1,5 +1,6 @@
 ﻿using wacs.Communication.Hubs.Intercom;
 using wacs.Configuration;
+using wacs.Diagnostics;
 using wacs.Resolver;
 using wacs.Rsm.Interface;
 
@@ -13,13 +14,15 @@ namespace wacs.Rsm.Implementation
         private readonly INodeResolver nodeResolver;
         private readonly IRsmConfiguration rsmConfig;
         private readonly IReplicatedLog replicatedLog;
+        private readonly ILogger logger;
 
         public ConsensusFactory(IConsensusRoundManager consensusRoundManager,
                                 IIntercomMessageHub intercomMessageHub,
                                 ISynodConfigurationProvider synodConfigurationProvider,
                                 IReplicatedLog replicatedLog,
                                 INodeResolver nodeResolver,
-                                IRsmConfiguration rsmConfig)
+                                IRsmConfiguration rsmConfig,
+                                ILogger logger)
         {
             this.consensusRoundManager = consensusRoundManager;
             this.intercomMessageHub = intercomMessageHub;
@@ -27,6 +30,7 @@ namespace wacs.Rsm.Implementation
             this.nodeResolver = nodeResolver;
             this.rsmConfig = rsmConfig;
             this.replicatedLog = replicatedLog;
+            this.logger = logger;
         }
 
         public IConsensus CreateInstance()
@@ -36,7 +40,8 @@ namespace wacs.Rsm.Implementation
                                  synodConfigurationProvider,
                                  replicatedLog,
                                  nodeResolver,
-                                 rsmConfig);
+                                 rsmConfig,
+                                 logger);
         }
     }
 }

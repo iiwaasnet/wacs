@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reactive.Linq;
 using wacs.Communication.Hubs.Intercom;
 using wacs.Diagnostics;
@@ -50,10 +51,15 @@ namespace wacs.Rsm.Implementation
         {
             try
             {
+
                 var payload = new RsmAccept(message).GetPayload();
                 var proposal = new Ballot(payload.Proposal.ProposalNumber);
 
                 IMessage response;
+
+                var timer = new Stopwatch();
+                timer.Start();
+
 
                 if (RequestCameNotFromLeader(new Process(message.Envelope.Sender.Id)))
                 {
@@ -67,6 +73,9 @@ namespace wacs.Rsm.Implementation
                     }
                 }
 
+                timer.Stop();
+                logger.InfoFormat("Accept response in {0} msec", timer.ElapsedMilliseconds);
+
                 intercomMessageHub.Send(new Process(message.Envelope.Sender.Id), response);
             }
             catch (Exception err)
@@ -79,10 +88,16 @@ namespace wacs.Rsm.Implementation
         {
             try
             {
+
                 var payload = new RsmPrepare(message).GetPayload();
                 var proposal = new Ballot(payload.Proposal.ProposalNumber);
 
                 IMessage response;
+
+
+                var timer = new Stopwatch();
+                timer.Start();
+
 
                 if (RequestCameNotFromLeader(new Process(message.Envelope.Sender.Id)))
                 {
@@ -95,6 +110,11 @@ namespace wacs.Rsm.Implementation
                         response = RespondOnPrepareRequest(payload, proposal);
                     }
                 }
+
+
+                timer.Stop();
+                logger.InfoFormat("Prepare response in {0} msec", timer.ElapsedMilliseconds);
+
 
                 intercomMessageHub.Send(new Process(message.Envelope.Sender.Id), response);
             }

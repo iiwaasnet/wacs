@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using wacs.Diagnostics;
 using wacs.Messaging.Messages;
@@ -10,7 +11,6 @@ namespace wacs.Communication.Hubs.Intercom
     {
         private readonly ConcurrentDictionary<IObserver<IMessage>, object> observers;
         private readonly BlockingCollection<IMessage> messages;
-        private readonly CancellationTokenSource cancellationSource;
         private Action<IMessage> appendMessage;
         private readonly Action<Listener> unsubscribe;
         private readonly ILogger logger;
@@ -21,9 +21,9 @@ namespace wacs.Communication.Hubs.Intercom
             messages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             appendMessage = DropMessage;
             this.unsubscribe = unsubscribe;
-            cancellationSource = new CancellationTokenSource();
             this.logger = logger;
-            new Thread(() => ForwardMessages(cancellationSource.Token)).Start();
+            //TODO: might be quite expensive to spawn every time new thread
+            new Thread(ForwardMessages).Start();
         }
 
         public void Notify(IMessage message)
@@ -40,15 +40,15 @@ namespace wacs.Communication.Hubs.Intercom
         {
         }
 
-        private void ForwardMessages(CancellationToken token)
+        private void ForwardMessages()
         {
-            foreach (var message in messages.GetConsumingEnumerable(token))
+            foreach (var message in messages.GetConsumingEnumerable())
             {
-                foreach (var observer in observers)
+                foreach (var observer in observers.Keys)
                 {
                     try
                     {
-                        observer.Key.OnNext(message);
+                        observer.OnNext(message);
                     }
                     catch (Exception err)
                     {
@@ -80,7 +80,7 @@ namespace wacs.Communication.Hubs.Intercom
         {
             unsubscribe(this);
             Stop();
-            cancellationSource.Cancel(false);
+            messages.CompleteAdding();
         }
 
         private class Unsubscriber : IDisposable
