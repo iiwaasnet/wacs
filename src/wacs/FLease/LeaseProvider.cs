@@ -126,7 +126,7 @@ namespace wacs.FLease
                        ? config.MaxLeaseTimeSpan
                          - TimeSpan.FromTicks(config.MessageRoundtrip.Ticks * 2)
                          - config.ClockDrift
-                       : TimeSpan.FromTicks(config.MaxLeaseTimeSpan.Ticks);
+                       : config.MaxLeaseTimeSpan;
         }
 
         private ILease GetLastKnownLease()
