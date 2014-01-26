@@ -18,10 +18,12 @@ namespace wacs.Rsm.Implementation
         private readonly ILeaseProvider leaseProvider;
         private readonly IConsensus consensus;
         private readonly ILogger logger;
+        private IPerformanceCounter consensusPerSecond;
 
         public Rsm(IReplicatedLog replicatedLog,
                    ILeaseProvider leaseProvider,
                    IConsensus consensus,
+                   IPerformanceCountersCategory<WacsPerformanceCounters> perfCounters,
                    ILogger logger)
         {
             this.logger = logger;
@@ -29,6 +31,7 @@ namespace wacs.Rsm.Implementation
             this.replicatedLog = replicatedLog;
             this.leaseProvider = leaseProvider;
             this.consensus = consensus;
+            consensusPerSecond = perfCounters.GetCounter(WacsPerformanceCounters.ConsensusAgreementsPerSecond);
 
             processingThread = new Thread(ProcessCommands);
             processingThread.Start();
@@ -59,6 +62,8 @@ namespace wacs.Rsm.Implementation
             var awaitableRequest = (AwaitableRsmRequest) awaitableResponse;
 
             var decision = consensus.Decide(firstUnchosenLogEntry, awaitableRequest, RoundCouldBeFast());
+
+            consensusPerSecond.Increment();
 
             if (ConsensusNotReachedDueToShortHistoryPrefix(decision))
             {

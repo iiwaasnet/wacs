@@ -22,7 +22,7 @@ namespace wacs.Diagnostics
 
 			PerformanceCounterCategory.Create(categoryDefinition.CategoryName,
 			                                  categoryDefinition.CategoryHelp,
-			                                  PerformanceCounterCategoryType.MultiInstance,
+			                                  PerformanceCounterCategoryType.SingleInstance,
 			                                  new CounterCreationDataCollection(GetPerformanceCountersData().ToArray()));
 		}
 

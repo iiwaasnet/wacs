@@ -37,6 +37,9 @@ namespace wacs
             builder.RegisterType<MessageSerializer>().As<IMessageSerializer>().SingleInstance();
             builder.RegisterType<NodeResolver>().As<INodeResolver>().SingleInstance();
             builder.RegisterType<SynodConfigurationProvider>().As<ISynodConfigurationProvider>().SingleInstance();
+            builder.RegisterType<PerformanceCountersCategory<WacsPerformanceCounters>>()
+                .As<IPerformanceCountersCategory<WacsPerformanceCounters>>()
+                .SingleInstance();
 
             RegisterConfigurations(builder);
         }
