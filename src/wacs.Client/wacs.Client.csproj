@@ -53,11 +53,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="libzmq.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\wacs.Communication\wacs.Communication.csproj">
       <Project>{380d9e8b-d5ac-42d4-8bd0-26526d88f91f}</Project>
       <Name>wacs.Communication</Name>
@@ -70,6 +65,11 @@
       <Project>{9df356b9-2357-427b-b8fb-4d27eef84c6c}</Project>
       <Name>wacs.Messaging</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="libzmq.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
