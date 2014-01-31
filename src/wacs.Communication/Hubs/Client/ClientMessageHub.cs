@@ -35,8 +35,47 @@ namespace wacs.Communication.Hubs.Client
             this.synodConfigProvider = synodConfigProvider;
             this.config = config;
             context = ZmqContext.Create();
-            device = CreateProcessingDevice();
-            processingThreads = CreateRequestProcessingThreads().ToArray();
+            new Thread(AcceptClientRequests).Start();
+            //device = CreateProcessingDevice();
+            //processingThreads = CreateRequestProcessingThreads().ToArray();
+        }
+
+        private void AcceptClientRequests()
+        {
+            try
+            {
+                using (var socket = context.CreateSocket(SocketType.REP))
+                {
+                    socket.SendHighWatermark = 100;
+                    socket.ReceiveHighWatermark = 200;
+                    socket.Bind(synodConfigProvider.LocalNode.GetServiceAddress());
+
+                    while (!tokenSource.Token.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            var request = socket.ReceiveMessage();
+                            //var request = socket.ReceiveMessage(config.ReceiveWaitTimeout);
+
+                            if (!request.IsEmpty && request.IsComplete)
+                            {
+                                var response = ProcessRequest(request);
+
+                                socket.SendMessage(new ZmqMessage(response.Frames));
+                            }
+                        }
+                        catch (Exception err)
+                        {
+                            logger.Error(err);
+                        }
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                logger.InfoFormat("Listening thread terminated! {0}", err);
+            }
+            
         }
 
         private IEnumerable<Thread> CreateRequestProcessingThreads()

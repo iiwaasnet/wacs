@@ -9,6 +9,7 @@ using wacs.Diagnostics;
 using wacs.Framework.State;
 using wacs.Messaging.Messages;
 using ZeroMQ;
+using Process = wacs.Messaging.Messages.Process;
 
 namespace wacs.Communication.Hubs.Client
 {
@@ -45,30 +46,26 @@ namespace wacs.Communication.Hubs.Client
 
         private void ForwardMessages(CancellationToken token)
         {
-            try
+            while (!token.IsCancellationRequested)
             {
-                using (var socket = context.CreateSocket(SocketType.REQ))
+                try
                 {
-                    socket.SendHighWatermark = 100;
-                    socket.ReceiveHighWatermark = 200;
-                    while (!token.IsCancellationRequested)
+                    using (var socket = context.CreateSocket(SocketType.REQ))
                     {
-                        try
-                        {
-                            var queuedRequest = forwardQueue.Take();
+                        socket.Linger = TimeSpan.Zero;
+                        socket.SendHighWatermark = 100;
+                        socket.ReceiveHighWatermark = 200;
 
-                            ForwardMessagesToLeader(socket, queuedRequest);
-                        }
-                        catch (Exception err)
+                        foreach (var queuedRequest in forwardQueue.GetConsumingEnumerable())
                         {
-                            logger.Error(err);
+                            ForwardMessagesToLeader(socket, queuedRequest);
                         }
                     }
                 }
-            }
-            catch (Exception err)
-            {
-                logger.Error(err.ToString());
+                catch (Exception err)
+                {
+                    logger.Error(err.ToString());
+                }
             }
 
             logger.WarnFormat("Forwarding thread {0} terminated", Thread.CurrentThread.ManagedThreadId);
@@ -84,15 +81,18 @@ namespace wacs.Communication.Hubs.Client
             socket.SendMessage(new ZmqMessage(requestMessage.Frames));
 
             //TODO: receive timeout
-            var response = socket.ReceiveMessage();
-            var responseMessage = new ClientMultipartMessage(response);
+            var response = socket.ReceiveMessage(config.ReceiveWaitTimeout);
+            if(response.IsComplete)
+            {
+                var responseMessage = new ClientMultipartMessage(response);
 
-            forwardRequest.SetResponse(new Message(new Envelope { Sender = new Messaging.Messages.Process { Id = responseMessage.GetSenderId() } },
-                                                   new Body
-                                                   {
-                                                       MessageType = responseMessage.GetMessageType(),
-                                                       Content = responseMessage.GetMessage()
-                                                   }));
+                forwardRequest.SetResponse(new Message(new Envelope {Sender = new Process {Id = responseMessage.GetSenderId()}},
+                                                       new Body
+                                                       {
+                                                           MessageType = responseMessage.GetMessageType(),
+                                                           Content = responseMessage.GetMessage()
+                                                       }));
+            }
         }
 
         private static void ConnectToLeaderIfChanged(ZmqSocket socket, AwaitableResponse forwardRequest)
@@ -122,9 +122,11 @@ namespace wacs.Communication.Hubs.Client
             try
             {
                 cancellationSource.Cancel(false);
+                forwardQueue.CompleteAdding();
                 forwardingThreads.ForEach(t => t.Join());
                 context.Dispose();
                 cancellationSource.Dispose();
+                forwardQueue.Dispose();
             }
             catch (Exception err)
             {
