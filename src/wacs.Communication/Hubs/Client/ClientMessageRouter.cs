@@ -109,6 +109,8 @@ namespace wacs.Communication.Hubs.Client
 
         public IMessage ForwardClientRequestToLeader(INode leader, IMessage message)
         {
+            logger.InfoFormat("Request forwarded to leader {0}", leader.GetServiceAddress());
+
             IAwaitableResponse<IMessage> response = new AwaitableResponse(leader, message);
             forwardQueue.Add(response);
 
