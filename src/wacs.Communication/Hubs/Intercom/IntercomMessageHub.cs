@@ -170,6 +170,7 @@ namespace wacs.Communication.Hubs.Intercom
         {
             var socket = context.CreateSocket(SocketType.SUB);
             socket.ReceiveHighWatermark = 200;
+            socket.Linger = TimeSpan.Zero;
             socket.Subscribe(prefix);
             socket.ReceiveReady += SocketOnReceiveReady;
 
@@ -180,6 +181,7 @@ namespace wacs.Communication.Hubs.Intercom
         {
             var socket = context.CreateSocket(SocketType.PUB);
             socket.SendHighWatermark = 100;
+            socket.Linger = TimeSpan.Zero;
             socket.Bind(localNode.GetIntercomAddress());
 
             return socket;
