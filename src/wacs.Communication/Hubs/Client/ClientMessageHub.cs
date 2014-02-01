@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Castle.Core.Internal;
 using wacs.Configuration;
@@ -48,17 +47,20 @@ namespace wacs.Communication.Hubs.Client
                 {
                     socket.SendHighWatermark = 100;
                     socket.ReceiveHighWatermark = 200;
+                    socket.Linger = TimeSpan.Zero;
                     socket.Bind(synodConfigProvider.LocalNode.GetServiceAddress());
 
                     while (!tokenSource.Token.IsCancellationRequested)
                     {
                         try
                         {
-                            var request = socket.ReceiveMessage();
-                            //var request = socket.ReceiveMessage(config.ReceiveWaitTimeout);
+                            //var request = socket.ReceiveMessage();
+                            var request = socket.ReceiveMessage(config.ReceiveWaitTimeout);
 
                             if (!request.IsEmpty && request.IsComplete)
                             {
+                                logger.InfoFormat("Client message received by {0}", synodConfigProvider.LocalProcess.Id);
+
                                 var response = ProcessRequest(request);
 
                                 socket.SendMessage(new ZmqMessage(response.Frames));
@@ -75,7 +77,6 @@ namespace wacs.Communication.Hubs.Client
             {
                 logger.InfoFormat("Listening thread terminated! {0}", err);
             }
-            
         }
 
         private IEnumerable<Thread> CreateRequestProcessingThreads()

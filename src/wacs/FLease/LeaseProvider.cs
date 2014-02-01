@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using System.Threading.Tasks;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.Resolver;
@@ -52,7 +51,9 @@ namespace wacs.FLease
             var lease = GetLastKnownLease();
 
             timer.Stop();
-            logger.InfoFormat("Lease received in {0} msec", timer.ElapsedMilliseconds);
+            logger.InfoFormat("Lease received {0} in {1} msec",
+                              lastKnownLease != null ? lastKnownLease.Owner.Id.ToString() : "null",
+                              timer.ElapsedMilliseconds);
 
             return lease;
         }

@@ -20,13 +20,16 @@ namespace wacs.Communication.Hubs.Client
         private readonly BlockingCollection<IAwaitableResponse<IMessage>> forwardQueue;
         private readonly IEnumerable<Thread> forwardingThreads;
         private readonly CancellationTokenSource cancellationSource;
+        private readonly IRsmConfiguration rsmConfiguration;
         private readonly ZmqContext context;
 
         public ClientMessageRouter(IClientMessageHubConfiguration config,
+                                   IRsmConfiguration rsmConfiguration,
                                    ILogger logger)
         {
             this.logger = logger;
             this.config = config;
+            this.rsmConfiguration = rsmConfiguration;
             cancellationSource = new CancellationTokenSource();
             forwardQueue = new BlockingCollection<IAwaitableResponse<IMessage>>(new ConcurrentQueue<IAwaitableResponse<IMessage>>());
             context = ZmqContext.Create();
@@ -82,7 +85,8 @@ namespace wacs.Communication.Hubs.Client
 
             //TODO: receive timeout
             var response = socket.ReceiveMessage(config.ReceiveWaitTimeout);
-            if(response.IsComplete)
+            //var response = socket.ReceiveMessage();
+            if (!response.IsEmpty && response.IsComplete)
             {
                 var responseMessage = new ClientMultipartMessage(response);
 
@@ -114,7 +118,7 @@ namespace wacs.Communication.Hubs.Client
             IAwaitableResponse<IMessage> response = new AwaitableResponse(leader, message);
             forwardQueue.Add(response);
 
-            return response.GetResponse();
+            return response.GetResponse(rsmConfiguration.CommandExecutionTimeout);
         }
 
         public void Dispose()
