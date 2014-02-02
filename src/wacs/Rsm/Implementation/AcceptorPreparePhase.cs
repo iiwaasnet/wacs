@@ -20,8 +20,6 @@ namespace wacs.Rsm.Implementation
             }
             else
             {
-                
-
                 var timer = new Stopwatch();
                 timer.Start();
 

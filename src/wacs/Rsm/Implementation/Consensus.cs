@@ -101,7 +101,6 @@ namespace wacs.Rsm.Implementation
                 BroadcastChosenValue(logIndex, decision.DecidedValue);
             }
 
-
             timer.Stop();
             logger.InfoFormat("Broadcast chosen value in {0} msec", timer.ElapsedMilliseconds);
 
@@ -172,7 +171,6 @@ namespace wacs.Rsm.Implementation
 
                     var timer = new Stopwatch();
                     timer.Start();
-
 
                     intercomMessageHub.Broadcast(message);
 
@@ -291,7 +289,6 @@ namespace wacs.Rsm.Implementation
                     timer.Stop();
                     logger.InfoFormat("SendPrepare {0} msec", timer.ElapsedMilliseconds);
 
-
                     AssertPrepareTimeout(index);
 
                     if (PhaseAcknowledged(index))
@@ -353,7 +350,9 @@ namespace wacs.Rsm.Implementation
             {
                 return new PreparePhaseResult
                        {
-                           AcceptedValue = payloads.First(p => p.AcceptedProposal.Equals(maxAcceptedProposal)).AcceptedValue,
+                           AcceptedValue = payloads
+                               .First(p => p.AcceptedProposal.Equals(maxAcceptedProposal) && p.AcceptedValue != null)
+                               .AcceptedValue,
                            Outcome = PreparePhaseOutcome.SucceededWithOtherValue
                        };
             }
