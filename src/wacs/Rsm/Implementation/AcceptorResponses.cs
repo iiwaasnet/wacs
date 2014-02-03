@@ -4,7 +4,7 @@ using wacs.Rsm.Interface;
 
 namespace wacs.Rsm.Implementation
 {
-    public partial class Acceptor : IAcceptor
+    public partial class Acceptor
     {
         private IMessage CreateNackPrepareNotLeaderMessage(IConsensusDecisionPayload payload)
         {
