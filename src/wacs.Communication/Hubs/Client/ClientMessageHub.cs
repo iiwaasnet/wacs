@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Castle.Core.Internal;
 using wacs.Configuration;
@@ -34,9 +35,9 @@ namespace wacs.Communication.Hubs.Client
             this.synodConfigProvider = synodConfigProvider;
             this.config = config;
             context = ZmqContext.Create();
-            new Thread(AcceptClientRequests).Start();
-            //device = CreateProcessingDevice();
-            //processingThreads = CreateRequestProcessingThreads().ToArray();
+            //new Thread(AcceptClientRequests).Start();
+            device = CreateProcessingDevice();
+            processingThreads = CreateRequestProcessingThreads().ToArray();
         }
 
         private void AcceptClientRequests()
@@ -54,7 +55,6 @@ namespace wacs.Communication.Hubs.Client
                     {
                         try
                         {
-                            //var request = socket.ReceiveMessage();
                             var request = socket.ReceiveMessage(config.ReceiveWaitTimeout);
 
                             if (!request.IsEmpty && request.IsComplete)
@@ -98,6 +98,7 @@ namespace wacs.Communication.Hubs.Client
             {
                 receiver.SendHighWatermark = 100;
                 receiver.ReceiveHighWatermark = 200;
+                receiver.Linger = TimeSpan.Zero;
                 receiver.Connect(InprocWorkersAddress);
 
                 while (!token.IsCancellationRequested)

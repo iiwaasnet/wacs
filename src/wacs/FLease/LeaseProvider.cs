@@ -107,8 +107,8 @@ namespace wacs.FLease
         private void ReadOrRenewLease()
         {
             // TODO: Uncomment
-            //var now = DateTime.UtcNow;
-            var now = DateTime.UtcNow - TimeSpan.FromMinutes(1);
+            var now = DateTime.UtcNow;
+            //var now = DateTime.UtcNow - TimeSpan.FromMinutes(1);
 
             var lease = AсquireOrLearnLease(ballotGenerator.New(owner), now);
 
