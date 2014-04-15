@@ -37,13 +37,9 @@ namespace tests.Unit.FLease
         private ContainerBuilder builder;
         private INode node;
 
-        private static Node CreateLocalNode()
-        {
-            return new Node("tcp://127.0.0.1", 3030, 4030);
-        }
 
         [Test(Description = "Lemma R1: Read-abort")]
-        public void TestReadWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
+        public void ReadWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
         {
             var owner = new Process();
 
@@ -65,7 +61,7 @@ namespace tests.Unit.FLease
         }
 
         [Test(Description = "Lemma R1: Read-abort")]
-        public void TestReadWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
+        public void ReadWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
         {
             var owner = new Process();
 
@@ -87,7 +83,7 @@ namespace tests.Unit.FLease
         }
 
         [Test(Description = "Lemma R2: Write-abort")]
-        public void TestWriteWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
+        public void WriteWithLowerBallotIsRejected_ByPreviousReadWithHigherBallot()
         {
             var owner = new Process();
 
@@ -109,7 +105,7 @@ namespace tests.Unit.FLease
         }
 
         [Test(Description = "Lemma R2: Write-abort")]
-        public void TestWriteWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
+        public void WriteWithLowerBallotIsRejected_ByPreviousWriteWithHigherBallot()
         {
             var owner = new Process();
 
@@ -131,7 +127,7 @@ namespace tests.Unit.FLease
         }
 
         [Test(Description = "Lemma R3: Read-write-commit")]
-        public void TestIfReadWithHigherBallotCommits_ThenReadWithLowerOrEqualBallotAborts()
+        public void IfReadWithHigherBallotCommits_ThenReadWithLowerOrEqualBallotAborts()
         {
             var owner = new Process();
 
@@ -154,7 +150,7 @@ namespace tests.Unit.FLease
         }
 
         [Test(Description = "Lemma R3: Read-write-commit")]
-        public void TestIfWriteWithHigherBallotCommits_ThenWriteWithLowerBallotAborts()
+        public void IfWriteWithHigherBallotCommits_ThenWriteWithLowerBallotAborts()
         {
             var owner = new Process();
 
@@ -176,7 +172,7 @@ namespace tests.Unit.FLease
         }
 
         [Test(Description = "Lemma R4: Read-commit")]
-        public void TestIfReadWithHigherBallotCommitsWithL1_ThenWriteWithLowerBallotCommitedWithL1Before()
+        public void IfReadWithHigherBallotCommitsWithL1_ThenWriteWithLowerBallotCommitedWithL1Before()
         {
             var owner = new Process();
 
@@ -202,7 +198,7 @@ namespace tests.Unit.FLease
         }
 
         [Test(Description = "Lemma R5: Write-commit")]
-        public void TestIfTwoWritesCommitWithL1AndL2_ThenReadWithHigherBallotCommitsWithL2()
+        public void IfTwoWritesCommitWithL1AndL2_ThenReadWithHigherBallotCommitsWithL2()
         {
             var owner = new Process();
 
@@ -230,5 +226,11 @@ namespace tests.Unit.FLease
                 Assert.AreEqual(lease2.ExpiresAt, readLease.Lease.ExpiresAt);
             }
         }
+
+        private static Node CreateLocalNode()
+        {
+            return new Node("tcp://127.0.0.1", 3030, 4030);
+        }
+
     }
 }

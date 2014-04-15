@@ -33,10 +33,9 @@ namespace wacs.Rsm.Implementation
                                              {
                                                  Proposal = payload.Proposal,
                                                  LogIndex = payload.LogIndex,
-                                                 MinProposal = new Messaging.Messages.Intercom.Rsm.Ballot
-                                                               {
-                                                                   ProposalNumber = acceptedProposal.ProposalNumber
-                                                               }
+                                                 MinProposal = (acceptedProposal != null)
+                                                                   ? new Messaging.Messages.Intercom.Rsm.Ballot {ProposalNumber = acceptedProposal.ProposalNumber}
+                                                                   : null
                                              });
         }
 
@@ -83,10 +82,9 @@ namespace wacs.Rsm.Implementation
                                             {
                                                 Proposal = payload.Proposal,
                                                 LogIndex = payload.LogIndex,
-                                                MinProposal = new Messaging.Messages.Intercom.Rsm.Ballot
-                                                              {
-                                                                  ProposalNumber = acceptedProposal.ProposalNumber
-                                                              }
+                                                MinProposal = (acceptedProposal != null)
+                                                                  ? new Messaging.Messages.Intercom.Rsm.Ballot {ProposalNumber = acceptedProposal.ProposalNumber}
+                                                                  : null
                                             });
         }
 

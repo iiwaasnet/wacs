@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Autofac;
 using Moq;
 using NUnit.Framework;
@@ -16,50 +15,8 @@ namespace tests.Unit.FLease
     [TestFixture]
     public class LeaseProviderTests
     {
-        private ILeaseProvider BuildLeaseProvider(SetupData setupData, IIntercomMessageHub intercomMessageHub)
-        {
-            var builder = DIHelper.CreateBuilder();
-
-            builder.Register(c => intercomMessageHub).As<IIntercomMessageHub>().SingleInstance();
-
-            var topology = new Mock<ITopologyConfiguration>();
-            topology.Setup(m => m.LocalNode).Returns(setupData.LocalNode);
-
-            var synod = new Mock<ISynod>();
-            synod.Setup(m => m.Members).Returns(setupData.Synod);
-            topology.Setup(m => m.Synod).Returns(synod.Object);
-
-            var leaseConfig = new Mock<ILeaseConfiguration>();
-            leaseConfig.Setup(m => m.NodeResponseTimeout).Returns(TimeSpan.FromMilliseconds(200));
-            leaseConfig.Setup(m => m.MaxLeaseTimeSpan).Returns(TimeSpan.FromSeconds(2));
-            leaseConfig.Setup(m => m.MessageRoundtrip).Returns(TimeSpan.FromMilliseconds(400));
-            leaseConfig.Setup(m => m.ClockDrift).Returns(TimeSpan.FromMilliseconds(200));
-
-            var hostResolverConfig = new Mock<INodeResolverConfiguration>();
-            hostResolverConfig.Setup(m => m.ProcessIdBroadcastPeriod).Returns(TimeSpan.FromSeconds(1));
-
-            var config = new Mock<IWacsConfiguration>();
-            config.Setup(m => m.Lease).Returns(leaseConfig.Object);
-            config.Setup(m => m.Topology).Returns(topology.Object);
-            config.Setup(m => m.NodeResolver).Returns(hostResolverConfig.Object);
-
-            builder.Register(c => config.Object).As<IWacsConfiguration>();
-
-            var container = builder.Build();
-
-            container.Resolve<INodeResolver>();
-
-            return container.Resolve<ILeaseProvider>();
-        }
-
-        internal class SetupData
-        {
-            internal IEnumerable<INode> Synod { get; set; }
-            internal INode LocalNode { get; set; }
-        }
-
         [Test]
-        public void TestGetLease_ReturnsTask()
+        public void GetLease_ReturnsTask()
         {
             var lease = new Lease(new Process(), DateTime.UtcNow + TimeSpan.FromSeconds(3));
             var leaseProvider = new Mock<ILeaseProvider>();
@@ -75,7 +32,7 @@ namespace tests.Unit.FLease
         [TestCase(2)]
         [TestCase(3)]
         [TestCase(4)]
-        public void TestLeaseIsIssuedByQuorum(int numberOfNodes)
+        public void LeaseIsIssuedByQuorum(int numberOfNodes)
         {
             var builder = DIHelper.CreateBuilder();
             builder.RegisterType<InprocIntercomMessageHub>().As<IIntercomMessageHub>().SingleInstance();
@@ -117,6 +74,48 @@ namespace tests.Unit.FLease
             Assert.GreaterOrEqual(leases.GroupBy(l => l.Owner.Id).Max(g => g.Count()), majority);
 
             leaseProviders.ToList().ForEach(p => p.Dispose());
+        }
+
+        private ILeaseProvider BuildLeaseProvider(SetupData setupData, IIntercomMessageHub intercomMessageHub)
+        {
+            var builder = DIHelper.CreateBuilder();
+
+            builder.Register(c => intercomMessageHub).As<IIntercomMessageHub>().SingleInstance();
+
+            var topology = new Mock<ITopologyConfiguration>();
+            topology.Setup(m => m.LocalNode).Returns(setupData.LocalNode);
+
+            var synod = new Mock<ISynod>();
+            synod.Setup(m => m.Members).Returns(setupData.Synod);
+            topology.Setup(m => m.Synod).Returns(synod.Object);
+
+            var leaseConfig = new Mock<ILeaseConfiguration>();
+            leaseConfig.Setup(m => m.NodeResponseTimeout).Returns(TimeSpan.FromMilliseconds(200));
+            leaseConfig.Setup(m => m.MaxLeaseTimeSpan).Returns(TimeSpan.FromSeconds(2));
+            leaseConfig.Setup(m => m.MessageRoundtrip).Returns(TimeSpan.FromMilliseconds(400));
+            leaseConfig.Setup(m => m.ClockDrift).Returns(TimeSpan.FromMilliseconds(200));
+
+            var hostResolverConfig = new Mock<INodeResolverConfiguration>();
+            hostResolverConfig.Setup(m => m.ProcessIdBroadcastPeriod).Returns(TimeSpan.FromSeconds(1));
+
+            var config = new Mock<IWacsConfiguration>();
+            config.Setup(m => m.Lease).Returns(leaseConfig.Object);
+            config.Setup(m => m.Topology).Returns(topology.Object);
+            config.Setup(m => m.NodeResolver).Returns(hostResolverConfig.Object);
+
+            builder.Register(c => config.Object).As<IWacsConfiguration>();
+
+            var container = builder.Build();
+
+            container.Resolve<INodeResolver>();
+
+            return container.Resolve<ILeaseProvider>();
+        }
+
+        internal class SetupData
+        {
+            internal IEnumerable<INode> Synod { get; set; }
+            internal INode LocalNode { get; set; }
         }
     }
 }

@@ -94,7 +94,6 @@ namespace wacs.Rsm.Implementation
 
                 IMessage response;
 
-
                 var timer = new Stopwatch();
                 timer.Start();
 
