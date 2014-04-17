@@ -140,6 +140,45 @@ namespace tests.Unit.Rsm
             }
         }
 
+        [Test]
+        public void ChangingSynodConfigration_RemovesNonExistingNodes()
+        {
+            var logger = new Mock<ILogger>();
+
+            var listener = new Listener(u => { }, logger.Object);
+            var messageHub = new Mock<IIntercomMessageHub>();
+            messageHub.Setup(m => m.Subscribe()).Returns(listener);
+
+            var synodConfigProvider = new Mock<ISynodConfigurationProvider>();
+            var localNode = new Node("127.0.0.1", 1255, 1266);
+            var localProcess = new Process(2);
+            synodConfigProvider.Setup(m => m.LocalNode).Returns(localNode);
+            synodConfigProvider.Setup(m => m.LocalProcess).Returns(localProcess);
+            synodConfigProvider.Setup(m => m.World).Returns(new[] {localNode});
+            var nodeResolverConfig = new Mock<INodeResolverConfiguration>();
+
+            using (var nodeResolver = new NodeResolver(messageHub.Object, synodConfigProvider.Object, nodeResolverConfig.Object, logger.Object))
+            {
+                var remoteProcess = 1;
+                var baseAddress = "127.0.0.2";
+                var intercomPort = 1244;
+                var servicePort = 1255;
+
+                SendProcessAnnouncementMessage(baseAddress, intercomPort, servicePort, remoteProcess, listener);
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+
+                var process = nodeResolver.ResolveRemoteNode(new Node(baseAddress, intercomPort, servicePort));
+                Assert.AreEqual(process.Id, remoteProcess);
+
+                synodConfigProvider.Raise(p => { p.WorldChanged += () => {}; });
+
+                process = nodeResolver.ResolveRemoteNode(new Node(baseAddress, intercomPort, servicePort));
+                Assert.IsNull(process);
+
+                Assert.IsNotNull(nodeResolver.ResolveLocalNode());
+            }
+        }
+
         private static void SendProcessAnnouncementMessage(string baseAddress, int intercomPort, int servicePort, int senderId, Listener listener)
         {
             var remoteNode = new wacs.Messaging.Messages.Intercom.NodeResolver.Node
