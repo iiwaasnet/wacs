@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Castle.Core.Internal;
 using wacs.Communication.Hubs.Intercom;
 using wacs.Configuration;
@@ -26,8 +25,9 @@ namespace wacs.Resolver
         private readonly ConcurrentDictionary<INode, IProcess> nodeToProcessMap;
         private readonly ConcurrentDictionary<IProcess, INode> processToNodeMap;
         private readonly ISynodConfigurationProvider synodConfigProvider;
-        private readonly Task worldLearningTask;
+        private readonly Thread worldLearningThread;
         private volatile IProcess localProcess;
+        private readonly IDisposable subscription;
         private bool disposed;
 
         public NodeResolver(IIntercomMessageHub intercomMessageHub,
@@ -47,7 +47,10 @@ namespace wacs.Resolver
             cancellation = new CancellationTokenSource();
 
             listener = intercomMessageHub.Subscribe();
-            worldLearningTask = StartLearningWorld(config);
+            subscription = listener.Subscribe(new MessageStreamListener(OnMessage));
+            listener.Start();
+
+            worldLearningThread = StartLearningWorld(config);
         }
 
         public void Dispose()
@@ -56,10 +59,11 @@ namespace wacs.Resolver
             {
                 try
                 {
+                    listener.Stop();
+                    subscription.Dispose();
                     cancellation.Cancel(false);
                     cancellation.Dispose();
-                    worldLearningTask.Wait();
-                    worldLearningTask.Dispose();
+                    worldLearningThread.Join();
 
                     disposed = true;
                 }
@@ -109,42 +113,37 @@ namespace wacs.Resolver
             }
         }
 
-        private Task StartLearningWorld(INodeResolverConfiguration config)
+        private Thread StartLearningWorld(INodeResolverConfiguration config)
         {
-            var task = new Task(() => ResolveWorld(cancellation.Token, config.ProcessIdBroadcastPeriod));
-            task.Start();
+            var thread = new Thread(() => ResolveWorld(cancellation.Token, config.ProcessIdBroadcastPeriod));
+            thread.Start();
 
-            return task;
+            return thread;
         }
 
         private void ResolveWorld(CancellationToken token, TimeSpan processIdBroadcastPeriod)
         {
             try
             {
-                listener.Start();
-                using (listener.Subscribe(new MessageStreamListener(OnMessage)))
+                while (!token.IsCancellationRequested)
                 {
-                    while (!token.IsCancellationRequested)
-                    {
-                        intercomMessageHub
-                            .Broadcast(new ProcessAnnouncementMessage(new Process {Id = localProcess.Id},
-                                                                      new ProcessAnnouncementMessage.Payload
-                                                                      {
-                                                                          Node = new Node
-                                                                                 {
-                                                                                     BaseAddress = localNode.BaseAddress,
-                                                                                     IntercomPort = localNode.IntercomPort,
-                                                                                     ServicePort = localNode.ServicePort
-                                                                                 },
-                                                                          Process = new Process
-                                                                                    {
-                                                                                        Id = localProcess.Id
-                                                                                    }
-                                                                      }));
-                        Thread.Sleep(processIdBroadcastPeriod);
-                    }
+                    intercomMessageHub
+                        .Broadcast(new ProcessAnnouncementMessage(new Process {Id = localProcess.Id},
+                                                                  new ProcessAnnouncementMessage.Payload
+                                                                  {
+                                                                      Node = new Node
+                                                                             {
+                                                                                 BaseAddress = localNode.BaseAddress,
+                                                                                 IntercomPort = localNode.IntercomPort,
+                                                                                 ServicePort = localNode.ServicePort
+                                                                             },
+                                                                      Process = new Process
+                                                                                {
+                                                                                    Id = localProcess.Id
+                                                                                }
+                                                                  }));
+                    Thread.Sleep(processIdBroadcastPeriod);
                 }
-                listener.Stop();
             }
             catch (Exception err)
             {

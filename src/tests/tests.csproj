@@ -68,6 +68,7 @@
     <Compile Include="Unit\FLease\RoundBasedRegisterTests.cs" />
     <Compile Include="Unit\Helpers\DIHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Unit\Helpers\ListenerMock.cs" />
     <Compile Include="Unit\Rsm\AcceptorAcceptPhaseTests.cs" />
     <Compile Include="Unit\Rsm\AcceptorPreparePhaseTests.cs" />
     <Compile Include="Unit\Rsm\NodeResolverTests.cs" />
