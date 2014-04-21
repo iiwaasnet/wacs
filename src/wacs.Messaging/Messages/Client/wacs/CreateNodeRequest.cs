@@ -1,6 +1,4 @@
-﻿using wacs.Messaging.Messages.Intercom;
-
-namespace wacs.Messaging.Messages.Client.wacs
+﻿namespace wacs.Messaging.Messages.Client.wacs
 {
     public class CreateNodeRequest : TypedMessage<CreateNodeRequest.Payload>
     {

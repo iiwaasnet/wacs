@@ -64,6 +64,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Unit\BallotTests.cs" />
     <Compile Include="Unit\FLease\LeaseProviderTests.cs" />
     <Compile Include="Unit\FLease\RoundBasedRegisterTests.cs" />
     <Compile Include="Unit\Helpers\DIHelper.cs" />
