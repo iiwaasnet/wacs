@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Moq;
 using NUnit.Framework;
@@ -95,6 +96,19 @@ namespace tests.Unit.MessageHubs
         private static void WaitUntilMessageDelivered()
         {
             Thread.Sleep(TimeSpan.FromSeconds(1));
+        }
+
+        private static IIntercomMessageHub CreateMessageHub(INode node, IProcess process, IEnumerable<INode> world)
+        {
+            var logger = new Mock<ILogger>();
+
+            var synodConfigProvider = new Mock<ISynodConfigurationProvider>();
+            synodConfigProvider.Setup(m => m.LocalProcess).Returns(process);
+            synodConfigProvider.Setup(m => m.LocalNode).Returns(node);
+            synodConfigProvider.Setup(m => m.Synod).Returns(world);
+            synodConfigProvider.Setup(m => m.World).Returns(world);
+
+            return new IntercomMessageHub(synodConfigProvider.Object, logger.Object);
         }
     }
 }
