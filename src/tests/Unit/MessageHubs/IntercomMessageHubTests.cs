@@ -28,34 +28,17 @@ namespace tests.Unit.MessageHubs
             var receiverNode = new Node("tcp://127.0.0.1", receiverPort, 2356);
             var remoteNode = new Node("tcp://127.0.0.1", remotePort, 2356);
 
-            var senderSynodConfigProvider = new Mock<ISynodConfigurationProvider>();
-            senderSynodConfigProvider.Setup(m => m.LocalProcess).Returns(senderProcess);
-            senderSynodConfigProvider.Setup(m => m.LocalNode).Returns(senderNode);
-            senderSynodConfigProvider.Setup(m => m.Synod).Returns(new[] {senderNode, receiverNode, remoteNode});
-            senderSynodConfigProvider.Setup(m => m.World).Returns(new[] {senderNode, receiverNode, remoteNode});
-
-            var receiverSynodConfigProvider = new Mock<ISynodConfigurationProvider>();
-            receiverSynodConfigProvider.Setup(m => m.LocalProcess).Returns(receiverProcess);
-            receiverSynodConfigProvider.Setup(m => m.LocalNode).Returns(receiverNode);
-            receiverSynodConfigProvider.Setup(m => m.Synod).Returns(new[] {senderNode, receiverNode, remoteNode});
-            receiverSynodConfigProvider.Setup(m => m.World).Returns(new[] {senderNode, receiverNode, remoteNode});
-
-            var remoteSynodConfigProvider = new Mock<ISynodConfigurationProvider>();
-            remoteSynodConfigProvider.Setup(m => m.LocalProcess).Returns(remoteProcess);
-            remoteSynodConfigProvider.Setup(m => m.LocalNode).Returns(remoteNode);
-            remoteSynodConfigProvider.Setup(m => m.Synod).Returns(new[] {senderNode, receiverNode, remoteNode});
-            remoteSynodConfigProvider.Setup(m => m.World).Returns(new[] {senderNode, receiverNode, remoteNode});
+            var world = new[] {senderNode, receiverNode, remoteNode};
 
             var receiverObserver = new Mock<IObserver<IMessage>>();
             var remoteObserver = new Mock<IObserver<IMessage>>();
 
-            var logger = new Mock<ILogger>();
 
-            using (var senderHub = new IntercomMessageHub(senderSynodConfigProvider.Object, logger.Object))
+            using (var senderHub = CreateMessageHub(senderNode, senderProcess, world))
             {
-                using (var receiverHub = new IntercomMessageHub(receiverSynodConfigProvider.Object, logger.Object))
+                using (var receiverHub = CreateMessageHub(receiverNode, receiverProcess, world))
                 {
-                    using (var remoteHub = new IntercomMessageHub(remoteSynodConfigProvider.Object, logger.Object))
+                    using (var remoteHub = CreateMessageHub(remoteNode, remoteProcess, world))
                     {
                         using (var remoteListener = remoteHub.Subscribe())
                         {
