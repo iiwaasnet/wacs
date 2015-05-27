@@ -1,6 +1,4 @@
-﻿using wacs.Messaging.Messages.Intercom;
-
-namespace wacs.Messaging.Messages
+﻿namespace wacs.Messaging.Messages
 {
     public class Envelope
     {

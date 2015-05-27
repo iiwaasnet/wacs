@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading;
-using Castle.Core.Internal;
 using NetMQ;
 using NetMQ.Devices;
 using NetMQ.zmq;
 using wacs.Configuration;
 using wacs.Diagnostics;
+using wacs.Framework;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Client.Error;
 using Process = wacs.Messaging.Messages.Process;
@@ -29,8 +28,8 @@ namespace wacs.Communication.Hubs.Client
         private readonly ILogger logger;
 
         public ClientMessageHub(ISynodConfigurationProvider synodConfigProvider,
-                                IClientMessageHubConfiguration config,
-                                ILogger logger)
+            IClientMessageHubConfiguration config,
+            ILogger logger)
         {
             this.logger = logger;
             tokenSource = new CancellationTokenSource();
@@ -85,7 +84,8 @@ namespace wacs.Communication.Hubs.Client
         {
             for (var i = 0; i < config.ParallelMessageProcessors; i++)
             {
-                var thread = new Thread(() => AcceptIncomingRequests(tokenSource.Token, context.CreateSocket(ZmqSocketType.Rep)));
+                var thread =
+                    new Thread(() => AcceptIncomingRequests(tokenSource.Token, context.CreateSocket(ZmqSocketType.Rep)));
                 thread.Start();
 
                 yield return thread;
@@ -139,12 +139,13 @@ namespace wacs.Communication.Hubs.Client
             {
                 logger.Error(err);
 
-                return new ClientMultipartMessage(new ErrorMessage(new Process {Id = synodConfigProvider.LocalProcess.Id},
-                                                                   new ErrorMessage.Payload
-                                                                   {
-                                                                       NodeAddress = synodConfigProvider.LocalNode.BaseAddress,
-                                                                       Error = err.ToString()
-                                                                   }));
+                return
+                    new ClientMultipartMessage(new ErrorMessage(new Process {Id = synodConfigProvider.LocalProcess.Id},
+                        new ErrorMessage.Payload
+                        {
+                            NodeAddress = synodConfigProvider.LocalNode.BaseAddress,
+                            Error = err.ToString()
+                        }));
             }
         }
 
@@ -152,11 +153,11 @@ namespace wacs.Communication.Hubs.Client
         {
             var multipartMessage = new ClientMultipartMessage(request);
             var message = new Message(new Envelope {Sender = new Process {Id = multipartMessage.GetSenderId()}},
-                                      new Body
-                                      {
-                                          MessageType = multipartMessage.GetMessageType(),
-                                          Content = multipartMessage.GetMessage()
-                                      });
+                new Body
+                {
+                    MessageType = multipartMessage.GetMessageType(),
+                    Content = multipartMessage.GetMessage()
+                });
 
             var reply = PassClientRequestForProcessing(message);
 
@@ -168,19 +169,19 @@ namespace wacs.Communication.Hubs.Client
             var localProcess = synodConfigProvider.LocalProcess;
 
             var errorMessage = new ErrorMessage(new Process {Id = localProcess.Id},
-                                                new ErrorMessage.Payload
-                                                {
-                                                    ErrorCode = ErrorMessageCodes.NodeIsPassive,
-                                                    NodeAddress = synodConfigProvider.LocalNode.GetServiceAddress()
-                                                });
+                new ErrorMessage.Payload
+                {
+                    ErrorCode = ErrorMessageCodes.NodeIsPassive,
+                    NodeAddress = synodConfigProvider.LocalNode.GetServiceAddress()
+                });
             return new ClientMultipartMessage(errorMessage);
         }
 
         private QueueDevice CreateProcessingDevice()
         {
             var queue = new QueueDevice(context,
-                                        synodConfigProvider.LocalNode.GetServiceAddress(),
-                                        InprocWorkersAddress);
+                synodConfigProvider.LocalNode.GetServiceAddress(),
+                InprocWorkersAddress);
             queue.Start();
 
             return queue;
@@ -231,11 +232,11 @@ namespace wacs.Communication.Hubs.Client
             var localProcess = synodConfigProvider.LocalProcess;
 
             return new ErrorMessage(new Process {Id = localProcess.Id},
-                                    new ErrorMessage.Payload
-                                    {
-                                        ErrorCode = ErrorMessageCodes.MessageNotProcessed,
-                                        NodeAddress = synodConfigProvider.LocalNode.GetServiceAddress()
-                                    });
+                new ErrorMessage.Payload
+                {
+                    ErrorCode = ErrorMessageCodes.MessageNotProcessed,
+                    NodeAddress = synodConfigProvider.LocalNode.GetServiceAddress()
+                });
         }
     }
 }
