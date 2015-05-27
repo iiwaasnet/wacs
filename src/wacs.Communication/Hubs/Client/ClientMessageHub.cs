@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using Castle.Core.Internal;
+using NetMQ;
+using NetMQ.Devices;
+using NetMQ.zmq;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Client.Error;
-using ZeroMQ;
-using ZeroMQ.Devices;
 using Process = wacs.Messaging.Messages.Process;
 
 namespace wacs.Communication.Hubs.Client
@@ -20,7 +22,7 @@ namespace wacs.Communication.Hubs.Client
         private readonly ISynodConfigurationProvider synodConfigProvider;
         private bool disposed;
         private readonly QueueDevice device;
-        private readonly ZmqContext context;
+        private readonly NetMQContext context;
         private readonly CancellationTokenSource tokenSource;
         private readonly IClientMessageHubConfiguration config;
         private readonly IEnumerable<Thread> processingThreads;
@@ -34,7 +36,7 @@ namespace wacs.Communication.Hubs.Client
             tokenSource = new CancellationTokenSource();
             this.synodConfigProvider = synodConfigProvider;
             this.config = config;
-            context = ZmqContext.Create();
+            context = NetMQContext.Create();
             //new Thread(AcceptClientRequests).Start();
             device = CreateProcessingDevice();
             processingThreads = CreateRequestProcessingThreads().ToArray();
@@ -44,11 +46,11 @@ namespace wacs.Communication.Hubs.Client
         {
             try
             {
-                using (var socket = context.CreateSocket(SocketType.REP))
+                using (var socket = context.CreateSocket(ZmqSocketType.Rep))
                 {
-                    socket.SendHighWatermark = 100;
-                    socket.ReceiveHighWatermark = 200;
-                    socket.Linger = TimeSpan.Zero;
+                    socket.Options.SendHighWatermark = 100;
+                    socket.Options.ReceiveHighWatermark = 200;
+                    socket.Options.Linger = TimeSpan.Zero;
                     socket.Bind(synodConfigProvider.LocalNode.GetServiceAddress());
 
                     while (!tokenSource.Token.IsCancellationRequested)
@@ -57,13 +59,13 @@ namespace wacs.Communication.Hubs.Client
                         {
                             var request = socket.ReceiveMessage(config.ReceiveWaitTimeout);
 
-                            if (!request.IsEmpty && request.IsComplete)
+                            if (request != null && !request.IsEmpty /*&& request.IsComplete*/)
                             {
                                 logger.InfoFormat("Client message received by {0}", synodConfigProvider.LocalProcess.Id);
 
                                 var response = ProcessRequest(request);
 
-                                socket.SendMessage(new ZmqMessage(response.Frames));
+                                socket.SendMessage(new NetMQMessage(response.Frames));
                             }
                         }
                         catch (Exception err)
@@ -83,7 +85,7 @@ namespace wacs.Communication.Hubs.Client
         {
             for (var i = 0; i < config.ParallelMessageProcessors; i++)
             {
-                var thread = new Thread(() => AcceptIncomingRequests(tokenSource.Token, context.CreateSocket(SocketType.REP)));
+                var thread = new Thread(() => AcceptIncomingRequests(tokenSource.Token, context.CreateSocket(ZmqSocketType.Rep)));
                 thread.Start();
 
                 yield return thread;
@@ -92,13 +94,13 @@ namespace wacs.Communication.Hubs.Client
             device.Start();
         }
 
-        private void AcceptIncomingRequests(CancellationToken token, ZmqSocket receiver)
+        private void AcceptIncomingRequests(CancellationToken token, NetMQSocket receiver)
         {
             using (receiver)
             {
-                receiver.SendHighWatermark = 100;
-                receiver.ReceiveHighWatermark = 200;
-                receiver.Linger = TimeSpan.Zero;
+                receiver.Options.SendHighWatermark = 100;
+                receiver.Options.ReceiveHighWatermark = 200;
+                receiver.Options.Linger = TimeSpan.Zero;
                 receiver.Connect(InprocWorkersAddress);
 
                 while (!token.IsCancellationRequested)
@@ -107,11 +109,11 @@ namespace wacs.Communication.Hubs.Client
                     {
                         var request = receiver.ReceiveMessage(config.ReceiveWaitTimeout);
 
-                        if (!request.IsEmpty && request.IsComplete)
+                        if (request != null && !request.IsEmpty /*&& request.IsComplete*/)
                         {
                             var response = ProcessRequest(request);
 
-                            receiver.SendMessage(new ZmqMessage(response.Frames));
+                            receiver.SendMessage(new NetMQMessage(response.Frames));
                         }
                     }
                     catch (Exception err)
@@ -122,7 +124,7 @@ namespace wacs.Communication.Hubs.Client
             }
         }
 
-        private ClientMultipartMessage ProcessRequest(ZmqMessage request)
+        private ClientMultipartMessage ProcessRequest(NetMQMessage request)
         {
             try
             {
@@ -146,7 +148,7 @@ namespace wacs.Communication.Hubs.Client
             }
         }
 
-        private ClientMultipartMessage ProcessClientRequest(ZmqMessage request)
+        private ClientMultipartMessage ProcessClientRequest(NetMQMessage request)
         {
             var multipartMessage = new ClientMultipartMessage(request);
             var message = new Message(new Envelope {Sender = new Process {Id = multipartMessage.GetSenderId()}},
@@ -178,9 +180,8 @@ namespace wacs.Communication.Hubs.Client
         {
             var queue = new QueueDevice(context,
                                         synodConfigProvider.LocalNode.GetServiceAddress(),
-                                        InprocWorkersAddress,
-                                        DeviceMode.Threaded);
-            queue.Initialize();
+                                        InprocWorkersAddress);
+            queue.Start();
 
             return queue;
         }
@@ -200,7 +201,6 @@ namespace wacs.Communication.Hubs.Client
                     tokenSource.Cancel(false);
                     processingThreads.ForEach(th => th.Join(config.ReceiveWaitTimeout));
                     tokenSource.Dispose();
-                    device.Dispose();
 
                     disposed = true;
                 }

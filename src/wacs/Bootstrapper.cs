@@ -73,9 +73,6 @@ namespace wacs
             replicationDemultiplexor.Dispose();
         }
 
-        public int Id
-        {
-            get { return nodeResolver.ResolveLocalNode().Id; }
-        }
+        public int Id => nodeResolver.ResolveLocalNode().Id;
     }
 }

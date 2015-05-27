@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NetMQ;
 using wacs.Configuration;
 using wacs.Messaging.Messages;
-using ZeroMQ;
 
 namespace wacs.Communication.Hubs.Intercom
 {
@@ -22,14 +22,14 @@ namespace wacs.Communication.Hubs.Intercom
             frames = BuildMessageParts(recipient, message).ToArray();
         }
 
-        public IntercomMultipartMessage(ZmqMessage message)
+        public IntercomMultipartMessage(NetMQMessage message)
         {
             AssertMessage(message);
 
             frames = SplitMessageToFrames(message);
         }
 
-        private IEnumerable<byte[]> SplitMessageToFrames(IEnumerable<Frame> message)
+        private IEnumerable<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message)
         {
             return message.Select(m => m.Buffer).ToArray();
         }
@@ -64,11 +64,11 @@ namespace wacs.Communication.Hubs.Intercom
                        : MulticastId;
         }
 
-        private static void AssertMessage(ZmqMessage message)
+        private static void AssertMessage(NetMQMessage message)
         {
             if (message.FrameCount < 4)
             {
-                throw new Exception(string.Format("Inconsistent message received! FrameCount: [{0}] Bytes: [{1}]", message.FrameCount, message.TotalSize));
+                throw new Exception($"Inconsistent message received! FrameCount: [{message.FrameCount}]");
             }
         }
 

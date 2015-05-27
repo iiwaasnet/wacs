@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Net.Sockets;
 using System.Threading;
+using NetMQ;
+using NetMQ.zmq;
 using wacs.Communication.Hubs.Client;
 using wacs.Messaging.Messages;
 using wacs.Messaging.Messages.Client.Error;
 using wacs.Messaging.Messages.Client.wacs;
-using ZeroMQ;
 using Process = wacs.Messaging.Messages.Process;
 
 namespace wacs.Client
@@ -17,15 +19,15 @@ namespace wacs.Client
         private static void Main(string[] args)
         {
             var commandTimeout = TimeSpan.FromSeconds(1);
-            using (var context = ZmqContext.Create())
+            using (var context = NetMQContext.Create())
             {
                 while (true)
                 {
                     try
                     {
-                        using (var socket = context.CreateSocket(SocketType.REQ))
+                        using (var socket = context.CreateSocket(ZmqSocketType.Req))
                         {
-                            socket.Linger = TimeSpan.Zero;
+                            socket.Options.Linger = TimeSpan.Zero;
                             socket.Connect(ServerEndpoint);
                             var timer = new Stopwatch();
                             while (true)
@@ -43,7 +45,7 @@ namespace wacs.Client
             }
         }
 
-        private static void SendRequests(Stopwatch timer, ZmqSocket socket, TimeSpan commandTimeout)
+        private static void SendRequests(Stopwatch timer, NetMQSocket socket, TimeSpan commandTimeout)
         {
             timer.Start();
             var request = new CreateNodeRequest(new Process {Id = 0},
@@ -51,11 +53,11 @@ namespace wacs.Client
                                                 {
                                                     NodeName = "A"
                                                 });
-            socket.SendMessage(new ZmqMessage(new ClientMultipartMessage(request).Frames));
+            socket.SendMessage(new NetMQMessage(new ClientMultipartMessage(request).Frames));
 
             var resp = socket.ReceiveMessage(commandTimeout);
-            if (resp.IsComplete)
-            {
+            //if (resp.IsComplete)
+            //{
                 timer.Stop();
 
                 var response = new ClientMultipartMessage(resp);
@@ -77,7 +79,7 @@ namespace wacs.Client
                 }
 
 
-            }
+            //}
             timer.Reset();
 
             //Thread.Sleep(TimeSpan.FromSeconds(5));

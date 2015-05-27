@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Castle.Core.Internal;
+using NetMQ;
+using NetMQ.zmq;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.Framework.State;
 using wacs.Messaging.Messages;
-using ZeroMQ;
 using Process = wacs.Messaging.Messages.Process;
 
 namespace wacs.Communication.Hubs.Client
@@ -21,18 +22,19 @@ namespace wacs.Communication.Hubs.Client
         private readonly IEnumerable<Thread> forwardingThreads;
         private readonly CancellationTokenSource cancellationSource;
         private readonly IRsmConfiguration rsmConfiguration;
-        private readonly ZmqContext context;
+        private readonly NetMQContext context;
 
         public ClientMessageRouter(IClientMessageHubConfiguration config,
-                                   IRsmConfiguration rsmConfiguration,
-                                   ILogger logger)
+            IRsmConfiguration rsmConfiguration,
+            ILogger logger)
         {
             this.logger = logger;
             this.config = config;
             this.rsmConfiguration = rsmConfiguration;
             cancellationSource = new CancellationTokenSource();
-            forwardQueue = new BlockingCollection<IAwaitableResponse<IMessage>>(new ConcurrentQueue<IAwaitableResponse<IMessage>>());
-            context = ZmqContext.Create();
+            forwardQueue =
+                new BlockingCollection<IAwaitableResponse<IMessage>>(new ConcurrentQueue<IAwaitableResponse<IMessage>>());
+            context = NetMQContext.Create();
             forwardingThreads = StartForwardingThreads().ToArray();
         }
 
@@ -53,11 +55,11 @@ namespace wacs.Communication.Hubs.Client
             {
                 try
                 {
-                    using (var socket = context.CreateSocket(SocketType.REQ))
+                    using (var socket = context.CreateSocket(ZmqSocketType.Req))
                     {
-                        socket.Linger = TimeSpan.Zero;
-                        socket.SendHighWatermark = 100;
-                        socket.ReceiveHighWatermark = 200;
+                        socket.Options.Linger = TimeSpan.Zero;
+                        socket.Options.SendHighWatermark = 100;
+                        socket.Options.ReceiveHighWatermark = 200;
 
                         foreach (var queuedRequest in forwardQueue.GetConsumingEnumerable())
                         {
@@ -74,38 +76,39 @@ namespace wacs.Communication.Hubs.Client
             logger.WarnFormat("Forwarding thread {0} terminated", Thread.CurrentThread.ManagedThreadId);
         }
 
-        private void ForwardMessagesToLeader(ZmqSocket socket, IAwaitableResponse<IMessage> queuedRequest)
+        private void ForwardMessagesToLeader(NetMQSocket socket, IAwaitableResponse<IMessage> queuedRequest)
         {
             var forwardRequest = (AwaitableResponse) queuedRequest;
 
             ConnectToLeaderIfChanged(socket, forwardRequest);
 
             var requestMessage = new ClientMultipartMessage(forwardRequest.Request);
-            socket.SendMessage(new ZmqMessage(requestMessage.Frames));
+            socket.SendMessage(new NetMQMessage(requestMessage.Frames));
 
             //TODO: receive timeout
             var response = socket.ReceiveMessage(config.ReceiveWaitTimeout);
             //var response = socket.ReceiveMessage();
-            if (!response.IsEmpty && response.IsComplete)
+            if (response != null && !response.IsEmpty /*&& response.IsComplete*/)
             {
                 var responseMessage = new ClientMultipartMessage(response);
 
-                forwardRequest.SetResponse(new Message(new Envelope {Sender = new Process {Id = responseMessage.GetSenderId()}},
-                                                       new Body
-                                                       {
-                                                           MessageType = responseMessage.GetMessageType(),
-                                                           Content = responseMessage.GetMessage()
-                                                       }));
+                forwardRequest.SetResponse(
+                    new Message(new Envelope {Sender = new Process {Id = responseMessage.GetSenderId()}},
+                        new Body
+                        {
+                            MessageType = responseMessage.GetMessageType(),
+                            Content = responseMessage.GetMessage()
+                        }));
             }
         }
 
-        private static void ConnectToLeaderIfChanged(ZmqSocket socket, AwaitableResponse forwardRequest)
+        private static void ConnectToLeaderIfChanged(NetMQSocket socket, AwaitableResponse forwardRequest)
         {
-            if (socket.LastEndpoint != forwardRequest.Leader.GetServiceAddress())
+            if (socket.Options.GetLastEndpoint != forwardRequest.Leader.GetServiceAddress())
             {
-                if (!string.IsNullOrWhiteSpace(socket.LastEndpoint))
+                if (!string.IsNullOrWhiteSpace(socket.Options.GetLastEndpoint))
                 {
-                    socket.Disconnect(socket.LastEndpoint);
+                    socket.Disconnect(socket.Options.GetLastEndpoint);
                 }
                 socket.Connect(forwardRequest.Leader.GetServiceAddress());
             }

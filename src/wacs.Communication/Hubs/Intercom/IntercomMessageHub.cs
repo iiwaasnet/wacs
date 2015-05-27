@@ -3,11 +3,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
+using NetMQ;
+using NetMQ.zmq;
 using wacs.Configuration;
 using wacs.Diagnostics;
 using wacs.Messaging.Messages;
-using ZeroMQ;
+using Poller = NetMQ.Poller;
 
 namespace wacs.Communication.Hubs.Intercom
 {
@@ -19,16 +22,16 @@ namespace wacs.Communication.Hubs.Intercom
         private readonly INode localNode;
         private readonly object locker = new object();
         private readonly ILogger logger;
-        private readonly ZmqContext multicastContext;
-        private readonly ZmqSocket multicastListener;
+        private readonly NetMQContext multicastContext;
+        private readonly NetMQSocket multicastListener;
         private readonly Poller multicastPoller;
         private readonly BlockingCollection<IntercomMultipartMessage> outMessageQueue;
-        private readonly ZmqSocket sender;
-        private readonly ZmqContext senderContext;
+        private readonly NetMQSocket sender;
+        private readonly NetMQContext senderContext;
         private readonly TimeSpan socketsPollTimeout;
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
-        private readonly ZmqContext unicastContext;
-        private readonly ZmqSocket unicastListener;
+        private readonly NetMQContext unicastContext;
+        private readonly NetMQSocket unicastListener;
         private readonly Poller unicastPoller;
         private HashSet<INode> currentWorld;
 
@@ -42,9 +45,9 @@ namespace wacs.Communication.Hubs.Intercom
             outMessageQueue = new BlockingCollection<IntercomMultipartMessage>(new ConcurrentQueue<IntercomMultipartMessage>());
             cancellationSource = new CancellationTokenSource();
 
-            senderContext = ZmqContext.Create();
-            unicastContext = ZmqContext.Create();
-            multicastContext = ZmqContext.Create();
+            senderContext = NetMQContext.Create();
+            unicastContext = NetMQContext.Create();
+            multicastContext = NetMQContext.Create();
 
             subscriptions = new ConcurrentDictionary<Listener, object>();
 
@@ -53,8 +56,8 @@ namespace wacs.Communication.Hubs.Intercom
             currentWorld = new HashSet<INode>(configProvider.World);
             ConnectListeningSockets(currentWorld);
 
-            unicastPoller = new Poller(new[] {unicastListener});
-            multicastPoller = new Poller(new[] {multicastListener});
+            unicastPoller = new Poller(unicastListener);
+            multicastPoller = new Poller(multicastListener);
 
             sender = CreateSender(senderContext);
 
@@ -68,6 +71,9 @@ namespace wacs.Communication.Hubs.Intercom
         public void Dispose()
         {
             cancellationSource.Cancel(false);
+            multicastPoller.Stop(true);
+            unicastPoller.Stop(true);
+            
             outMessageQueue.CompleteAdding();
             inMessageQueue.CompleteAdding();
 
@@ -156,38 +162,28 @@ namespace wacs.Communication.Hubs.Intercom
             }
         }
 
-        private ZmqSocket CreateUnicastListener(ZmqContext context, IProcess localProcess)
+        private NetMQSocket CreateUnicastListener(NetMQContext context, IProcess localProcess)
         {
             return CreateListeningSocket(context, localProcess.Id.GetBytes());
         }
 
-        private ZmqSocket CreateMulticastListener(ZmqContext context)
+        private NetMQSocket CreateMulticastListener(NetMQContext context)
         {
             return CreateListeningSocket(context, IntercomMultipartMessage.MulticastId);
         }
 
-        private ZmqSocket CreateListeningSocket(ZmqContext context, byte[] prefix)
+        private NetMQSocket CreateListeningSocket(NetMQContext context, byte[] prefix)
         {
-            var socket = context.CreateSocket(SocketType.SUB);
-            socket.ReceiveHighWatermark = 200;
-            socket.Linger = TimeSpan.Zero;
+            var socket = context.CreateSocket(ZmqSocketType.Sub);
+            socket.Options.ReceiveHighWatermark = 200;
+            socket.Options.Linger = TimeSpan.Zero;
             socket.Subscribe(prefix);
             socket.ReceiveReady += SocketOnReceiveReady;
 
             return socket;
         }
 
-        private ZmqSocket CreateSender(ZmqContext context)
-        {
-            var socket = context.CreateSocket(SocketType.PUB);
-            socket.SendHighWatermark = 100;
-            socket.Linger = TimeSpan.Zero;
-            socket.Bind(localNode.GetIntercomAddress());
-
-            return socket;
-        }
-
-        private void SocketOnReceiveReady(object sender, SocketEventArgs socketEventArgs)
+        private void SocketOnReceiveReady(object sender, NetMQSocketEventArgs socketEventArgs)
         {
             try
             {
@@ -196,12 +192,12 @@ namespace wacs.Communication.Hubs.Intercom
 
                 var message = socketEventArgs.Socket.ReceiveMessage(TimeSpan.FromMilliseconds(50));
 
-                if (message.IsComplete)
-                {
+                //if (message.IsComplete)
+                //{
                     var multipartMessage = new IntercomMultipartMessage(message);
                     //logger.InfoFormat("Msg received: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
                     inMessageQueue.Add(multipartMessage);
-                }
+                //}
 
                 timer.Stop();
                 logger.InfoFormat("Msg received in {0} msec", timer.ElapsedMilliseconds);
@@ -214,6 +210,44 @@ namespace wacs.Communication.Hubs.Intercom
                 logger.Error(err);
             }
         }
+
+        private NetMQSocket CreateSender(NetMQContext context)
+        {
+            var socket = context.CreateSocket(ZmqSocketType.Pub);
+            socket.Options.SendHighWatermark = 100;
+            socket.Options.Linger = TimeSpan.Zero;
+            socket.Bind(localNode.GetIntercomAddress());
+
+            return socket;
+        }
+
+        //private void SocketOnReceiveReady(object sender, SocketEventArgs socketEventArgs)
+        //{
+        //    try
+        //    {
+        //        var timer = new Stopwatch();
+        //        timer.Start();
+
+        //        var message = socketEventArgs.Socket.ReceiveMessage(TimeSpan.FromMilliseconds(50));
+
+        //        if (message.IsComplete)
+        //        {
+        //            var multipartMessage = new IntercomMultipartMessage(message);
+        //            //logger.InfoFormat("Msg received: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
+        //            inMessageQueue.Add(multipartMessage);
+        //        }
+
+        //        timer.Stop();
+        //        logger.InfoFormat("Msg received in {0} msec", timer.ElapsedMilliseconds);
+        //        //logger.InfoFormat("Backlog:{0} Receive bfr:{1}",
+        //        //                  socketEventArgs.Socket.Backlog,
+        //        //                  socketEventArgs.Socket.ReceiveBufferSize);
+        //    }
+        //    catch (Exception err)
+        //    {
+        //        logger.Error(err);
+        //    }
+        //}
 
         private void ForwardIncomingMessages()
         {
@@ -253,16 +287,13 @@ namespace wacs.Communication.Hubs.Intercom
             {
                 while (!token.IsCancellationRequested)
                 {
-                    poller.Poll(socketsPollTimeout);
+                    poller.Start();
+                    //poller.Poll(socketsPollTimeout);
                 }
             }
             catch (Exception err)
             {
-                logger.ErrorFormat("Sender status:[{0}] Multicast status:[{1}] Unicast status:[{2}] Error:[{3}]",
-                                   sender.SendStatus,
-                                   multicastListener.ReceiveStatus,
-                                   unicastListener.ReceiveStatus,
-                                   err);
+                logger.Error(err);
             }
         }
 
@@ -272,7 +303,7 @@ namespace wacs.Communication.Hubs.Intercom
             timer.Start();
             //logger.InfoFormat("Msg sent: {0} sender: {1}", multipartMessage.GetMessageType(), multipartMessage.GetSenderId());
 
-            var message = new ZmqMessage(multipartMessage.Frames);
+            var message = new NetMQMessage(multipartMessage.Frames);
             sender.SendMessage(message);
 
             timer.Stop();

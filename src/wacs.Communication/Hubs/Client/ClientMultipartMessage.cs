@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NetMQ;
 using wacs.Communication.Hubs.Intercom;
 using wacs.Messaging.Messages;
-using ZeroMQ;
 
 namespace wacs.Communication.Hubs.Client
 {
@@ -16,14 +16,14 @@ namespace wacs.Communication.Hubs.Client
             frames = BuildMessageParts(message).ToArray();
         }
 
-        public ClientMultipartMessage(ZmqMessage message)
+        public ClientMultipartMessage(NetMQMessage message)
         {
             AssertMessage(message);
 
             frames = SplitMessageToFrames(message);
         }
 
-        private IEnumerable<byte[]> SplitMessageToFrames(IEnumerable<Frame> message)
+        private IEnumerable<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message)
         {
             return message.Select(m => m.Buffer).ToArray();
         }
@@ -50,11 +50,11 @@ namespace wacs.Communication.Hubs.Client
             return message.Envelope.Sender.Id.GetBytes();
         }
 
-        private static void AssertMessage(ZmqMessage message)
+        private static void AssertMessage(NetMQMessage message)
         {
             if (message.FrameCount < 3)
             {
-                throw new Exception(string.Format("Inconsistent message received! FrameCount: [{0}] Bytes: [{1}]", message.FrameCount, message.TotalSize));
+                throw new Exception($"Inconsistent message received! FrameCount: [{message.FrameCount}]");
             }
         }
 
@@ -83,9 +83,6 @@ namespace wacs.Communication.Hubs.Client
             return frames.Skip(2).Aggregate(new byte[0], (seed, array) => seed.Concat(array).ToArray());
         }
 
-        public IEnumerable<byte[]> Frames
-        {
-            get { return frames; }
-        }
+        public IEnumerable<byte[]> Frames => frames;
     }
 }
