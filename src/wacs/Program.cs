@@ -1,10 +1,18 @@
 ﻿using System;
 using Autofac;
 using Autofac.Configuration;
-using Topshelf;
 using Topshelf.HostConfigurators;
 using Topshelf.Runtime;
+using Topshelf.ServiceConfigurators;
 using wacs.Diagnostics;
+using HostControl = Topshelf.HostControl;
+using HostFactory = Topshelf.HostFactory;
+using InstallHostConfiguratorExtensions = Topshelf.InstallHostConfiguratorExtensions;
+using RunAsExtensions = Topshelf.RunAsExtensions;
+using ServiceConfiguratorExtensions = Topshelf.ServiceConfiguratorExtensions;
+using ServiceControl = Topshelf.ServiceControl;
+using ServiceExtensions = Topshelf.ServiceExtensions;
+using UninstallHostConfiguratorExtensions = Topshelf.UninstallHostConfiguratorExtensions;
 
 namespace wacs
 {
@@ -38,20 +46,34 @@ namespace wacs
 
         private static void ConfigureService(HostConfigurator x, IContainer container)
         {
-            x.Service<ServiceControl>(s =>
-                                      {
-                                          s.ConstructUsing(name => container.Resolve<ServiceControl>());
-                                          s.WhenStarted((sc, hc) => sc.Start(hc));
-                                          s.WhenStopped((sc, hc) => sc.Stop(hc));
-                                      });
-            x.RunAsLocalSystem();
+            ServiceExtensions.Service<ServiceControl>(x, s => SetupServiceControl(container, s));
+            RunAsExtensions.RunAsLocalSystem(x);
 
             x.SetDescription("Wait-free Coordination Service");
             x.SetDisplayName("WACS");
             x.SetServiceName("WACS");
 
-            x.AfterInstall(InstallPerfCounters);
-            x.BeforeUninstall(UninstallPerfCounters);
+            InstallHostConfiguratorExtensions.AfterInstall(x, InstallPerfCounters);
+            UninstallHostConfiguratorExtensions.BeforeUninstall(x, UninstallPerfCounters);
+        }
+
+        private static void SetupServiceControl(IContainer container, ServiceConfigurator<ServiceControl> s)
+        {
+            s.ConstructUsing(name => container.Resolve<ServiceControl>());
+            s.WhenStarted((sc, hc) => sc.Start(hc));
+            s.WhenStopped((sc, hc) => StopService(sc, hc, container));
+            ServiceConfiguratorExtensions.WhenStopped(s, sc => container.Dispose());
+        }
+
+        private static bool StopService(ServiceControl sc, HostControl hc, IContainer container)
+        {
+            if (sc.Stop(hc))
+            {
+                container.Dispose();
+                return true;
+            }
+
+            return false;
         }
 
         private static void UninstallPerfCounters()

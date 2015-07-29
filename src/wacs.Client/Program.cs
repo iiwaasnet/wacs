@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Net.Sockets;
 using System.Threading;
 using NetMQ;
 using NetMQ.zmq;
@@ -49,24 +48,24 @@ namespace wacs.Client
         {
             timer.Start();
             var request = new CreateNodeRequest(new Process {Id = 0},
-                                                new CreateNodeRequest.Payload
-                                                {
-                                                    NodeName = "A"
-                                                });
+                new CreateNodeRequest.Payload
+                {
+                    NodeName = "A"
+                });
             socket.SendMessage(new NetMQMessage(new ClientMultipartMessage(request).Frames));
 
             var resp = socket.ReceiveMessage(commandTimeout);
-            //if (resp.IsComplete)
-            //{
+            if (resp != null && !resp.IsEmpty)
+            {
                 timer.Stop();
 
                 var response = new ClientMultipartMessage(resp);
                 var msg = new Message(new Envelope {Sender = new Process {Id = response.GetSenderId()}},
-                                      new Body
-                                      {
-                                          MessageType = response.GetMessageType(),
-                                          Content = response.GetMessage()
-                                      });
+                    new Body
+                    {
+                        MessageType = response.GetMessageType(),
+                        Content = response.GetMessage()
+                    });
                 if (CreateNodeResponse.MessageType == msg.Body.MessageType)
                 {
                     var payload = new CreateNodeResponse(msg).GetPayload();
@@ -77,9 +76,7 @@ namespace wacs.Client
                     var payload = new ErrorMessage(msg).GetPayload();
                     Console.WriteLine("Error: {0} done in {1} msec", payload.Error, timer.ElapsedMilliseconds);
                 }
-
-
-            //}
+            }
             timer.Reset();
 
             //Thread.Sleep(TimeSpan.FromSeconds(5));
